@@ -2,6 +2,7 @@
 # App de demostración del módulo de importación
 
 library(shiny)
+library(DT)
 library(Rscience2027)   # tu paquete
 
 ui <- fluidPage(
