@@ -9,7 +9,7 @@ library(Rscience2027)   # tu paquete
 ui <- fluidPage(
   titlePanel("Demo: Módulo de Importación de Datos"),
 
-  mod_import_ui("demo_import"),
+  module_treeApp_UI("demo_tools"),
 
 
 )
@@ -17,7 +17,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
   # Llamamos al módulo
-  seleccion <- mod_import_server(id = "demo_import", show_debug = T)
+  seleccion <- module_treeApp_Server(id = "demo_tools")
 
 
 }

@@ -95,7 +95,7 @@ mod_rscience_ui <- function(id) {
       ),
 
       tabPanelBody("tab_tool",
-                   div(class="p-5 text-center", icon("terminal", "fa-5x mb-3"), h4("Scripting Engine"))
+                   div(class="p-3", module_treeApp_UI(ns("demo_tools")))
       ),
 
       tabPanelBody("tab_welcome",
@@ -128,6 +128,8 @@ mod_rscience_server <- function(id) {
     # 1. INICIALIZACIÓN SILENCIOSA DEL MÓDULO DE IMPORTACIÓN
     # Esto mantiene los datos en memoria, pero no genera outputs aquí.
     res_import <- mod_import_server("demo_import")
+
+    res_tool <- module_treeApp_Server(id = "demo_tools")
 
     # 2. LÓGICA DE NAVEGACIÓN (SWITCHES -> TABS)
     # Solo gestiona qué panel está visible.

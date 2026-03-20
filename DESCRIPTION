@@ -22,3 +22,5 @@ Imports:
   readxl,
   vroom,
   shinyjs
+Depends: 
+    R (>= 3.5)
