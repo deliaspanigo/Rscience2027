@@ -1,5 +1,6 @@
 # inst/app/demo_importar.R
 # App de demostración del módulo de importación
+devtools::load_all()
 
 library(shiny)
 library(DT)
