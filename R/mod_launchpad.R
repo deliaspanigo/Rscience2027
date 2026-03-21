@@ -1,17 +1,16 @@
 # ==============================================================================
-# MÓDULO LAUNCHPAD - v.0.0.1 (ENCAPSULADO TOTAL)
+# MÓDULO LAUNCHPAD - v.0.0.1 (ENCAPSULADO TOTAL + ESTADO UNIFICADO)
 # ==============================================================================
+library("bslib")
+library("shiny")
 
 mod_launchpad_ui <- function(id) {
   ns <- NS(id)
-
-  # ID único para el contenedor raíz del módulo
   wrapper_id <- ns("launch_wrapper")
 
   tagList(
     tags$head(
       tags$style(HTML(paste0("
-        /* --- RESET LOCAL DEL MÓDULO --- */
         #", wrapper_id, " {
            margin: 0 !important; padding: 0 !important;
            height: 100vh !important; width: 100vw !important;
@@ -19,33 +18,19 @@ mod_launchpad_ui <- function(id) {
            font-family: 'Inter', sans-serif;
            display: block;
         }
-
         #", wrapper_id, " .container-fluid { padding: 0 !important; margin: 0 !important; }
-
-        /* BOTONES PILDORA XL */
-        #", wrapper_id, " .btn-pill-xl {
-           border-radius: 50px !important; padding: 15px 35px !important;
-           font-weight: 800; font-size: 0.7rem !important;
-           text-transform: uppercase; letter-spacing: 1px;
-           display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-        }
-
-        /* PANEL IZQUIERDO */
         #", wrapper_id, " .main-body { display: flex; height: 75vh; width: 100vw; overflow: hidden; }
-
         #", wrapper_id, " .left-panel {
            flex: 0 0 40%; padding: 40px; border-right: 2px solid #00d4ff;
            display: flex; flex-direction: column; align-items: center; justify-content: center;
            background: #ffffff;
         }
-
         #", wrapper_id, " .floating-logo {
            width: 280px; margin-bottom: 1rem;
            animation: floatVertical 4s ease-in-out infinite;
            filter: drop-shadow(0 10px 15px rgba(0,212,255,0.25));
         }
         @keyframes floatVertical { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } }
-
         #", wrapper_id, " .btn-rscience {
            background: #00d4ff; border: none; color: white; font-weight: 800;
            padding: 14px; border-radius: 12px; transition: 0.3s;
@@ -53,7 +38,6 @@ mod_launchpad_ui <- function(id) {
         }
         #", wrapper_id, " .btn-rscience:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,212,255,0.4); background: #00b8e6; color: white; }
         #", wrapper_id, " .btn-launch-main { width: 320px; margin-bottom: 20px; }
-
         #", wrapper_id, " .utility-container { display: flex; gap: 8px; width: 320px; justify-content: center; margin-bottom: 15px; }
         #", wrapper_id, " .btn-utility {
            background: #f8f9fa; border: 1px solid #e9ecef; color: #6c757d; font-weight: 700;
@@ -61,20 +45,15 @@ mod_launchpad_ui <- function(id) {
            transition: 0.2s; flex: 1;
         }
         #", wrapper_id, " .btn-utility:hover { background: #fff; color: #00d4ff; border-color: #00d4ff; }
-
         #", wrapper_id, " .social-bar { display: flex; gap: 20px; margin-top: 5px; }
         #", wrapper_id, " .social-icon { color: #dee2e6; font-size: 1.3rem; transition: 0.3s; text-decoration: none; }
         #", wrapper_id, " .social-icon:hover { color: #00d4ff; transform: scale(1.1); }
-
-        /* PANEL DERECHO Y CARRUSEL */
         #", wrapper_id, " .right-panel {
            flex: 0 0 60%; padding: 40px 60px; display: flex; flex-direction: column;
            justify-content: center; align-items: center; background: #fafafa;
         }
-
         #", wrapper_id, " .toolbar-right { display: flex; gap: 10px; margin-bottom: 30px; width: 100%; justify-content: center; }
         #", wrapper_id, " .btn-category { padding: 10px 20px; font-size: 0.8rem; width: auto; min-width: 120px; }
-
         #", wrapper_id, " .carousel-viewport {
            height: 280px; width: 100%; max-width: 600px;
            background: linear-gradient(135deg, #00d4ff 0%, #007bff 100%);
@@ -83,12 +62,9 @@ mod_launchpad_ui <- function(id) {
         }
         #", wrapper_id, " .carousel-rail { display: flex; width: 300%; height: 100%; transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1); }
         #", wrapper_id, " .individual-slide { width: 33.33%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 40px; text-align: center; }
-
         #", wrapper_id, " .dots-nav { display: flex; gap: 10px; margin-top: 25px; }
         #", wrapper_id, " .dot-btn { width: 10px; height: 10px; border-radius: 20px; border: none; background: #ddd; transition: 0.4s; cursor: pointer; }
         #", wrapper_id, " .dot-btn.active { background: #00d4ff; width: 30px; }
-
-        /* FOOTER LOGOS */
         #", wrapper_id, " .footer-logos { height: 25vh; border-top: 2px solid #00d4ff; background: white; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
         #", wrapper_id, " .marquee-row { display: flex; align-items: center; width: 100%; height: 40px; margin: 4px 0; }
         #", wrapper_id, " .category-label {
@@ -98,14 +74,12 @@ mod_launchpad_ui <- function(id) {
         #", wrapper_id, " .marquee-container { flex: 1; overflow: hidden; display: flex; }
         #", wrapper_id, " .marquee-content { display: flex; width: max-content; animation: scrollLeft linear infinite; }
         #", wrapper_id, " .marquee-content img { height: 30px; margin: 0 40px; opacity: 0.4; filter: grayscale(1); }
-
         #", wrapper_id, " .scroll-slow { animation-duration: 45s; }
         #", wrapper_id, " .scroll-fast { animation-duration: 30s; }
         @keyframes scrollLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
       ")))
     ),
 
-    # CONTENEDOR RAÍZ CON ID DE NAMESPACE
     div(id = wrapper_id,
         div(class = "main-body",
             div(class = "left-panel",
@@ -155,50 +129,39 @@ mod_launchpad_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # 1. RUTA DE RECURSOS
     base_path <- system.file("shiny/f01_user_apps/app01_launchpad/www", package = "Rscience2027")
 
-    # 2. SISTEMA DE NAVEGACIÓN (TRIGGER + DESTINO)
-    nav_trigger <- reactiveVal(0)
-    target_page <- reactiveVal(NULL)
+    # --- ESTADOS REACTIVOS ---
+    nav_trigger     <- reactiveVal(0)
+    target_page     <- reactiveVal("welcome")
+    last_click_time <- reactiveVal(NULL)
+    current_slide   <- reactiveVal(1)
 
+    # --- FUNCIÓN CENTRAL DE NAVEGACIÓN ---
     fire_navigation <- function(dest) {
       target_page(dest)
       nav_trigger(nav_trigger() + 1)
+      last_click_time(Sys.time())
+
       if (show_debug) {
-        message(sprintf("[DEBUG Launchpad] Trigger #%d -> Destino: %s", nav_trigger(), dest))
+        message(sprintf("[DEBUG] Trigger: %d | Destino: %s", nav_trigger(), dest))
       }
     }
 
+    # --- EVENTOS ---
     observeEvent(input$btn_enter,     { fire_navigation("engine") })
     observeEvent(input$btn_sec_enter, { fire_navigation("engine") })
     observeEvent(input$btn_dist,      { fire_navigation("distributions") })
     observeEvent(input$btn_class,     { fire_navigation("classroom") })
     observeEvent(input$btn_extra,     { fire_navigation("extra") })
 
-    # 3. DEBUG MONITOR
-    if (show_debug) {
-      insertUI(
-        selector = paste0("#", ns("dots_ui")),
-        where = "afterEnd",
-        ui = div(
-          style = "margin-top:20px; padding:12px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; font-family:monospace; font-size:0.75rem; color:#856404;",
-          h6("Launchpad Debug Monitor", style="margin:0 0 5px 0; font-weight:bold;"),
-          verbatimTextOutput(ns("debug_console"))
-        )
-      )
-      output$debug_console <- renderPrint({
-        list(clicks = nav_trigger(), target = target_page(), slide = current_slide())
-      })
-    }
-
-    # 4. CARRUSEL
-    current_slide <- reactiveVal(1)
+    # --- CARRUSEL ---
     auto_timer <- reactiveTimer(5000)
     observe({
       auto_timer()
       isolate({ current_slide(if(current_slide() == 3) 1 else current_slide() + 1) })
     })
+    observeEvent(input$go_to_slide, { current_slide(input$go_to_slide) })
 
     output$carousel_rail_ui <- renderUI({
       offset <- (current_slide() - 1) * -33.33
@@ -218,9 +181,8 @@ mod_launchpad_server <- function(id, show_debug = FALSE) {
           })
       )
     })
-    observeEvent(input$go_to_slide, { current_slide(input$go_to_slide) })
 
-    # 5. LOGOS
+    # --- LOGOS ---
     output$ui_institutions <- renderUI({
       files <- list.files(file.path(base_path, "f01_institutions"))
       if(length(files) == 0) return(NULL)
@@ -233,15 +195,41 @@ mod_launchpad_server <- function(id, show_debug = FALSE) {
       div(class = "marquee-content scroll-fast", lapply(c(files, files), function(f) img(src = paste0("f02_universities/", f))))
     })
 
-    # 6. MODALES
+    # --- MODALES ---
     observeEvent(input$btn_cite, {
       showModal(modalDialog(title = "Cite Rscience", p("Rscience Team (2026). v.0.0.1."), easyClose = TRUE))
     })
 
-    # 7. RETORNO
-    return(list(
-      clicked_destination = reactive({ target_page() }),
-      nav_trigger         = reactive({ nav_trigger() })
-    ))
+    # --- OBJETO UNIFICADO DE ESTADO ---
+    # Este objeto será el mismo para el Debug y para el Retorno
+    launchpad_status <- reactive({
+      list(
+        nav_trigger = nav_trigger(),
+        target_page = target_page(),
+        last_click_time  = last_click_time(),
+        current_slide = current_slide()
+      )
+    })
+
+    # --- DEBUG MONITOR ---
+    if (show_debug) {
+      insertUI(
+        selector = paste0("#", ns("dots_ui")),
+        where = "afterEnd",
+        ui = div(
+          style = "margin-top:20px; padding:12px; background:#fff3cd; border:1px solid #ffeeba; border-radius:8px; font-family:monospace; font-size:0.75rem; color:#856404;",
+          h6("Launchpad Debug Monitor", style="margin:0 0 5px 0; font-weight:bold;"),
+          verbatimTextOutput(ns("debug_console"))
+        )
+      )
+      # Aquí usamos el objeto unificado
+      output$debug_console <- renderPrint({
+        launchpad_status()
+      })
+    }
+
+    # --- RETORNO ---
+    # Retornamos directamente la expresión reactiva unificada
+    return(launchpad_status)
   })
 }

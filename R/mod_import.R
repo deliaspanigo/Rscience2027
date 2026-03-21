@@ -1,79 +1,83 @@
 # ==============================================================================
-# IMPORT MODULE - v.0.0.1 DEFINITIVE (FULL METADATA & DEEP RESET)
+# IMPORT MODULE - v.0.0.1 DEFINITIVE (ULTRA-ENCAPSULATED CSS & STATE)
 # ==============================================================================
 library("shinyjs")
 library("DT")
 library("vroom")
 library("readxl")
-
-
+library("bslib")
 
 mod_import_ui <- function(id) {
   ns <- NS(id)
+
+  # Definimos el selector raíz para el CSS
+  root_sel <- paste0(".", ns("import-container"))
+
   tagList(
     shinyjs::useShinyjs(),
     tags$head(
       tags$style(HTML(paste0("
-        /* Contenedor principal */
-        .", ns("import-container"), " { padding-top: 20px !important; }
+        /* --- ENCAPSULAMIENTO TOTAL MEDIANTE SELECTOR RAÍZ --- */
 
-        /* BOTONES PILDORA XL - Forzamos especificidad con prefijo .btn */
-        .btn.btn-pill-xl {
-          border-radius: 50px !important;
-          padding: 15px 35px !important;
-          font-weight: 800 !important;
-          font-size: 1.1rem !important;
-          text-transform: uppercase !important;
-          letter-spacing: 1px !important;
-          display: inline-flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          gap: 10px !important;
-          transition: all 0.3s ease !important;
+        ", root_sel, " { padding-top: 20px !important; }
+
+        /* BOTONES PILDORA XL */
+        ", root_sel, " .btn.btn-pill-xl {
+           border-radius: 50px !important;
+           padding: 15px 35px !important;
+           font-weight: 800 !important;
+           font-size: 1.1rem !important;
+           text-transform: uppercase !important;
+           letter-spacing: 1px !important;
+           display: inline-flex !important;
+           align-items: center !important;
+           justify-content: center !important;
+           gap: 10px !important;
+           transition: all 0.3s ease !important;
         }
 
-        .btn.btn-pill-xl:hover {
-          transform: translateY(-2px) !important;
-          filter: brightness(1.1);
+        ", root_sel, " .btn.btn-pill-xl:hover {
+           transform: translateY(-2px) !important;
+           filter: brightness(1.1);
         }
 
-        .action-row-right {
-          display: flex; flex-direction: row; justify-content: flex-end;
-          align-items: center; gap: 15px; height: 100%; padding-top: 25px;
+        ", root_sel, " .action-row-right {
+           display: flex; flex-direction: row; justify-content: flex-end;
+           align-items: center; gap: 15px; height: 100%; padding-top: 25px;
         }
 
-        /* LABELS GRANDES Y NEGROS */
-        .section-label {
-          font-weight: 800; font-size: 1.2rem !important;
-          color: #000000 !important; text-transform: uppercase;
-          margin-bottom: 12px; letter-spacing: 1.2px;
+        /* LABELS SECCIÓN */
+        ", root_sel, " .section-label {
+           font-weight: 800; font-size: 1.2rem !important;
+           color: #000000 !important; text-transform: uppercase;
+           margin-bottom: 12px; letter-spacing: 1.2px;
         }
 
-        /* ESTADO CLOSED CON CHECK VERDE */
-        .status-closed { color: #28a745 !important; font-weight: 900 !important; margin-left: 8px; }
+        /* ESTADOS Y DIVISORES */
+        ", root_sel, " .status-closed { color: #28a745 !important; font-weight: 900 !important; margin-left: 8px; }
+        ", root_sel, " .engine-divider { border-top: 2px solid rgba(0,212,255,0.2); margin: 30px 0; }
 
-        .engine-divider { border-top: 2px solid rgba(0,212,255,0.2); margin: 30px 0; }
-
-        /* BLOQUEO TOTAL */
-        .locked-disabled {
-          opacity: 0.6;
-          filter: grayscale(0.4);
-          pointer-events: none !important;
-          cursor: not-allowed !important;
+        /* BLOQUEO DE CONTROLES */
+        ", root_sel, " .locked-disabled {
+           opacity: 0.6;
+           filter: grayscale(0.4);
+           pointer-events: none !important;
+           cursor: not-allowed !important;
         }
 
-        /* BANNER INFORMATIVO VERDE */
-        .file-info-banner {
-          background: rgba(40, 167, 69, 0.05);
-          border-left: 5px solid #28a745;
-          padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;
+        /* BANNER INFORMATIVO */
+        ", root_sel, " .file-info-banner {
+           background: rgba(40, 167, 69, 0.05);
+           border-left: 5px solid #28a745;
+           padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;
         }
 
-        /* Fix para Selectize en Modals/Sidebars */
+        /* FIX SELECTIZE (Global pero necesario para funcionalidad) */
         .selectize-dropdown { z-index: 999999 !important; }
       ")))
     ),
 
+    # Aplicamos la clase del namespace al contenedor raíz
     div(class = paste("container-fluid", ns("import-container")),
         div(class = "row g-3 align-items-center",
             div(class = "col-md-8",
@@ -117,30 +121,18 @@ mod_import_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-
-    output$the_debug <- renderUI({
-      req(show_debug)
-      div(
-        div(class = "engine-divider"),
-        div(class = "row g-4",
-            div(class = "col-md-6", div(class = "section-label", "System Status"), verbatimTextOutput(ns("status_txt"))),
-            div(class = "col-md-6", div(class = "section-label", "Selection Debug"), verbatimTextOutput(ns("debug_selection")))
-        )
-      )
-
-    })
-    # --- ESTADO INTERNO ULTRA COMPLETO ---
+    # --- REACTIVE VALUES ---
     data_store <- reactiveValues(
       df = NULL, name_orig = NULL, name_mod = NULL,
       sheet = NULL, sep = NULL, dec = NULL, header = NULL,
       timestamp = NULL, file_obj = NULL, full_path = NULL,
       rows = NULL, cols = NULL
     )
-
     is_locked <- reactiveVal(FALSE)
+
     closed_suffix <- HTML("<span class='status-closed' style='font-size: 1.1rem;'>(Closed) <i class='fa fa-check'></i></span>")
 
-    # --- FUNCIÓN DE LIMPIEZA ATÓMICA ---
+    # --- LOGIC: RESET & LOCK ---
     deep_reset_values <- function() {
       data_store$df <- NULL; data_store$name_orig <- NULL; data_store$name_mod <- NULL
       data_store$sheet <- NULL; data_store$sep <- NULL; data_store$dec <- NULL; data_store$header <- NULL
@@ -149,8 +141,6 @@ mod_import_server <- function(id, show_debug = FALSE) {
     }
 
     toggle_import_controls <- function(lock_it) {
-      # Añadimos 'label_selection' y 'label_source' a la lista de IDs a los que aplicar la clase CSS
-      ids <- c("div_source", "label_source", "div_menu01", "div_menu02", "label_selection", "div_options")
       ids <- c("div_source", "div_menu01", "div_menu02", "label_selection", "div_options")
 
       if (lock_it) {
@@ -167,59 +157,36 @@ mod_import_server <- function(id, show_debug = FALSE) {
       is_locked(lock_it)
     }
 
+    # --- UI RENDERS ---
     output$menu01_local_file <- renderUI({ req(input$source == 'local_file'); fileInput(ns("file_input"), NULL, buttonLabel = "Browse...", width = "100%") })
+
     output$menu02_RData <- renderUI({
       req(input$source == 'example')
-
-      # Usamos selectizeInput para forzar que el menú cuelgue del 'body'
-      selectizeInput(
-        ns("example_dataset"),
-        NULL,
-        choices = c("(Select Dataset)" = "", "mtcars", "iris", "airquality"),
-        width = "100%",
-        options = list(
-          dropdownParent = 'body',
-          placeholder = '(Select Dataset)'
-        )
-      )
+      selectizeInput(ns("example_dataset"), NULL, choices = c("(Select Dataset)" = "", "mtcars", "iris", "airquality"),
+                     width = "100%", options = list(dropdownParent = 'body', placeholder = '(Select Dataset)'))
     })
+
     output$options_ui <- renderUI({
       req(input$source == "local_file", input$file_input)
       ext <- tolower(tools::file_ext(input$file_input$name))
-
       lbl_opts <- if(is_locked()) tagList("Parsing Options", closed_suffix) else "Parsing Options"
       lbl_sheet <- if(is_locked()) tagList("Sheet Selection", closed_suffix) else "Sheet Selection"
 
       if (ext %in% c("csv", "tsv", "txt")) {
-        div(class = "mt-3",
-            div(class = "section-label", lbl_opts),
+        div(class = "mt-3", div(class = "section-label", lbl_opts),
             fluidRow(
-              column(4, selectizeInput(ns("sep"), "Separator",
-                                       choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab" = "\t"),
-                                       selected = input$sep,
-                                       options = list(dropdownParent = 'body'))),
-              column(4, selectizeInput(ns("dec"), "Decimal",
-                                       choices = c("Period (.)" = ".", "Comma (,)" = ","),
-                                       selected = input$dec,
-                                       options = list(dropdownParent = 'body'))),
+              column(4, selectizeInput(ns("sep"), "Separator", choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab" = "\t"), options = list(dropdownParent = 'body'))),
+              column(4, selectizeInput(ns("dec"), "Decimal", choices = c("Period (.)" = ".", "Comma (,)" = ","), options = list(dropdownParent = 'body'))),
               column(4, div(style = "padding-top: 35px;", checkboxInput(inputId = ns("header"), label = "Header", value = TRUE)))
-            )
-        )
+            ))
       } else if (ext %in% c("xls", "xlsx")) {
         sheets <- tryCatch({ readxl::excel_sheets(input$file_input$datapath) }, error = function(e) NULL)
-        div(class = "mt-3",
-            div(class = "section-label", lbl_sheet),
-            fluidRow(
-              column(4, selectizeInput(ns("excel_sheet"), NULL,
-                                       choices = sheets,
-                                       selected = input$excel_sheet,
-                                       width = "100%",
-                                       options = list(dropdownParent = 'body')))
-            )
-        )
+        div(class = "mt-3", div(class = "section-label", lbl_sheet),
+            fluidRow(column(4, selectizeInput(ns("excel_sheet"), NULL, choices = sheets, width = "100%", options = list(dropdownParent = 'body')))))
       }
     })
 
+    # --- IMPORT ACTION ---
     observeEvent(input$btn_import, {
       tryCatch({
         now <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
@@ -238,14 +205,8 @@ mod_import_server <- function(id, show_debug = FALSE) {
           data_store$name_orig <- input$example_dataset; data_store$name_mod <- paste0(input$example_dataset, " (R example)")
           data_store$full_path <- "Internal R memory"
         }
-
         data_store$df <- as.data.frame(temp_df)
-        rownames(data_store$df) <- 1:nrow(data_store$df)
-
-        data_store$rows <- nrow(data_store$df)
-        data_store$cols <- ncol(data_store$df)
-        data_store$timestamp <- now
-
+        data_store$rows <- nrow(data_store$df); data_store$cols <- ncol(data_store$df); data_store$timestamp <- now
         toggle_import_controls(TRUE)
       }, error = function(e) showNotification(e$message, type = "error"))
     })
@@ -253,22 +214,14 @@ mod_import_server <- function(id, show_debug = FALSE) {
     observeEvent(input$btn_edit,  { deep_reset_values(); toggle_import_controls(FALSE) })
     observeEvent(input$btn_reset, { deep_reset_values(); shinyjs::reset("file_input"); toggle_import_controls(FALSE) })
 
-    # --- OBJETO DE SALIDA MAESTRO (TODO LO QUE VENIMOS DISCUTIENDO) ---
+    # --- DATA OUTPUTS ---
     user_selection <- reactive({
       list(
         is_done   = !is.null(data_store$df),
         locked    = is_locked(),
-        metadata  = list(
-          name_orig = data_store$name_orig,
-          name_mod  = data_store$name_mod,
-          path      = data_store$full_path,
-          sheet     = data_store$sheet,
-          sep       = data_store$sep,
-          dec       = data_store$dec,
-          header    = data_store$header,
-          timestamp = data_store$timestamp,
-          file_obj  = data_store$file_obj
-        ),
+        metadata  = list(name_orig = data_store$name_orig, name_mod = data_store$name_mod, path = data_store$full_path,
+                         sheet = data_store$sheet, sep = data_store$sep, dec = data_store$dec,
+                         header = data_store$header, timestamp = data_store$timestamp, file_obj = data_store$file_obj),
         stats     = list(rows = data_store$rows, cols = data_store$cols),
         dataset   = data_store$df
       )
@@ -276,49 +229,32 @@ mod_import_server <- function(id, show_debug = FALSE) {
 
     output$preview <- renderDT({
       req(data_store$df)
-
-      datatable(
-        data_store$df,
-        rownames = TRUE,
-        # Quitamos todas las clases de estilo por defecto para que no peleen
-        class = 'cell-border hover',
-        options = list(
-          scrollX = TRUE,
-          pageLength = 5,
-          dom = 'ltip',
-          #ESTA ES LA MAGIA: Inyectamos el color fila por fila al renderizar
-          rowCallback = JS(
-            "function(row, data, displayNum, displayIndex) {",
-            "  if (displayIndex % 2 === 0) {", # Filas pares (0, 2, 4...)
-            "    $(row).css('background-color', '#f0ffff');", # Tu Cian
-            "  } else {", # Filas impares
-            "    $(row).css('background-color', '#ffffff');", # Blanco
-            "  }",
-            "}"
-          ),
-          # También forzamos el Header aquí por si el CSS falla
-          initComplete = JS(
-            "function(settings, json) {",
-            "  $(this.api().table().header()).css({",
-            "    'background-color': '#00d4ff',",
-            "    'color': 'white',",
-            "    'text-transform': 'uppercase'",
-            "  });",
-            "}"
-          )
-        )
-      )
+      datatable(data_store$df, rownames = TRUE, class = 'cell-border hover',
+                options = list(scrollX = TRUE, pageLength = 5, dom = 'ltip',
+                               rowCallback = JS("function(row, data, displayNum, displayIndex) {
+                    $(row).css('background-color', displayIndex % 2 === 0 ? '#f0ffff' : '#ffffff');
+                  }"),
+                               initComplete = JS("function(settings, json) {
+                    $(this.api().table().header()).css({'background-color': '#00d4ff', 'color': 'white', 'text-transform': 'uppercase'});
+                  }")))
     })
+
     output$dataset_info_ui <- renderUI({
       req(data_store$df)
-      div(class = "file-info-banner",
-          fluidRow(
-            column(6, span(style="font-weight:900; color:#28a745; font-size:1.2rem;", "DATASET: "), span(style="font-size:1.2rem; font-weight:600;", data_store$name_mod)),
-            column(3, span(style="font-weight:900; color:#28a745;", "ROWS: "), span(data_store$rows)),
-            column(3, span(style="font-weight:900; color:#28a745;", "COLS: "), span(data_store$cols))
-          ))
+      div(class = "file-info-banner", fluidRow(
+        column(6, span(style="font-weight:900; color:#28a745; font-size:1.2rem;", "DATASET: "), span(style="font-size:1.2rem; font-weight:600;", data_store$name_mod)),
+        column(3, span(style="font-weight:900; color:#28a745;", "ROWS: "), span(data_store$rows)),
+        column(3, span(style="font-weight:900; color:#28a745;", "COLS: "), span(data_store$cols))
+      ))
     })
 
+    # --- DEBUG MONITOR ---
+    output$the_debug <- renderUI({
+      req(show_debug)
+      div(div(class = "engine-divider"),
+          fluidRow(column(6, div(class = "section-label", "System Status"), verbatimTextOutput(ns("status_txt"))),
+                   column(6, div(class = "section-label", "Selection Debug"), verbatimTextOutput(ns("debug_selection")))))
+    })
     output$status_txt <- renderText({ if (is.null(data_store$df)) "STATUS: [ OFFLINE ]" else paste0("STATUS: [ ONLINE ] ", data_store$rows, " rows") })
     output$debug_selection <- renderPrint({ user_selection() })
 

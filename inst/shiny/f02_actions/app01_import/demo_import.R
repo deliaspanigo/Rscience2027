@@ -5,7 +5,7 @@ devtools::load_all()
 library(shiny)
 library(DT)
 library(Rscience2027)   # tu paquete
-
+library(bslib)
 ui <- fluidPage(
   theme = bs_theme(version = 5, bootswatch = "flatly", primary = "#00d4ff"),
 

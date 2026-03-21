@@ -1,10 +1,10 @@
 Name: Rscience 2027 - Home Launchpad
 Description: Inicia el Launchpad interactivo de Rscience (v.0.0.1)
-Binding: run_launchpad
+Binding: run_app_full
 Interactive: true
 
 
-Name: Rscience 2027 - Soft
+Name: Rscience 2027 - Soft Only
 Description: Inicia el Launchpad interactivo de Rscience (v.0.0.1)
-Binding: run_launch_Rscience
+Binding: run_app_Rscience
 Interactive: true
