@@ -155,15 +155,15 @@ module_treeApp_Server <- function(id, data = tree_data) {
       path <- input$node_click
       if (is_confirmed()) {
         div(class = "selection-header confirmed",
-            span(icon("lock"), paste(" FINALIZADO:", paste(rev(path), collapse = " > "))),
+            span(icon("lock"), paste(" Tool selected:", paste(rev(path), collapse = " > "))),
             span(class = "header-id", paste("SCRIPT:", current_script_id())))
       } else if (!is.null(path) && length(path) > 0) {
         div(class = "selection-header active-selection",
-            span(icon("location-arrow"), paste(" SELECCIÓN:", paste(rev(path), collapse = " > "))),
+            span(icon("location-arrow"), paste(" User :", paste(rev(path), collapse = " > "))),
             span(class = "header-id", paste("ID:", current_script_id())))
       } else {
         div(class = "selection-header",
-            span(icon("search"), " Navegando... Seleccione un nodo para enfocar ruta"),
+            span(icon("bolt"),  " Waiting for user selection..."),
             span(class = "header-id", "ID: ---"))
       }
     })

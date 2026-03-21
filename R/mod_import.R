@@ -1,5 +1,5 @@
 # ==============================================================================
-# IMPORT MODULE - v.0.0.8 (FINAL: EDIT & RESET SYNC + CLEAN DEBUG)
+# IMPORT MODULE UI - v.0.0.9 (FULL STRUCTURE & DYNAMIC COLORS)
 # ==============================================================================
 library("shinyjs")
 library("DT")
@@ -15,46 +15,57 @@ mod_import_ui <- function(id) {
     shinyjs::useShinyjs(),
     tags$head(
       tags$style(HTML(paste0("
-        /* --- BLOQUEO DE COLUMNA CON OVERLAY --- */
+        /* --- BLOQUEO DE COLUMNA CON OVERLAY AJUSTADO --- */
         ", root_sel, " .lock-wrapper { position: relative; transition: all 0.3s ease; }
 
         ", root_sel, " .locked-disabled::after {
             content: '';
             position: absolute;
-            top: -0px; left: -5px; right: -15px; bottom: -15px;
-            background: rgba(230, 230, 230, 0.5);
+            /* Bajamos el sombreado para no tapar los headers de las columnas */
+            top: -2px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: rgba(240, 240, 240, 0.4);
             backdrop-filter: blur(2px);
             z-index: 100;
-            border-radius: 20px;
-            border: 2px solid rgba(0,0,0,0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(0,0,0,0.05);
             cursor: not-allowed !important;
         }
 
         ", root_sel, " .locked-disabled {
             pointer-events: none !important;
             user-select: none;
-            filter: grayscale(0.5);
+            filter: grayscale(0.3);
         }
 
-        /* --- SELECTION HEADER (MARQUESINA SUPERIOR) --- */
+        /* --- SELECTION HEADER (MARQUESINA DINÁMICA) --- */
         ", root_sel, " .selection-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 25px; border-radius: 12px; background: #ffffff;
-            border: 1px solid #e0e0e0; transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            padding: 15px 25px; border-radius: 12px; transition: all 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
+        /* 1. Estado Inicial: Cyan (Waiting) */
+        ", root_sel, " .selection-header.waiting-mode {
+            background: #f0fdff; border: 1px solid #00cfd4; color: #008184;
+        }
+
+
+        /* 2. Estado Selección Hecha: Naranja (Pending Import) */
         ", root_sel, " .selection-header.active-selection {
-            background: #f0faff; border: 1px solid #00d4ff; color: #007bff;
+            background: #fff9f0; border: 1px solid #ff9100; color: #b36600;
         }
 
+        /* 3. Estado Final: Verde (Imported/Ready) */
         ", root_sel, " .selection-header.confirmed {
             background: #f6fff8; border: 1px solid #28a745; color: #1e7e34;
         }
 
         ", root_sel, " .header-id {
             font-family: 'Monaco', 'Courier New', monospace; font-weight: 700;
-            font-size: 0.85rem; background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 20px;
+            font-size: 0.85rem; background: rgba(0,0,0,0.08); padding: 4px 15px; border-radius: 20px;
         }
 
         /* --- BOTONES PILDORA XL --- */
@@ -74,7 +85,7 @@ mod_import_ui <- function(id) {
             align-items: center; gap: 12px; height: 100%;
         }
 
-        /* --- LABELS Y ESTADOS --- */
+        /* --- LABELS Y SECCIONES --- */
         ", root_sel, " .section-label {
             font-weight: 800; font-size: 1.1rem !important;
             color: #1a1a1a !important; text-transform: uppercase;
@@ -102,15 +113,15 @@ mod_import_ui <- function(id) {
 
     div(class = paste("container-fluid", ns("import-container")),
 
-        # FILA 0: HEADER SUPERIOR
+        # FILA 0: EL HEADER SUPERIOR (INDEPENDIENTE)
         div(class = "row",
             div(class = "col-12", uiOutput(ns("import_header")))
         ),
         br(),
-        div(style = "border-top: 4px solid rgba(0,212,255,0.15); margin: 35px 0;"),
 
-        # FILA 1: CUERPO PRINCIPAL
+        # FILA 1: PANEL DE CONTROL
         div(class = "row g-4 align-items-start",
+            # Columna de Entradas
             div(class = "col-md-7",
                 div(id = ns("main_input_col"), class = "lock-wrapper",
                     div(class = "row g-3",
@@ -130,6 +141,7 @@ mod_import_ui <- function(id) {
 
             div(class = "col-md-1"),
 
+            # Columna de Acciones
             div(class = "col-md-4",
                 div(class = "action-row-right",
                     actionButton(ns("btn_import"), span(icon("check"), "Import"), class = "btn-success btn-pill-xl"),
@@ -139,9 +151,9 @@ mod_import_ui <- function(id) {
             )
         ),
 
-        div(style = "border-top: 4px solid rgba(0,212,255,0.15); margin: 35px 0;"),
+        div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
 
-        # FILA 2: RESULTADOS Y PREVIEW
+        # FILA 2: DATOS E INFORMACIÓN
         uiOutput(ns("dataset_info_ui")),
 
         div(class = "row g-0",
@@ -194,7 +206,6 @@ mod_import_server <- function(id, show_debug = FALSE) {
       data_store$rows <- NULL; data_store$cols <- NULL
     }
 
-    # --- RENDERS: HEADER ---
     output$import_header <- renderUI({
       current_name <- if(input$source == "local_file") {
         if(!is.null(input$file_input)) input$file_input$name else NULL
@@ -203,17 +214,22 @@ mod_import_server <- function(id, show_debug = FALSE) {
       }
 
       if (is_locked()) {
+        # ESTADO VERDE: TODO LISTO
         div(class = "selection-header confirmed",
-            span(icon("lock"), paste(" DATA IMPORTED:", data_store$name_mod)),
+            span(icon("check-double"), paste(" DATA IMPORTED:", data_store$name_mod)),
             span(class = "header-id", "STATUS: READY"))
+
       } else if (!is.null(current_name)) {
+        # ESTADO NARANJA: HAY ALGO SELECCIONADO PERO NO IMPORTADO
         div(class = "selection-header active-selection",
-            span(icon("file-import"), paste(" Selected:", current_name)),
+            span(icon("file-import"), paste(" SELECTED:", current_name)),
             span(class = "header-id", "STATUS: PENDING"))
+
       } else {
-        div(class = "selection-header",
+        # ESTADO CYAN: ESPERANDO
+        div(class = "selection-header waiting-mode",
             span(icon("bolt"), " Waiting for user selection..."),
-            span(class = "header-id", "STATUS: IDLE"))
+            span(class = "header-id", "STATUS: WAITING"))
       }
     })
 
