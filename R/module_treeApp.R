@@ -10,6 +10,12 @@ library("collapsibleTree")
 # ==============================================================================
 # TOOLS SELECTOR MODULE UI - v.0.4.6 (FULL INTERFACE RESTORED)
 # ==============================================================================
+# ==============================================================================
+# TOOLS SELECTOR MODULE UI - v.0.4.7 (ISOLATE PATH CHECKBOX)
+# ==============================================================================
+# ==============================================================================
+# TOOLS SELECTOR MODULE UI - v.0.4.8 (STRICT LINK LOGIC & DUAL CONTROLS)
+# ==============================================================================
 module_treeApp_UI <- function(id) {
   ns <- NS(id)
   root_id <- paste0("#", ns("tree-container"))
@@ -20,100 +26,103 @@ module_treeApp_UI <- function(id) {
     tags$head(tags$style(HTML(paste0("
       /* --- FILA 1: HEADER --- */
       ", root_sel, " .selection-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-      ", root_sel, " .selection-header.waiting-mode { background: #f0fdff; border: 1px solid #00cfd4; color: #008184; }
       ", root_sel, " .selection-header.active-selection { background: #fff9f0; border: 1px solid #ff9100; color: #b36600; }
-      ", root_sel, " .header-id { font-family: monospace; font-weight: 700; background: rgba(0,0,0,0.08); padding: 4px 15px; border-radius: 20px; }
 
-      /* --- FILA 2: CONTROLES Y PATH (DARK) --- */
+      /* --- FILA 2: CONTROLES (DARK) --- */
       ", root_sel, " .filter-row-container { background: #1a202c; border-radius: 15px; padding: 15px 25px; border: 1px solid #2d3748; display: flex; align-items: center; gap: 12px; min-height: 70px; }
       ", root_sel, " .path-chip { background: #28a745; color: white !important; padding: 6px 15px; border-radius: 50px; font-weight: 800; border: 1px solid #1e7e34; }
-      ", root_sel, " .btn-pill-xl { border-radius: 50px !important; padding: 10px 25px !important; font-weight: 800 !important; }
 
-      /* --- FILA 3: LISTA DE SCRIPTS (LA QUE FALTABA) --- */
+      /* Controles de Checkbox */
+      ", root_sel, " .isolate-control { background: #2d3748; padding: 5px 12px; border-radius: 50px; color: #a0aec0; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; border: 1px solid #4a5568; white-space: nowrap; }
+      ", root_sel, " .isolate-control input { margin-right: 5px; }
+
+      /* --- FILA 3: LISTA DE SCRIPTS --- */
       ", root_sel, " .scripts-container { background: #f8f9fa; border-radius: 15px; border: 1px dashed #cbd5e0; padding: 15px; margin-bottom: 20px; min-height: 50px; }
 
       /* --- FILA 4: MAPA Y D3 VISUALS --- */
       ", root_sel, " .map-wrapper { background: white; border-radius: 25px; padding: 20px; border: 1px solid #eee; height: 750px; position: relative; }
 
-      ", root_id, " path.link {
-          stroke: #000000 !important;
-          stroke-width: 4px !important;
-          opacity: 0.8 !important;
-          fill: none !important;
-      }
+      ", root_id, " path.link { stroke: #000000 !important; stroke-width: 4px !important; opacity: 0.8 !important; fill: none !important; }
+      ", root_id, " g.node.nodo-ruta-activa circle { fill: #ff9100 !important; stroke: #b36600 !important; stroke-width: 3px !important; }
 
-      ", root_id, " g.node.nodo-ruta-activa circle {
-          fill: #ff9100 !important;
-          stroke: #b36600 !important;
-          stroke-width: 3px !important;
-      }
+      /* LÓGICA DE VISIBILIDAD DINÁMICA */
+      ", root_id, ".isolate-active g.node:not(.nodo-ruta-activa) { opacity: 0 !important; pointer-events: none !important; }
+      ", root_id, ".strict-active path.link:not(.link-path-elegido) { opacity: 0 !important; pointer-events: none !important; }
     ")))),
 
     div(id = ns("tree-container"), class = paste("container-fluid", ns("tree-container")),
         # 1. Header
         div(class = "row", div(class = "col-12", uiOutput(ns("selection_header")))),
 
-        # 2. Path y Botones
+        # 2. Path e Interruptores
         div(class = "row align-items-center mb-3",
-            div(class = "col-md-8",
+            div(class = "col-md-6",
                 div(class = "filter-row-container",
-                    span(style="color:#cbd5e0; font-weight:900; font-size:0.75rem;", "PATH:"),
+                    span(style="color:#cbd5e0; font-weight:900; font-size:0.7rem;", "PATH:"),
                     uiOutput(ns("tree_selection_ui"))
                 )
             ),
-            div(class = "col-md-4 text-end",
-                div(class = "d-flex gap-2 justify-content-end",
+            div(class = "col-md-6 text-end",
+                div(class = "d-flex gap-2 justify-content-end align-items-center",
+                    div(class = "isolate-control", checkboxInput(ns("cb_isolate"), "ISOLATE NODES", value = FALSE)),
+                    div(class = "isolate-control", checkboxInput(ns("cb_strict"), "STRICT LINKS", value = FALSE)),
                     actionButton(ns("btn_select"), "Confirm", class = "btn-success btn-pill-xl"),
                     actionButton(ns("btn_reset_all"), "Reset", class = "btn-primary btn-pill-xl")
                 )
             )
         ),
 
-        # 3. Lista de Scripts (Restaurada)
-        div(class = "row",
-            div(class = "col-12",
-                div(class = "scripts-container",
-                    uiOutput(ns("full_script_list_ui"))
-                )
-            )
-        ),
+        # 3. Scripts
+        div(class = "row", div(class = "col-12", div(class = "scripts-container", uiOutput(ns("full_script_list_ui"))))),
 
         # 4. Mapa
-        div(class = "row",
-            div(class = "col-12",
-                div(class = "map-wrapper",
-                    collapsibleTree::collapsibleTreeOutput(ns("stat_tree"), height = "700px")
-                )
-            )
-        )
+        div(class = "row", div(class = "col-12", div(class = "map-wrapper", collapsibleTree::collapsibleTreeOutput(ns("stat_tree"), height = "700px"))))
     ),
 
     tags$script(HTML(paste0("
       (function() {
         var activeNames = ['Rscience'];
         var treeId = '", ns("stat_tree"), "';
+        var containerId = '", ns("tree-container"), "';
 
         function refreshStyles() {
           var svg = d3.select('#' + treeId);
+          var isIsolate = $('#", ns("cb_isolate"), "').is(':checked');
+          var isStrict = $('#", ns("cb_strict"), "').is(':checked');
+
+          $('#' + containerId).toggleClass('isolate-active', isIsolate);
+          $('#' + containerId).toggleClass('strict-active', isStrict);
+
+          // 1. Nodos
           svg.selectAll('g.node').each(function(d) {
             var isActive = d.data && activeNames.indexOf(d.data.name) !== -1;
             d3.select(this).classed('nodo-ruta-activa', isActive);
           });
 
+          // 2. Conectores con Regla de Doble Extremo
           svg.selectAll('path.link').each(function(d) {
-             var isTargetInPath = d.target && d.target.data && activeNames.indexOf(d.target.data.name) !== -1;
-             if (isTargetInPath) {
-                d3.select(this).style('stroke', '#ff9100', 'important').style('stroke-width', '8px', 'important').style('opacity', '1', 'important');
+             var sourceActive = d.source && d.source.data && activeNames.indexOf(d.source.data.name) !== -1;
+             var targetActive = d.target && d.target.data && activeNames.indexOf(d.target.data.name) !== -1;
+
+             // Un link es de 'path elegido' solo si AMBOS extremos están en el path
+             var isPathLink = sourceActive && targetActive;
+
+             if (isPathLink) {
+                d3.select(this)
+                  .classed('link-path-elegido', true)
+                  .style('stroke', '#ff9100', 'important').style('stroke-width', '10px', 'important').style('opacity', '1', 'important');
              } else {
-                d3.select(this).style('stroke', '#000000', 'important').style('stroke-width', '4px', 'important').style('opacity', '0.8', 'important');
+                d3.select(this)
+                  .classed('link-path-elegido', false)
+                  .style('stroke', '#000000', 'important').style('stroke-width', '4px', 'important').style('opacity', '0.8', 'important');
              }
           });
         }
 
         $(document).on('shiny:visualchange', function(e) {
           if (e.target.id === treeId) {
-            var loop = setInterval(refreshStyles, 50);
-            setTimeout(function() { clearInterval(loop); }, 2000);
+            var loop = setInterval(refreshStyles, 60);
+            setTimeout(function() { clearInterval(loop); }, 1800);
 
             d3.select('#' + treeId).selectAll('circle').on('click.pathFix', function(d) {
               activeNames = [];
@@ -126,6 +135,8 @@ module_treeApp_UI <- function(id) {
             });
           }
         });
+
+        $(document).on('change', '#", ns("cb_isolate"), ", #", ns("cb_strict"), "', refreshStyles);
       })();
     ")))
   )
