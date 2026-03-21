@@ -1,7 +1,7 @@
 library(shiny)
 library(bslib)
 library(ggplot2)
-
+devtools::load_all()
 # ==============================================================================
 # RSCIENCE 2026 v.0.0.1 - LAUNCHPAD TOTAL (FIXED FOR MODULE EMBEDDING)
 # ==============================================================================
@@ -11,13 +11,21 @@ ui <- fluidPage(
 
   tags$head(
     tags$style(HTML("
-      /* --- RESET Y FULL HEIGHT --- */
-      body, html {
-        margin: 0 !important; padding: 0 !important;
-        height: 100vh !important; width: 100vw !important;
-        overflow: hidden; background: #fff; font-family: 'Inter', sans-serif;
-      }
+        # /* BOTONES PILDORA XL - TEXTO GRANDE */
+        # .btn-pill-xl {
+        #   border-radius: 50px !important; padding: 15px 35px !important;
+        #   font-weight: 800; font-size: 0.7rem !important;
+        #   text-transform: uppercase; letter-spacing: 1px;
+        #   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+        # }
 
+      #' /* --- RESET Y FULL HEIGHT --- */
+      #' body, html {
+      #'   margin: 0 !important; padding: 0 !important;
+      #'   height: 100vh !important; width: 100vw !important;
+      #'   overflow: hidden; background: #fff; font-family: 'Inter', sans-serif;
+      #' }
+      #'
       #main_ui_manager {
         height: 100vh !important; width: 100vw !important;
         display: block !important; /* Cambiado de flex para evitar conflictos con el host */

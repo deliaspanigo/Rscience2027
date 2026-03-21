@@ -6,20 +6,35 @@ library("DT")
 library("vroom")
 library("readxl")
 
+
+
 mod_import_ui <- function(id) {
   ns <- NS(id)
   tagList(
     shinyjs::useShinyjs(),
     tags$head(
-      tags$style(HTML("
-        .container-fluid { overflow-x: hidden !important; padding-top: 20px !important; }
+      tags$style(HTML(paste0("
+        /* Contenedor principal */
+        .", ns("import-container"), " { padding-top: 20px !important; }
 
-        /* BOTONES PILDORA XL - TEXTO GRANDE */
-        .btn-pill-xl {
-          border-radius: 50px !important; padding: 15px 35px !important;
-          font-weight: 800; font-size: 1.1rem !important;
-          text-transform: uppercase; letter-spacing: 1px;
-          display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+        /* BOTONES PILDORA XL - Forzamos especificidad con prefijo .btn */
+        .btn.btn-pill-xl {
+          border-radius: 50px !important;
+          padding: 15px 35px !important;
+          font-weight: 800 !important;
+          font-size: 1.1rem !important;
+          text-transform: uppercase !important;
+          letter-spacing: 1px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 10px !important;
+          transition: all 0.3s ease !important;
+        }
+
+        .btn.btn-pill-xl:hover {
+          transform: translateY(-2px) !important;
+          filter: brightness(1.1);
         }
 
         .action-row-right {
@@ -30,43 +45,37 @@ mod_import_ui <- function(id) {
         /* LABELS GRANDES Y NEGROS */
         .section-label {
           font-weight: 800; font-size: 1.2rem !important;
-          color: #000000; text-transform: uppercase;
+          color: #000000 !important; text-transform: uppercase;
           margin-bottom: 12px; letter-spacing: 1.2px;
         }
 
         /* ESTADO CLOSED CON CHECK VERDE */
         .status-closed { color: #28a745 !important; font-weight: 900 !important; margin-left: 8px; }
 
-        .engine-divider { border-top: 1px solid rgba(0,212,255,0.2); margin: 30px 0; }
+        .engine-divider { border-top: 2px solid rgba(0,212,255,0.2); margin: 30px 0; }
 
-        /* BLOQUEO TOTAL Y CURSOR PROHIBITIVO 🚫 */
-        .locked-disabled,
-        .locked-disabled .selectize-input,
-        .locked-disabled .selectize-control,
-        .locked-disabled .btn,
-        .locked-disabled input,
-        .locked-disabled select {
-          cursor: not-allowed !important;
+        /* BLOQUEO TOTAL */
+        .locked-disabled {
+          opacity: 0.6;
+          filter: grayscale(0.4);
           pointer-events: none !important;
+          cursor: not-allowed !important;
         }
-        .locked-disabled { opacity: 0.6; filter: grayscale(0.4); transition: all 0.3s ease; }
-
-        /* TABLA: ZEBRA CYAN + ALINEACIÓN IZQUIERDA */
-        table.dataTable thead th, table.dataTable tbody td { text-align: left !important; padding: 12px 15px !important; }
-        table.dataTable tr.odd { background-color: #f0ffff !important; }
-        table.dataTable tr.even { background-color: #ffffff !important; }
-        table.dataTable tbody tr:hover { background-color: #e0f7fa !important; }
 
         /* BANNER INFORMATIVO VERDE */
         .file-info-banner {
-          background: rgba(40, 167, 69, 0.05); border-left: 4px solid #28a745;
+          background: rgba(40, 167, 69, 0.05);
+          border-left: 5px solid #28a745;
           padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;
         }
-      "))
+
+        /* Fix para Selectize en Modals/Sidebars */
+        .selectize-dropdown { z-index: 999999 !important; }
+      ")))
     ),
 
-    div(class = "container-fluid",
-        div(class = "row g-0 align-items-center",
+    div(class = paste("container-fluid", ns("import-container")),
+        div(class = "row g-3 align-items-center",
             div(class = "col-md-8",
                 div(class = "row g-3",
                     div(class = "col-md-4",
@@ -96,7 +105,7 @@ mod_import_ui <- function(id) {
         div(class = "row g-0",
             div(class = "col-12",
                 div(class = "section-label mb-3", icon("table"), " Data Preview"),
-                div(style = "width: 100%;", DTOutput(ns("preview"))),
+                div(style = "width: 100%; overflow-x: auto;", DTOutput(ns("preview"))),
                 uiOutput(ns("the_debug"))
             )
         )
@@ -159,8 +168,21 @@ mod_import_server <- function(id, show_debug = FALSE) {
     }
 
     output$menu01_local_file <- renderUI({ req(input$source == 'local_file'); fileInput(ns("file_input"), NULL, buttonLabel = "Browse...", width = "100%") })
-    output$menu02_RData <- renderUI({ req(input$source == 'example'); selectInput(ns("example_dataset"), NULL, choices = c("(Select Dataset)" = "", "mtcars", "iris", "airquality", "diamonds"), width = "100%") })
+    output$menu02_RData <- renderUI({
+      req(input$source == 'example')
 
+      # Usamos selectizeInput para forzar que el menú cuelgue del 'body'
+      selectizeInput(
+        ns("example_dataset"),
+        NULL,
+        choices = c("(Select Dataset)" = "", "mtcars", "iris", "airquality"),
+        width = "100%",
+        options = list(
+          dropdownParent = 'body',
+          placeholder = '(Select Dataset)'
+        )
+      )
+    })
     output$options_ui <- renderUI({
       req(input$source == "local_file", input$file_input)
       ext <- tolower(tools::file_ext(input$file_input$name))
@@ -172,8 +194,14 @@ mod_import_server <- function(id, show_debug = FALSE) {
         div(class = "mt-3",
             div(class = "section-label", lbl_opts),
             fluidRow(
-              column(4, selectInput(ns("sep"), "Separator", choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab" = "\t"), selected = input$sep)),
-              column(4, selectInput(ns("dec"), "Decimal", choices = c("Period (.)" = ".", "Comma (,)" = ","), selected = input$dec)),
+              column(4, selectizeInput(ns("sep"), "Separator",
+                                       choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab" = "\t"),
+                                       selected = input$sep,
+                                       options = list(dropdownParent = 'body'))),
+              column(4, selectizeInput(ns("dec"), "Decimal",
+                                       choices = c("Period (.)" = ".", "Comma (,)" = ","),
+                                       selected = input$dec,
+                                       options = list(dropdownParent = 'body'))),
               column(4, div(style = "padding-top: 35px;", checkboxInput(inputId = ns("header"), label = "Header", value = TRUE)))
             )
         )
@@ -181,9 +209,12 @@ mod_import_server <- function(id, show_debug = FALSE) {
         sheets <- tryCatch({ readxl::excel_sheets(input$file_input$datapath) }, error = function(e) NULL)
         div(class = "mt-3",
             div(class = "section-label", lbl_sheet),
-            # --- CAMBIO AQUÍ: Envolvemos en Row/Column para limitar el ancho ---
             fluidRow(
-              column(4, selectInput(ns("excel_sheet"), NULL, choices = sheets, selected = input$excel_sheet, width = "100%"))
+              column(4, selectizeInput(ns("excel_sheet"), NULL,
+                                       choices = sheets,
+                                       selected = input$excel_sheet,
+                                       width = "100%",
+                                       options = list(dropdownParent = 'body')))
             )
         )
       }
@@ -204,7 +235,7 @@ mod_import_server <- function(id, show_debug = FALSE) {
           }
         } else {
           req(input$example_dataset != ""); temp_df <- get(input$example_dataset, "package:datasets")
-          data_store$name_orig <- input$example_dataset; data_store$name_mod <- paste0("Example: ", input$example_dataset)
+          data_store$name_orig <- input$example_dataset; data_store$name_mod <- paste0(input$example_dataset, " (R example)")
           data_store$full_path <- "Internal R memory"
         }
 
@@ -243,8 +274,41 @@ mod_import_server <- function(id, show_debug = FALSE) {
       )
     })
 
-    output$preview <- renderDT({ req(data_store$df); datatable(data_store$df, rownames = TRUE, options = list(scrollX = TRUE, pageLength = 5, dom = 'ltip')) })
+    output$preview <- renderDT({
+      req(data_store$df)
 
+      datatable(
+        data_store$df,
+        rownames = TRUE,
+        # Quitamos todas las clases de estilo por defecto para que no peleen
+        class = 'cell-border hover',
+        options = list(
+          scrollX = TRUE,
+          pageLength = 5,
+          dom = 'ltip',
+          #ESTA ES LA MAGIA: Inyectamos el color fila por fila al renderizar
+          rowCallback = JS(
+            "function(row, data, displayNum, displayIndex) {",
+            "  if (displayIndex % 2 === 0) {", # Filas pares (0, 2, 4...)
+            "    $(row).css('background-color', '#f0ffff');", # Tu Cian
+            "  } else {", # Filas impares
+            "    $(row).css('background-color', '#ffffff');", # Blanco
+            "  }",
+            "}"
+          ),
+          # También forzamos el Header aquí por si el CSS falla
+          initComplete = JS(
+            "function(settings, json) {",
+            "  $(this.api().table().header()).css({",
+            "    'background-color': '#00d4ff',",
+            "    'color': 'white',",
+            "    'text-transform': 'uppercase'",
+            "  });",
+            "}"
+          )
+        )
+      )
+    })
     output$dataset_info_ui <- renderUI({
       req(data_store$df)
       div(class = "file-info-banner",

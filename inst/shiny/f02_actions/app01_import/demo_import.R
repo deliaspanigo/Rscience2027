@@ -7,6 +7,8 @@ library(DT)
 library(Rscience2027)   # tu paquete
 
 ui <- fluidPage(
+  theme = bs_theme(version = 5, bootswatch = "flatly", primary = "#00d4ff"),
+
   titlePanel("Demo: Módulo de Importación de Datos"),
 
   mod_import_ui("demo_import"),
