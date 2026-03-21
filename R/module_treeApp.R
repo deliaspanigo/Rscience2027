@@ -1,82 +1,87 @@
+# ==============================================================================
+# TOOLS SELECTOR MODULE - v.0.1.0 (UNIFIED ESTHETIC)
+# ==============================================================================
 library("bslib")
 library("shiny")
 library("shinyjs")
 
-#' Módulo UI de Rscience Tree
-#' @param id Identificador del módulo
-#' @export
+# ==============================================================================
+# TOOLS SELECTOR MODULE - v.0.1.2 (REORDERED ROWS: HEADER -> FILTER -> MAP)
+# ==============================================================================
+
 module_treeApp_UI <- function(id) {
   ns <- NS(id)
-
-  # Selector raíz para el blindaje CSS
   root_id <- paste0("#", ns("tree-container"))
+  root_sel <- paste0(".", ns("tree-container"))
 
   tagList(
     shinyjs::useShinyjs(),
     tags$head(tags$style(HTML(paste0("
-      /* --- BLINDAJE CSS PARA RSCIENCE TREE --- */
+      /* --- HEADER Y BOTONES (Consistentes con v.0.1.1) --- */
+      ", root_sel, " .selection-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; border-radius: 12px; transition: all 0.4s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+      ", root_sel, " .selection-header.waiting-mode { background: #f0fdff; border: 1px solid #00cfd4; color: #008184; }
+      ", root_sel, " .selection-header.active-selection { background: #fff9f0; border: 1px solid #ff9100; color: #b36600; }
+      ", root_sel, " .selection-header.confirmed { background: #f6fff8; border: 1px solid #28a745; color: #1e7e34; }
 
-      ", root_id, " .map-container { background: white; border-radius: 25px; padding: 20px; border: 1px solid #eee; position: relative; height: 750px; overflow: hidden; }
-      ", root_id, " .map-controls { position: absolute; top: 20px; right: 20px; z-index: 101; display: flex; flex-direction: column; gap: 10px; }
+      ", root_sel, " .btn.btn-pill-xl { border-radius: 50px !important; padding: 12px 25px !important; font-weight: 800 !important; font-size: 0.9rem !important; text-transform: uppercase !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; transition: all 0.3s ease !important; }
 
-      ", root_id, " .btn-map-tool { width: 45px; height: 45px; border-radius: 50% !important; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); color: white; }
-      ", root_id, " .btn-center-view { background-color: #00d4ff; }
-      ", root_id, " .btn-reset-map { background-color: #ffc107; }
+      /* --- FILA DE FILTROS (Chips horizontales) --- */
+      ", root_sel, " .filter-row-container { background: white; border-radius: 15px; padding: 20px; border: 1px solid #eee; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+      ", root_sel, " .path-chip { background: #f0fdf4; color: #28a745; padding: 6px 15px; border-radius: 50px; font-weight: 800; border: 1px solid #bbf7d0; font-size: 0.85rem; }
 
-      ", root_id, " .side-panel { background: white; border-radius: 25px; padding: 30px; border: 1px solid #eee; min-height: 750px; }
-      ", root_id, " .path-chip { background: #f0fdf4; color: #28a745; padding: 12px; border-radius: 12px; margin-bottom: 8px; font-weight: 800; border: 1px solid #bbf7d0; display: block; }
+      /* --- MAPA Y BLOQUEO --- */
+      ", root_sel, " .map-wrapper { background: white; border-radius: 25px; padding: 20px; border: 1px solid #eee; position: relative; height: 750px; overflow: hidden; }
+      #", ns("map_lock"), " { position:absolute; top:0; left:0; width:100%; height:100%; background: rgba(240, 240, 240, 0.4); backdrop-filter: blur(2px); z-index:100; cursor:not-allowed; border-radius:25px; display:none; }
 
-      ", root_id, " .debug-box { background: #121212; color: #00ff00; padding: 20px; border-radius: 12px; font-family: monospace; margin-top: 20px; border-left: 6px solid #00d4ff; }
-      ", root_id, " .script-val { color: #ffffff; font-size: 1.4rem; font-weight: 900; display: block; margin-top: 10px; }
-
-      ", root_id, " .selection-header { min-height: 60px; background: #f8f9fa; color: #718096; padding: 15px 25px; border-radius: 15px; margin-bottom: 15px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; border: 2px dashed #cbd5e0; transition: all 0.3s ease; }
-      ", root_id, " .selection-header.active-selection { background: #fff7ed; color: #ea580c; border: 2px solid #ff9800; }
-      ", root_id, " .selection-header.confirmed { background: #00d4ff; color: white; border: 2px solid #00d4ff; box-shadow: 0 4px 15px rgba(0,212,255,0.2); }
-
-      ", root_id, " .header-id { background: #edf2f7; color: #718096; padding: 5px 15px; border-radius: 50px; font-size: 0.9rem; font-weight: 800; }
-      ", root_id, " .confirmed .header-id { background: white; color: #00d4ff; }
-
-      /* Estilos específicos del SVG del árbol (D3) */
-      ", root_id, " .nodo-ruta-activa circle { fill: #ff9800 !important; stroke: #e65100 !important; stroke-width: 4px !important; opacity: 1 !important; }
-      ", root_id, " .nodo-faded { opacity: 0.1 !important; pointer-events: none; transition: opacity 0.4s ease; }
-      ", root_id, " .link-ruta-activa { stroke: #ff9800 !important; stroke-width: 5px !important; opacity: 1 !important; }
-      ", root_id, " .link-faded { opacity: 0.05 !important; transition: opacity 0.4s ease; }
-
-      #", ns("map_lock"), " { position:absolute; top:0; left:0; width:100%; height:100%; background: rgba(44, 62, 80, 0.4); backdrop-filter: blur(2px); z-index:100; cursor:not-allowed; border-radius:25px; display:none; }
+      /* --- D3 HIGHLIGHTS --- */
+      ", root_id, " .nodo-ruta-activa circle { fill: #ff9100 !important; stroke: #b36600 !important; stroke-width: 4px !important; }
+      ", root_id, " .link-ruta-activa { stroke: #ff9100 !important; stroke-width: 5px !important; }
     ")))),
 
-    # CONTENEDOR RAÍZ CON ID ÚNICO
-    div(id = ns("tree-container"), class = "container-fluid",
-        fluidRow(
-          column(8,
-                 uiOutput(ns("selection_header")),
-                 div(class = "map-container",
-                     div(class = "map-controls",
-                         actionButton(ns("btn_center"), icon("compress-arrows-alt"), class = "btn-map-tool btn-center-view"),
-                         actionButton(ns("btn_clear_map"), icon("sync-alt"), class = "btn-map-tool btn-reset-map")
-                     ),
-                     div(id = ns("map_lock")),
-                     collapsibleTree::collapsibleTreeOutput(ns("stat_tree"), height = "700px")
-                 )
-          ),
-          column(4,
-                 div(class = "side-panel",
-                     h5("FILTRO DE NAVEGACIÓN", style="font-weight:900; color:#cbd5e0; margin-bottom:20px;"),
-                     uiOutput(ns("tree_selection_ui")),
-                     hr(),
-                     h6("IDENTIFICADOR RSCIENCE", style="font-weight:800; color:#555;"),
-                     uiOutput(ns("debug_ui")),
-                     div(style="margin-top:30px;",
-                         actionButton(ns("btn_select"), "Confirmar Script", class = "btn-success", style="width:100%; border-radius:50px; font-weight:800; padding: 15px; margin-bottom:10px;"),
-                         actionButton(ns("btn_edit"), "Editar / Desbloquear", class = "btn-warning", style="width:100%; border-radius:50px; font-weight:800; padding: 15px; margin-bottom:10px;"),
-                         actionButton(ns("btn_reset_all"), "Reiniciar App", class = "btn-danger", style="width:100%; border-radius:50px; font-weight:800; padding: 15px;")
-                     )
-                 )
-          )
+    div(id = ns("tree-container"), class = paste("container-fluid", ns("tree-container")),
+
+        # FILA 1: HEADER (STATUS)
+        div(class = "row", div(class = "col-12", uiOutput(ns("selection_header")))),
+
+        # FILA 2: NAVIGATION FILTER & ACTIONS
+        div(class = "row align-items-center",
+            div(class = "col-md-8",
+                div(class = "filter-row-container",
+                    span(style="font-weight:900; color:#cbd5e0; text-transform:uppercase; font-size:0.8rem;", "Path:"),
+                    uiOutput(ns("tree_selection_ui"))
+                )
+            ),
+            div(class = "col-md-4 text-end",
+                div(class = "d-flex gap-2 justify-content-end",
+                    actionButton(ns("btn_select"), span(icon("check"), "Confirm"), class = "btn-success btn-pill-xl"),
+                    actionButton(ns("btn_edit"),   span(icon("edit"), "Edit"),    class = "btn-warning btn-pill-xl"),
+                    actionButton(ns("btn_reset_all"), span(icon("sync"), "Reset"), class = "btn-primary btn-pill-xl")
+                )
+            )
+        ),
+
+        # FILA 3: MAPA DE NODOS (FULL WIDTH)
+        div(class = "row",
+            div(class = "col-12",
+                div(class = "map-wrapper",
+                    div(id = ns("map_lock")),
+                    collapsibleTree::collapsibleTreeOutput(ns("stat_tree"), height = "700px")
+                )
+            )
+        ),
+
+        # FILA EXTRA: IDENTIFIER (DEBUG)
+        div(class = "row mt-3",
+            div(class = "col-12",
+                div(style="background: #ffffff; padding: 10px 20px; border-radius: 10px; border: 1px solid #eee; display: flex; align-items: center; gap: 20px;",
+                    span(style="font-weight:800; color:#555; font-size:0.8rem;", "TARGET SCRIPT:"),
+                    uiOutput(ns("debug_ui"))
+                )
+            )
         )
     ),
 
-    # Script de D3.js adaptado para trabajar solo dentro de este módulo
+    # --- SCRIPT D3 (Recuperado de v.0.1.1) ---
     tags$script(HTML(paste0("
       (function() {
         var lastSelectedNode = null;
@@ -86,28 +91,19 @@ module_treeApp_UI <- function(id) {
 
         function applyVisuals() {
           var container = d3.select('#' + containerId);
-          function isDescendant(parentName, child) {
-            var node = child;
-            while (node) { if (node.data.name === parentName) return true; node = node.parent; }
-            return false;
-          }
           var allNodes = container.select('#' + treeId).selectAll('g.node');
           allNodes.classed('nodo-ruta-activa', function(d) { return activePathNames.includes(d.data.name); });
           allNodes.classed('nodo-faded', function(d) {
-            if (!lastSelectedNode) return false;
-            return !activePathNames.includes(d.data.name) && !isDescendant(lastSelectedNode, d);
+            if (activePathNames.length <= 1) return false;
+            return !activePathNames.includes(d.data.name);
           });
           container.select('#' + treeId).selectAll('path.link')
-            .classed('link-ruta-activa', function(d) { return activePathNames.includes(d.source.data.name) && activePathNames.includes(d.target.data.name); })
-            .classed('link-faded', function(d) {
-               if (!lastSelectedNode) return false;
-               return !activePathNames.includes(d.target.data.name) && !isDescendant(lastSelectedNode, d.target);
-            });
+            .classed('link-ruta-activa', function(d) { return activePathNames.includes(d.source.data.name) && activePathNames.includes(d.target.data.name); });
         }
 
         $(document).on('shiny:visualchange', function(event) {
           if (event.target.id === treeId) {
-            setTimeout(applyVisuals, 150);
+            setTimeout(applyVisuals, 200);
             d3.select('#' + treeId).selectAll('circle.node').on('click.rscience', function(d) {
               activePathNames = [];
               lastSelectedNode = d.data.name;
@@ -115,11 +111,6 @@ module_treeApp_UI <- function(id) {
               while (current) { activePathNames.push(current.data.name); current = current.parent; }
               setTimeout(applyVisuals, 50);
             });
-            var targetNode = document.getElementById(treeId);
-            if(targetNode) {
-              var observer = new MutationObserver(function() { window.requestAnimationFrame(applyVisuals); });
-              observer.observe(targetNode, { childList: true, subtree: true });
-            }
           }
         });
       })();
@@ -131,6 +122,15 @@ module_treeApp_Server <- function(id, data = tree_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     is_confirmed <- reactiveVal(FALSE)
+
+    # --- RESET LOGIC ---
+    observeEvent(input$btn_reset_all, {
+      is_confirmed(FALSE)
+      shinyjs::hide("map_lock")
+      shinyjs::enable("btn_select")
+      # Aquí podrías añadir lógica para resetear el input$node_click si fuera posible,
+      # pero collapsibleTree es de solo lectura desde Shiny mayormente.
+    })
 
     output$stat_tree <- collapsibleTree::renderCollapsibleTree({
       collapsibleTree::collapsibleTree(data, hierarchy = c("nivel1", "nivel2", "nivel3", "nivel4", "nivel5"),
@@ -155,32 +155,31 @@ module_treeApp_Server <- function(id, data = tree_data) {
       path <- input$node_click
       if (is_confirmed()) {
         div(class = "selection-header confirmed",
-            span(icon("lock"), paste(" Tool selected:", paste(rev(path), collapse = " > "))),
+            span(icon("lock"), paste(" TOOL READY:", paste(rev(path), collapse = " > "))),
             span(class = "header-id", paste("SCRIPT:", current_script_id())))
       } else if (!is.null(path) && length(path) > 0) {
         div(class = "selection-header active-selection",
-            span(icon("location-arrow"), paste(" User :", paste(rev(path), collapse = " > "))),
+            span(icon("bolt"), paste(" PENDING CONFIRMATION:", paste(rev(path), collapse = " > "))),
             span(class = "header-id", paste("ID:", current_script_id())))
       } else {
-        div(class = "selection-header",
-            span(icon("bolt"),  " Waiting for user selection..."),
-            span(class = "header-id", "ID: ---"))
+        div(class = "selection-header waiting-mode",
+            span(icon("mouse-pointer"), " Waiting for tool selection..."),
+            span(class = "header-id", "STATUS: IDLE"))
       }
     })
 
     output$tree_selection_ui <- renderUI({
-      path <- input$node_click; if (is.null(path) || length(path) == 0) return(p("Inicie la navegación..."))
+      path <- input$node_click; if (is.null(path) || length(path) == 0) return(p("Start navigation in the tree..."))
       lapply(seq_along(rev(path)), function(i) div(class = "path-chip", span(style="color:#aaa; font-size:0.7rem; margin-right:10px;", paste0("LVL ", i)), rev(path)[i]))
     })
 
     output$debug_ui <- renderUI({
       path <- input$node_click; if (is.null(path) || length(path) == 0) return(div(class="debug-box", "STANDBY"))
-      div(class="debug-box", div(">> TARGET: ", rev(path)[length(path)]), span(class="script-val", current_script_id()))
+      div(class="debug-box", div(">> TARGET SCRIPT:"), span(class="script-val", current_script_id()))
     })
 
     observeEvent(input$btn_select, { if(!is.null(input$node_click)) { is_confirmed(TRUE); shinyjs::show("map_lock"); shinyjs::disable("btn_select") } })
     observeEvent(input$btn_edit, { is_confirmed(FALSE); shinyjs::hide("map_lock"); shinyjs::enable("btn_select") })
-    observeEvent(input$btn_reset_all, { session$reload() })
-    observeEvent(input$btn_center, { session$reload() })
+
   })
 }

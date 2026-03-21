@@ -216,7 +216,7 @@ mod_import_server <- function(id, show_debug = FALSE) {
       if (is_locked()) {
         # ESTADO VERDE: TODO LISTO
         div(class = "selection-header confirmed",
-            span(icon("check-double"), paste(" DATA IMPORTED:", data_store$name_mod)),
+            span(icon("lock"), paste(" DATA IMPORTED:", data_store$name_mod)),
             span(class = "header-id", "STATUS: READY"))
 
       } else if (!is.null(current_name)) {
