@@ -1,14 +1,15 @@
 # ==============================================================================
-# TOOLS SELECTOR MODULE - v.0.1.0 (UNIFIED ESTHETIC)
+# TOOLS SELECTOR MODULE UI - v.0.3.3 (SYNC ENGINE REINFORCED & TARGET PURGE)
 # ==============================================================================
 library("bslib")
 library("shiny")
 library("shinyjs")
+library("dplyr")
+library("collapsibleTree")
 
 # ==============================================================================
-# TOOLS SELECTOR MODULE - v.0.1.2 (REORDERED ROWS: HEADER -> FILTER -> MAP)
+# TOOLS SELECTOR MODULE UI - v.0.4.6 (FULL INTERFACE RESTORED)
 # ==============================================================================
-
 module_treeApp_UI <- function(id) {
   ns <- NS(id)
   root_id <- paste0("#", ns("tree-container"))
@@ -17,99 +18,111 @@ module_treeApp_UI <- function(id) {
   tagList(
     shinyjs::useShinyjs(),
     tags$head(tags$style(HTML(paste0("
-      /* --- HEADER Y BOTONES (Consistentes con v.0.1.1) --- */
-      ", root_sel, " .selection-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; border-radius: 12px; transition: all 0.4s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+      /* --- FILA 1: HEADER --- */
+      ", root_sel, " .selection-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
       ", root_sel, " .selection-header.waiting-mode { background: #f0fdff; border: 1px solid #00cfd4; color: #008184; }
       ", root_sel, " .selection-header.active-selection { background: #fff9f0; border: 1px solid #ff9100; color: #b36600; }
-      ", root_sel, " .selection-header.confirmed { background: #f6fff8; border: 1px solid #28a745; color: #1e7e34; }
+      ", root_sel, " .header-id { font-family: monospace; font-weight: 700; background: rgba(0,0,0,0.08); padding: 4px 15px; border-radius: 20px; }
 
-      ", root_sel, " .btn.btn-pill-xl { border-radius: 50px !important; padding: 12px 25px !important; font-weight: 800 !important; font-size: 0.9rem !important; text-transform: uppercase !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; transition: all 0.3s ease !important; }
+      /* --- FILA 2: CONTROLES Y PATH (DARK) --- */
+      ", root_sel, " .filter-row-container { background: #1a202c; border-radius: 15px; padding: 15px 25px; border: 1px solid #2d3748; display: flex; align-items: center; gap: 12px; min-height: 70px; }
+      ", root_sel, " .path-chip { background: #28a745; color: white !important; padding: 6px 15px; border-radius: 50px; font-weight: 800; border: 1px solid #1e7e34; }
+      ", root_sel, " .btn-pill-xl { border-radius: 50px !important; padding: 10px 25px !important; font-weight: 800 !important; }
 
-      /* --- FILA DE FILTROS (Chips horizontales) --- */
-      ", root_sel, " .filter-row-container { background: white; border-radius: 15px; padding: 20px; border: 1px solid #eee; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-      ", root_sel, " .path-chip { background: #f0fdf4; color: #28a745; padding: 6px 15px; border-radius: 50px; font-weight: 800; border: 1px solid #bbf7d0; font-size: 0.85rem; }
+      /* --- FILA 3: LISTA DE SCRIPTS (LA QUE FALTABA) --- */
+      ", root_sel, " .scripts-container { background: #f8f9fa; border-radius: 15px; border: 1px dashed #cbd5e0; padding: 15px; margin-bottom: 20px; min-height: 50px; }
 
-      /* --- MAPA Y BLOQUEO --- */
-      ", root_sel, " .map-wrapper { background: white; border-radius: 25px; padding: 20px; border: 1px solid #eee; position: relative; height: 750px; overflow: hidden; }
-      #", ns("map_lock"), " { position:absolute; top:0; left:0; width:100%; height:100%; background: rgba(240, 240, 240, 0.4); backdrop-filter: blur(2px); z-index:100; cursor:not-allowed; border-radius:25px; display:none; }
+      /* --- FILA 4: MAPA Y D3 VISUALS --- */
+      ", root_sel, " .map-wrapper { background: white; border-radius: 25px; padding: 20px; border: 1px solid #eee; height: 750px; position: relative; }
 
-      /* --- D3 HIGHLIGHTS --- */
-      ", root_id, " .nodo-ruta-activa circle { fill: #ff9100 !important; stroke: #b36600 !important; stroke-width: 4px !important; }
-      ", root_id, " .link-ruta-activa { stroke: #ff9100 !important; stroke-width: 5px !important; }
+      ", root_id, " path.link {
+          stroke: #000000 !important;
+          stroke-width: 4px !important;
+          opacity: 0.8 !important;
+          fill: none !important;
+      }
+
+      ", root_id, " g.node.nodo-ruta-activa circle {
+          fill: #ff9100 !important;
+          stroke: #b36600 !important;
+          stroke-width: 3px !important;
+      }
     ")))),
 
     div(id = ns("tree-container"), class = paste("container-fluid", ns("tree-container")),
-
-        # FILA 1: HEADER (STATUS)
+        # 1. Header
         div(class = "row", div(class = "col-12", uiOutput(ns("selection_header")))),
 
-        # FILA 2: NAVIGATION FILTER & ACTIONS
-        div(class = "row align-items-center",
+        # 2. Path y Botones
+        div(class = "row align-items-center mb-3",
             div(class = "col-md-8",
                 div(class = "filter-row-container",
-                    span(style="font-weight:900; color:#cbd5e0; text-transform:uppercase; font-size:0.8rem;", "Path:"),
+                    span(style="color:#cbd5e0; font-weight:900; font-size:0.75rem;", "PATH:"),
                     uiOutput(ns("tree_selection_ui"))
                 )
             ),
             div(class = "col-md-4 text-end",
                 div(class = "d-flex gap-2 justify-content-end",
-                    actionButton(ns("btn_select"), span(icon("check"), "Confirm"), class = "btn-success btn-pill-xl"),
-                    actionButton(ns("btn_edit"),   span(icon("edit"), "Edit"),    class = "btn-warning btn-pill-xl"),
-                    actionButton(ns("btn_reset_all"), span(icon("sync"), "Reset"), class = "btn-primary btn-pill-xl")
+                    actionButton(ns("btn_select"), "Confirm", class = "btn-success btn-pill-xl"),
+                    actionButton(ns("btn_reset_all"), "Reset", class = "btn-primary btn-pill-xl")
                 )
             )
         ),
 
-        # FILA 3: MAPA DE NODOS (FULL WIDTH)
+        # 3. Lista de Scripts (Restaurada)
+        div(class = "row",
+            div(class = "col-12",
+                div(class = "scripts-container",
+                    uiOutput(ns("full_script_list_ui"))
+                )
+            )
+        ),
+
+        # 4. Mapa
         div(class = "row",
             div(class = "col-12",
                 div(class = "map-wrapper",
-                    div(id = ns("map_lock")),
                     collapsibleTree::collapsibleTreeOutput(ns("stat_tree"), height = "700px")
-                )
-            )
-        ),
-
-        # FILA EXTRA: IDENTIFIER (DEBUG)
-        div(class = "row mt-3",
-            div(class = "col-12",
-                div(style="background: #ffffff; padding: 10px 20px; border-radius: 10px; border: 1px solid #eee; display: flex; align-items: center; gap: 20px;",
-                    span(style="font-weight:800; color:#555; font-size:0.8rem;", "TARGET SCRIPT:"),
-                    uiOutput(ns("debug_ui"))
                 )
             )
         )
     ),
 
-    # --- SCRIPT D3 (Recuperado de v.0.1.1) ---
     tags$script(HTML(paste0("
       (function() {
-        var lastSelectedNode = null;
-        var activePathNames = ['Rscience'];
+        var activeNames = ['Rscience'];
         var treeId = '", ns("stat_tree"), "';
-        var containerId = '", ns("tree-container"), "';
 
-        function applyVisuals() {
-          var container = d3.select('#' + containerId);
-          var allNodes = container.select('#' + treeId).selectAll('g.node');
-          allNodes.classed('nodo-ruta-activa', function(d) { return activePathNames.includes(d.data.name); });
-          allNodes.classed('nodo-faded', function(d) {
-            if (activePathNames.length <= 1) return false;
-            return !activePathNames.includes(d.data.name);
+        function refreshStyles() {
+          var svg = d3.select('#' + treeId);
+          svg.selectAll('g.node').each(function(d) {
+            var isActive = d.data && activeNames.indexOf(d.data.name) !== -1;
+            d3.select(this).classed('nodo-ruta-activa', isActive);
           });
-          container.select('#' + treeId).selectAll('path.link')
-            .classed('link-ruta-activa', function(d) { return activePathNames.includes(d.source.data.name) && activePathNames.includes(d.target.data.name); });
+
+          svg.selectAll('path.link').each(function(d) {
+             var isTargetInPath = d.target && d.target.data && activeNames.indexOf(d.target.data.name) !== -1;
+             if (isTargetInPath) {
+                d3.select(this).style('stroke', '#ff9100', 'important').style('stroke-width', '8px', 'important').style('opacity', '1', 'important');
+             } else {
+                d3.select(this).style('stroke', '#000000', 'important').style('stroke-width', '4px', 'important').style('opacity', '0.8', 'important');
+             }
+          });
         }
 
-        $(document).on('shiny:visualchange', function(event) {
-          if (event.target.id === treeId) {
-            setTimeout(applyVisuals, 200);
-            d3.select('#' + treeId).selectAll('circle.node').on('click.rscience', function(d) {
-              activePathNames = [];
-              lastSelectedNode = d.data.name;
-              var current = d;
-              while (current) { activePathNames.push(current.data.name); current = current.parent; }
-              setTimeout(applyVisuals, 50);
+        $(document).on('shiny:visualchange', function(e) {
+          if (e.target.id === treeId) {
+            var loop = setInterval(refreshStyles, 50);
+            setTimeout(function() { clearInterval(loop); }, 2000);
+
+            d3.select('#' + treeId).selectAll('circle').on('click.pathFix', function(d) {
+              activeNames = [];
+              var curr = d;
+              while (curr) {
+                if (curr.data) activeNames.push(curr.data.name);
+                curr = curr.parent;
+              }
+              refreshStyles();
             });
           }
         });
@@ -118,68 +131,73 @@ module_treeApp_UI <- function(id) {
   )
 }
 
+
+
 module_treeApp_Server <- function(id, data = tree_data) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     is_confirmed <- reactiveVal(FALSE)
 
-    # --- RESET LOGIC ---
-    observeEvent(input$btn_reset_all, {
-      is_confirmed(FALSE)
-      shinyjs::hide("map_lock")
-      shinyjs::enable("btn_select")
-      # Aquí podrías añadir lógica para resetear el input$node_click si fuera posible,
-      # pero collapsibleTree es de solo lectura desde Shiny mayormente.
+    filtered_data <- reactive({
+      path <- input$node_click
+      if (is.null(path) || length(path) == 0) return(NULL)
+      p <- rev(path); res <- data
+      try({
+        if(length(p) >= 1) res <- res %>% filter(nivel1 == p[1])
+        if(length(p) >= 2) res <- res %>% filter(nivel2 == p[2])
+        if(length(p) >= 3) res <- res %>% filter(nivel3 == p[3])
+        if(length(p) >= 4) res <- res %>% filter(nivel4 == p[4])
+        if(length(p) >= 5) res <- res %>% filter(nivel5 == p[5])
+      }, silent = TRUE)
+      res
     })
 
     output$stat_tree <- collapsibleTree::renderCollapsibleTree({
       collapsibleTree::collapsibleTree(data, hierarchy = c("nivel1", "nivel2", "nivel3", "nivel4", "nivel5"),
                                        root = "Rscience", inputId = ns("node_click"), linkLength = 150,
-                                       fill = "#ffffff", fillClosed = "#28a745", nodeSize = "size", zoomable = TRUE)
-    })
-
-    current_script_id <- reactive({
-      path <- input$node_click; if (is.null(path) || length(path) == 0) return("---")
-      p <- rev(path); res <- data
-      try({
-        if(length(p) >= 1) res <- res %>% dplyr::filter(nivel1 == p[1])
-        if(length(p) >= 2) res <- res %>% dplyr::filter(nivel2 == p[2])
-        if(length(p) >= 3) res <- res %>% dplyr::filter(nivel3 == p[3])
-        if(length(p) >= 4) res <- res %>% dplyr::filter(nivel4 == p[4])
-        if(length(p) >= 5) res <- res %>% dplyr::filter(nivel5 == p[5])
-      }, silent = TRUE)
-      if(nrow(res) > 0) res$script_id[1] else "..."
+                                       fill = "#ffffff", fillClosed = "#28a745", nodeSize = "size",
+                                       zoomable = TRUE, fontSize = 16)
     })
 
     output$selection_header <- renderUI({
       path <- input$node_click
       if (is_confirmed()) {
         div(class = "selection-header confirmed",
-            span(icon("lock"), paste(" TOOL READY:", paste(rev(path), collapse = " > "))),
-            span(class = "header-id", paste("SCRIPT:", current_script_id())))
+            span(icon("lock"), paste(" TOOL LOCKED:", paste(rev(path), collapse = " > "))),
+            span(class = "header-id", "STATUS: READY"))
       } else if (!is.null(path) && length(path) > 0) {
         div(class = "selection-header active-selection",
-            span(icon("bolt"), paste(" PENDING CONFIRMATION:", paste(rev(path), collapse = " > "))),
-            span(class = "header-id", paste("ID:", current_script_id())))
+            span(icon("file-import"), paste(" SELECTED:", paste(rev(path), collapse = " > "))),
+            span(class = "header-id", "STATUS: PENDING"))
       } else {
         div(class = "selection-header waiting-mode",
-            span(icon("mouse-pointer"), " Waiting for tool selection..."),
-            span(class = "header-id", "STATUS: IDLE"))
+            span(icon("bolt"), " Waiting for tool selection..."),
+            span(class = "header-id", "STATUS: WAITING"))
       }
     })
 
     output$tree_selection_ui <- renderUI({
-      path <- input$node_click; if (is.null(path) || length(path) == 0) return(p("Start navigation in the tree..."))
-      lapply(seq_along(rev(path)), function(i) div(class = "path-chip", span(style="color:#aaa; font-size:0.7rem; margin-right:10px;", paste0("LVL ", i)), rev(path)[i]))
+      path <- input$node_click
+      if (is.null(path) || length(path) == 0) return(span("Start navigating...", style="color:#4a5568;"))
+      lapply(seq_along(rev(path)), function(i) div(class = "path-chip", rev(path)[i]))
     })
 
-    output$debug_ui <- renderUI({
-      path <- input$node_click; if (is.null(path) || length(path) == 0) return(div(class="debug-box", "STANDBY"))
-      div(class="debug-box", div(">> TARGET SCRIPT:"), span(class="script-val", current_script_id()))
+    output$full_script_list_ui <- renderUI({
+      df <- filtered_data()
+      if (is.null(df)) return(span("No selection yet.", style="color:#aaa; font-style:italic;"))
+      ids <- unique(df$script_id)
+      div(style="display:flex; flex-wrap:wrap; gap:8px;",
+          lapply(ids, function(id) span(id, style="background:#fff; color:#2d3748; border:1px solid #dee2e6; font-family:monospace; font-size:0.75rem; padding:3px 10px; border-radius:5px; font-weight:bold;")))
     })
 
-    observeEvent(input$btn_select, { if(!is.null(input$node_click)) { is_confirmed(TRUE); shinyjs::show("map_lock"); shinyjs::disable("btn_select") } })
-    observeEvent(input$btn_edit, { is_confirmed(FALSE); shinyjs::hide("map_lock"); shinyjs::enable("btn_select") })
-
+    observeEvent(input$cb_isolate, { session$sendCustomMessage("refresh_visuals", list()) })
+    observeEvent(input$btn_reset_all, {
+      is_confirmed(FALSE)
+      shinyjs::hide("map_lock")
+      updateCheckboxInput(session, "cb_isolate", value = FALSE)
+      session$sendCustomMessage("reset_tree_visuals", list())
+    })
+    observeEvent(input$btn_select, { if(!is.null(input$node_click)) { is_confirmed(TRUE); shinyjs::show("map_lock") } })
+    observeEvent(input$btn_edit, { is_confirmed(FALSE); shinyjs::hide("map_lock") })
   })
 }
