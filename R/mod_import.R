@@ -1,5 +1,5 @@
 # ==============================================================================
-# IMPORT MODULE - v.0.0.1 DEFINITIVE (ULTRA-ENCAPSULATED CSS & STATE)
+# IMPORT MODULE - v.0.0.8 (FINAL: EDIT & RESET SYNC + CLEAN DEBUG)
 # ==============================================================================
 library("shinyjs")
 library("DT")
@@ -9,93 +9,127 @@ library("bslib")
 
 mod_import_ui <- function(id) {
   ns <- NS(id)
-
-  # Definimos el selector raíz para el CSS
   root_sel <- paste0(".", ns("import-container"))
 
   tagList(
     shinyjs::useShinyjs(),
     tags$head(
       tags$style(HTML(paste0("
-        /* --- ENCAPSULAMIENTO TOTAL MEDIANTE SELECTOR RAÍZ --- */
+        /* --- BLOQUEO DE COLUMNA CON OVERLAY --- */
+        ", root_sel, " .lock-wrapper { position: relative; transition: all 0.3s ease; }
 
-        ", root_sel, " { padding-top: 20px !important; }
+        ", root_sel, " .locked-disabled::after {
+            content: '';
+            position: absolute;
+            top: -0px; left: -5px; right: -15px; bottom: -15px;
+            background: rgba(230, 230, 230, 0.5);
+            backdrop-filter: blur(2px);
+            z-index: 100;
+            border-radius: 20px;
+            border: 2px solid rgba(0,0,0,0.05);
+            cursor: not-allowed !important;
+        }
 
-        /* BOTONES PILDORA XL */
+        ", root_sel, " .locked-disabled {
+            pointer-events: none !important;
+            user-select: none;
+            filter: grayscale(0.5);
+        }
+
+        /* --- SELECTION HEADER (MARQUESINA SUPERIOR) --- */
+        ", root_sel, " .selection-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 25px; border-radius: 12px; background: #ffffff;
+            border: 1px solid #e0e0e0; transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        ", root_sel, " .selection-header.active-selection {
+            background: #f0faff; border: 1px solid #00d4ff; color: #007bff;
+        }
+
+        ", root_sel, " .selection-header.confirmed {
+            background: #f6fff8; border: 1px solid #28a745; color: #1e7e34;
+        }
+
+        ", root_sel, " .header-id {
+            font-family: 'Monaco', 'Courier New', monospace; font-weight: 700;
+            font-size: 0.85rem; background: rgba(0,0,0,0.05); padding: 4px 12px; border-radius: 20px;
+        }
+
+        /* --- BOTONES PILDORA XL --- */
         ", root_sel, " .btn.btn-pill-xl {
-           border-radius: 50px !important;
-           padding: 15px 35px !important;
-           font-weight: 800 !important;
-           font-size: 1.1rem !important;
-           text-transform: uppercase !important;
-           letter-spacing: 1px !important;
-           display: inline-flex !important;
-           align-items: center !important;
-           justify-content: center !important;
-           gap: 10px !important;
-           transition: all 0.3s ease !important;
+            border-radius: 50px !important; padding: 15px 35px !important;
+            font-weight: 800 !important; font-size: 1.1rem !important;
+            text-transform: uppercase !important; letter-spacing: 1px !important;
+            display: inline-flex !important; align-items: center !important;
+            justify-content: center !important; gap: 10px !important;
+            transition: all 0.3s ease !important;
         }
 
-        ", root_sel, " .btn.btn-pill-xl:hover {
-           transform: translateY(-2px) !important;
-           filter: brightness(1.1);
-        }
+        ", root_sel, " .btn.btn-pill-xl:hover { transform: translateY(-2px) !important; filter: brightness(1.1); }
 
         ", root_sel, " .action-row-right {
-           display: flex; flex-direction: row; justify-content: flex-end;
-           align-items: center; gap: 15px; height: 100%; padding-top: 25px;
+            display: flex; flex-direction: row; justify-content: flex-end;
+            align-items: center; gap: 12px; height: 100%;
         }
 
-        /* LABELS SECCIÓN */
+        /* --- LABELS Y ESTADOS --- */
         ", root_sel, " .section-label {
-           font-weight: 800; font-size: 1.2rem !important;
-           color: #000000 !important; text-transform: uppercase;
-           margin-bottom: 12px; letter-spacing: 1.2px;
+            font-weight: 800; font-size: 1.1rem !important;
+            color: #1a1a1a !important; text-transform: uppercase;
+            margin-bottom: 10px; letter-spacing: 1px;
         }
 
-        /* ESTADOS Y DIVISORES */
         ", root_sel, " .status-closed { color: #28a745 !important; font-weight: 900 !important; margin-left: 8px; }
-        ", root_sel, " .engine-divider { border-top: 2px solid rgba(0,212,255,0.2); margin: 30px 0; }
 
-        /* BLOQUEO DE CONTROLES */
-        ", root_sel, " .locked-disabled {
-           opacity: 0.6;
-           filter: grayscale(0.4);
-           pointer-events: none !important;
-           cursor: not-allowed !important;
-        }
-
-        /* BANNER INFORMATIVO */
         ", root_sel, " .file-info-banner {
-           background: rgba(40, 167, 69, 0.05);
-           border-left: 5px solid #28a745;
-           padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;
+            background: rgba(40, 167, 69, 0.05); border-left: 5px solid #28a745;
+            padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;
         }
 
-        /* FIX SELECTIZE (Global pero necesario para funcionalidad) */
+        /* --- DEBUG PANEL CLEAN --- */
+        ", root_sel, " .debug-panel-clean {
+            margin-top: 30px; padding: 20px;
+            background: #ffffff; border: 1px solid #dee2e6;
+            border-radius: 8px; font-family: monospace;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+
         .selectize-dropdown { z-index: 999999 !important; }
       ")))
     ),
 
-    # Aplicamos la clase del namespace al contenedor raíz
     div(class = paste("container-fluid", ns("import-container")),
-        div(class = "row g-3 align-items-center",
-            div(class = "col-md-8",
-                div(class = "row g-3",
-                    div(class = "col-md-4",
-                        div(id = ns("div_source"),
+
+        # FILA 0: HEADER SUPERIOR
+        div(class = "row",
+            div(class = "col-12", uiOutput(ns("import_header")))
+        ),
+        br(),
+        div(style = "border-top: 4px solid rgba(0,212,255,0.15); margin: 35px 0;"),
+
+        # FILA 1: CUERPO PRINCIPAL
+        div(class = "row g-4 align-items-start",
+            div(class = "col-md-7",
+                div(id = ns("main_input_col"), class = "lock-wrapper",
+                    div(class = "row g-3",
+                        div(class = "col-md-4",
                             div(id = ns("label_source"), class = "section-label", "Source Type"),
                             selectInput(ns("source"), NULL, choices = c("Local File" = "local_file", "R Example" = "example"), width = "100%")
+                        ),
+                        div(class = "col-md-8",
+                            div(id = ns("label_selection"), class = "section-label", "Data Selection"),
+                            div(id = ns("div_menu01"), uiOutput(ns("menu01_local_file"))),
+                            div(id = ns("div_menu02"), uiOutput(ns("menu02_RData")))
                         )
                     ),
-                    div(class = "col-md-7",
-                        div(id = ns("label_selection"), class = "section-label", "Data Selection"),
-                        div(id = ns("div_menu01"), uiOutput(ns("menu01_local_file"))),
-                        div(id = ns("div_menu02"), uiOutput(ns("menu02_RData")))
-                    )
-                ),
-                div(id = ns("div_options"), uiOutput(ns("options_ui")))
+                    div(id = ns("div_options"), uiOutput(ns("options_ui")))
+                )
             ),
+
+            div(class = "col-md-1"),
+
             div(class = "col-md-4",
                 div(class = "action-row-right",
                     actionButton(ns("btn_import"), span(icon("check"), "Import"), class = "btn-success btn-pill-xl"),
@@ -104,13 +138,19 @@ mod_import_ui <- function(id) {
                 )
             )
         ),
-        div(class = "engine-divider"),
+
+        div(style = "border-top: 4px solid rgba(0,212,255,0.15); margin: 35px 0;"),
+
+        # FILA 2: RESULTADOS Y PREVIEW
         uiOutput(ns("dataset_info_ui")),
+
         div(class = "row g-0",
             div(class = "col-12",
                 div(class = "section-label mb-3", icon("table"), " Data Preview"),
-                div(style = "width: 100%; overflow-x: auto;", DTOutput(ns("preview"))),
-                uiOutput(ns("the_debug"))
+                div(style = "width: 100%; overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #eee; padding: 10px;",
+                    DTOutput(ns("preview"))
+                ),
+                uiOutput(ns("the_debug_container"))
             )
         )
     )
@@ -129,10 +169,24 @@ mod_import_server <- function(id, show_debug = FALSE) {
       rows = NULL, cols = NULL
     )
     is_locked <- reactiveVal(FALSE)
+    closed_suffix <- HTML("<span class='status-closed' style='font-size: 0.8rem;'>(Locked) <i class='fa fa-lock'></i></span>")
 
-    closed_suffix <- HTML("<span class='status-closed' style='font-size: 1.1rem;'>(Closed) <i class='fa fa-check'></i></span>")
+    # --- LOGIC: LOCK & RESET ---
+    toggle_import_controls <- function(lock_it) {
+      if (lock_it) {
+        shinyjs::disable("btn_import")
+        shinyjs::html("label_source", paste0("Source Type", closed_suffix))
+        shinyjs::html("label_selection", paste0("Data Selection", closed_suffix))
+        shinyjs::addClass(id = "main_input_col", class = "locked-disabled")
+      } else {
+        shinyjs::enable("btn_import")
+        shinyjs::html("label_source", "Source Type")
+        shinyjs::html("label_selection", "Data Selection")
+        shinyjs::removeClass(id = "main_input_col", class = "locked-disabled")
+      }
+      is_locked(lock_it)
+    }
 
-    # --- LOGIC: RESET & LOCK ---
     deep_reset_values <- function() {
       data_store$df <- NULL; data_store$name_orig <- NULL; data_store$name_mod <- NULL
       data_store$sheet <- NULL; data_store$sep <- NULL; data_store$dec <- NULL; data_store$header <- NULL
@@ -140,26 +194,31 @@ mod_import_server <- function(id, show_debug = FALSE) {
       data_store$rows <- NULL; data_store$cols <- NULL
     }
 
-    toggle_import_controls <- function(lock_it) {
-      ids <- c("div_source", "div_menu01", "div_menu02", "label_selection", "div_options")
-
-      if (lock_it) {
-        shinyjs::disable("btn_import")
-        shinyjs::html("label_source", paste0("Source Type", closed_suffix))
-        shinyjs::html("label_selection", paste0("Data Selection", closed_suffix))
-        for (i in ids) shinyjs::addClass(id = i, class = "locked-disabled")
+    # --- RENDERS: HEADER ---
+    output$import_header <- renderUI({
+      current_name <- if(input$source == "local_file") {
+        if(!is.null(input$file_input)) input$file_input$name else NULL
       } else {
-        shinyjs::enable("btn_import")
-        shinyjs::html("label_source", "Source Type")
-        shinyjs::html("label_selection", "Data Selection")
-        for (i in ids) shinyjs::removeClass(id = i, class = "locked-disabled")
+        if(!is.null(input$example_dataset) && input$example_dataset != "") input$example_dataset else NULL
       }
-      is_locked(lock_it)
-    }
 
-    # --- UI RENDERS ---
+      if (is_locked()) {
+        div(class = "selection-header confirmed",
+            span(icon("lock"), paste(" DATA IMPORTED:", data_store$name_mod)),
+            span(class = "header-id", "STATUS: READY"))
+      } else if (!is.null(current_name)) {
+        div(class = "selection-header active-selection",
+            span(icon("file-import"), paste(" Selected:", current_name)),
+            span(class = "header-id", "STATUS: PENDING"))
+      } else {
+        div(class = "selection-header",
+            span(icon("bolt"), " Waiting for user selection..."),
+            span(class = "header-id", "STATUS: IDLE"))
+      }
+    })
+
+    # --- RENDERS: MENUS DINÁMICOS ---
     output$menu01_local_file <- renderUI({ req(input$source == 'local_file'); fileInput(ns("file_input"), NULL, buttonLabel = "Browse...", width = "100%") })
-
     output$menu02_RData <- renderUI({
       req(input$source == 'example')
       selectizeInput(ns("example_dataset"), NULL, choices = c("(Select Dataset)" = "", "mtcars", "iris", "airquality"),
@@ -169,24 +228,21 @@ mod_import_server <- function(id, show_debug = FALSE) {
     output$options_ui <- renderUI({
       req(input$source == "local_file", input$file_input)
       ext <- tolower(tools::file_ext(input$file_input$name))
-      lbl_opts <- if(is_locked()) tagList("Parsing Options", closed_suffix) else "Parsing Options"
-      lbl_sheet <- if(is_locked()) tagList("Sheet Selection", closed_suffix) else "Sheet Selection"
-
       if (ext %in% c("csv", "tsv", "txt")) {
-        div(class = "mt-3", div(class = "section-label", lbl_opts),
+        div(class = "mt-3", div(class = "section-label", "Parsing Options"),
             fluidRow(
               column(4, selectizeInput(ns("sep"), "Separator", choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab" = "\t"), options = list(dropdownParent = 'body'))),
               column(4, selectizeInput(ns("dec"), "Decimal", choices = c("Period (.)" = ".", "Comma (,)" = ","), options = list(dropdownParent = 'body'))),
-              column(4, div(style = "padding-top: 35px;", checkboxInput(inputId = ns("header"), label = "Header", value = TRUE)))
+              column(4, div(style = "padding-top: 35px;", checkboxInput(ns("header"), "Header", TRUE)))
             ))
       } else if (ext %in% c("xls", "xlsx")) {
         sheets <- tryCatch({ readxl::excel_sheets(input$file_input$datapath) }, error = function(e) NULL)
-        div(class = "mt-3", div(class = "section-label", lbl_sheet),
+        div(class = "mt-3", div(class = "section-label", "Sheet Selection"),
             fluidRow(column(4, selectizeInput(ns("excel_sheet"), NULL, choices = sheets, width = "100%", options = list(dropdownParent = 'body')))))
       }
     })
 
-    # --- IMPORT ACTION ---
+    # --- ACCIONES ---
     observeEvent(input$btn_import, {
       tryCatch({
         now <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
@@ -198,11 +254,11 @@ mod_import_server <- function(id, show_debug = FALSE) {
             data_store$sep <- input$sep; data_store$dec <- input$dec; data_store$header <- input$header; data_store$name_mod <- input$file_input$name
           } else {
             req(input$excel_sheet); temp_df <- readxl::read_excel(path, sheet = input$excel_sheet)
-            data_store$sheet <- input$excel_sheet; data_store$name_mod <- paste0(input$file_input$name, " - ", input$excel_sheet)
+            data_store$sheet <- input$excel_sheet; data_store$name_mod <- paste0(input$file_input$name, " [", input$excel_sheet, "]")
           }
         } else {
           req(input$example_dataset != ""); temp_df <- get(input$example_dataset, "package:datasets")
-          data_store$name_orig <- input$example_dataset; data_store$name_mod <- paste0(input$example_dataset, " (R example)")
+          data_store$name_orig <- input$example_dataset; data_store$name_mod <- paste0(input$example_dataset, " (Example)")
           data_store$full_path <- "Internal R memory"
         }
         data_store$df <- as.data.frame(temp_df)
@@ -211,53 +267,51 @@ mod_import_server <- function(id, show_debug = FALSE) {
       }, error = function(e) showNotification(e$message, type = "error"))
     })
 
-    observeEvent(input$btn_edit,  { deep_reset_values(); toggle_import_controls(FALSE) })
-    observeEvent(input$btn_reset, { deep_reset_values(); shinyjs::reset("file_input"); toggle_import_controls(FALSE) })
-
-    # --- DATA OUTPUTS ---
-    user_selection <- reactive({
-      list(
-        is_done   = !is.null(data_store$df),
-        locked    = is_locked(),
-        metadata  = list(name_orig = data_store$name_orig, name_mod = data_store$name_mod, path = data_store$full_path,
-                         sheet = data_store$sheet, sep = data_store$sep, dec = data_store$dec,
-                         header = data_store$header, timestamp = data_store$timestamp, file_obj = data_store$file_obj),
-        stats     = list(rows = data_store$rows, cols = data_store$cols),
-        dataset   = data_store$df
-      )
+    # EDIT: Resetea los valores reactivos y desbloquea para nuevos cambios
+    observeEvent(input$btn_edit,  {
+      deep_reset_values()
+      toggle_import_controls(FALSE)
     })
 
+    # RESET: Limpia todo e interfaz al estado inicial
+    observeEvent(input$btn_reset, {
+      deep_reset_values()
+      shinyjs::reset("main_input_col")
+      toggle_import_controls(FALSE)
+    })
+
+    # --- OUTPUTS ---
     output$preview <- renderDT({
       req(data_store$df)
       datatable(data_store$df, rownames = TRUE, class = 'cell-border hover',
                 options = list(scrollX = TRUE, pageLength = 5, dom = 'ltip',
                                rowCallback = JS("function(row, data, displayNum, displayIndex) {
-                    $(row).css('background-color', displayIndex % 2 === 0 ? '#f0ffff' : '#ffffff');
-                  }"),
+                                 $(row).css('background-color', displayIndex % 2 === 0 ? '#f0ffff' : '#ffffff');
+                               }"),
                                initComplete = JS("function(settings, json) {
-                    $(this.api().table().header()).css({'background-color': '#00d4ff', 'color': 'white', 'text-transform': 'uppercase'});
-                  }")))
+                                 $(this.api().table().header()).css({'background-color': '#00d4ff', 'color': 'white', 'text-transform': 'uppercase'});
+                               }")))
     })
 
     output$dataset_info_ui <- renderUI({
       req(data_store$df)
       div(class = "file-info-banner", fluidRow(
-        column(6, span(style="font-weight:900; color:#28a745; font-size:1.2rem;", "DATASET: "), span(style="font-size:1.2rem; font-weight:600;", data_store$name_mod)),
+        column(6, span(style="font-weight:900; color:#28a745; font-size:1.1rem;", "DATASET: "), span(style="font-size:1.1rem; font-weight:600;", data_store$name_mod)),
         column(3, span(style="font-weight:900; color:#28a745;", "ROWS: "), span(data_store$rows)),
         column(3, span(style="font-weight:900; color:#28a745;", "COLS: "), span(data_store$cols))
       ))
     })
 
-    # --- DEBUG MONITOR ---
-    output$the_debug <- renderUI({
+    # Panel de Debug Limpio
+    output$the_debug_container <- renderUI({
       req(show_debug)
-      div(div(class = "engine-divider"),
-          fluidRow(column(6, div(class = "section-label", "System Status"), verbatimTextOutput(ns("status_txt"))),
-                   column(6, div(class = "section-label", "Selection Debug"), verbatimTextOutput(ns("debug_selection")))))
+      div(class = "debug-panel-clean",
+          div(style = "color: #007bff; font-weight: bold; margin-bottom: 10px;", "DEBUG: DATA_STORE CONTENT"),
+          verbatimTextOutput(ns("debug_print"))
+      )
     })
-    output$status_txt <- renderText({ if (is.null(data_store$df)) "STATUS: [ OFFLINE ]" else paste0("STATUS: [ ONLINE ] ", data_store$rows, " rows") })
-    output$debug_selection <- renderPrint({ user_selection() })
+    output$debug_print <- renderPrint({ reactiveValuesToList(data_store) })
 
-    return(user_selection)
+    return(reactive({ list(df = data_store$df, locked = is_locked(), metadata = reactiveValuesToList(data_store)) }))
   })
 }
