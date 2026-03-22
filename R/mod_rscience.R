@@ -120,7 +120,7 @@ mod_rscience_ui <- function(id) {
             type = "hidden",
             tabPanelBody("tab_dataset", div(class="p-3", mod_import_ui(ns("demo_import")))),
             tabPanelBody("tab_analysis", div(class="p-4", h4("Analysis Studio Content"))),
-            tabPanelBody("tab_tool", div(class="p-3", module_treeApp_UI(ns("demo_tools")))),
+            tabPanelBody("tab_tool", div(class="p-3", mod_tools_ui(ns("my_tool")))),
             tabPanelBody("tab_welcome", div(class="vh-100 d-flex align-items-center justify-content-center", h4("Select a module", class="text-muted")))
           )
         )
@@ -137,7 +137,7 @@ mod_rscience_server <- function(id) {
 
     # 1. Módulos Internos
     res_import <- mod_import_server("demo_import")
-    res_tool   <- module_treeApp_Server(id = "demo_tools") # Descomentar cuando esté listo
+    res_tool   <- mod_tools_server("my_tool") # Descomentar cuando esté listo
 
     # 2. Lógica de Navegación (Switches -> Tabs)
     observe({
