@@ -206,6 +206,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
     }
 
     # 4. INYECTOR JS (Base estable + Mejoras estéticas solicitadas)
+    # 4. INYECTOR JS (Base estable + Mejoras estéticas solicitadas)
     output$js_injector <- renderUI({
       req(data_full)
       df_tree <- data_full %>% select(starts_with("nivel"))
@@ -279,10 +280,29 @@ mod_tree_server <- function(id, show_debug = FALSE) {
         });
 
       nodeEnter.append('circle').attr('r', 28);
-      nodeEnter.append('text').attr('dy', '.35em')
+
+      // --- BLOQUE MODIFICADO PARA SOPORTAR /n ---
+      const textElement = nodeEnter.append('text')
         .attr('x', d => d.children || d._children ? -50 : 50)
-        .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
-        .text(d => d.data.name);
+        .attr('text-anchor', d => d.children || d._children ? 'end' : 'start');
+
+      textElement.each(function(d) {
+        const name = d.data.name || '';
+        const lines = name.split('/n');
+        const el = d3.select(this);
+
+        // Offset vertical para que el bloque de texto quede centrado con el círculo
+        // Si hay 1 línea, offset es 0. Si hay 2, sube 0.5em para que el centro esté en el medio.
+        const vOffset = (lines.length - 1) * 0.5;
+
+        lines.forEach((line, index) => {
+          el.append('tspan')
+            .attr('x', d.children || d._children ? -50 : 50)
+            .attr('dy', index === 0 ? `-${vOffset}em` : '1.1em')
+            .text(line.trim());
+        });
+      });
+      // --- FIN DEL BLOQUE MODIFICADO ---
 
       const nodeUpdate = nodeEnter.merge(node);
       if (currentDuration === 0) { nodeUpdate.attr('transform', d => `translate(${d.y},${d.x})`); }
@@ -326,7 +346,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       updateTextSizes();
     }
 
-    // --- NUEVA FUNCIÓN DE ANCLAJE A LA IZQUIERDA ---
     function fitToLeftAnchor(targetNodes, customDuration) {
       const container = document.getElementById('tree-container');
       if (!container || !targetNodes || targetNodes.length === 0) return;
@@ -338,18 +357,15 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       const maxY = d3.max(targetNodes, d => d.y);
 
       const contentHeight = (maxX - minX) || 1;
-      const contentWidth = (maxY - minY) + 950; // Margen para los textos de la derecha
+      const contentWidth = (maxY - minY) + 950;
 
-      // Calculamos escala pero permitimos que el root esté fijo
       let scale = Math.min(rect.width / contentWidth, rect.height / (contentHeight + 200));
       scale = Math.min(Math.max(scale, 0.05), 0.7);
 
-      // El truco está aquí: el translate en Y (vertical) se centra,
-      // pero el translate en X (horizontal) se fija a un margen izquierdo constante (150px)
       const transform = d3.zoomIdentity
-        .translate(150 * scale, rect.height / 2) // 150 es el margen desde la izquierda
+        .translate(150 * scale, rect.height / 2)
         .scale(scale)
-        .translate(0, -(minX + maxX) / 2); // Solo centramos verticalmente
+        .translate(0, -(minX + maxX) / 2);
 
       if (customDuration === 0) {
         svg.call(zoomHandler.transform, transform);
@@ -402,7 +418,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       update(activeNode);
     }
 
-    // Función de captura actualizada para respetar el fondo negro
     window.captureTree = function() {
        const svgNode = document.querySelector('#tree-container svg');
        const rect = svgNode.getBoundingClientRect();
