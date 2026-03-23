@@ -123,7 +123,7 @@ mod_rscience_ui <- function(id) {
             tabPanelBody(
               "tab_tool",
               div(
-                style = "height: calc(100vh - 80px); overflow-y: auto; overflow-x: hidden;",
+                #style = "height: calc(100vh - 80px); overflow-y: auto; overflow-x: hidden;",
                 mod_tools_ui(ns("my_tool"))
               )
             ),

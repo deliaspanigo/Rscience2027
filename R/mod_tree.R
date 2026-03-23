@@ -1,11 +1,13 @@
-
-
 # ==========================================
 # MÓDULO: EXPLORADOR DE ÁRBOL RScience
 # ==========================================
 library(shiny)
 library(dplyr)
 library(jsonlite)
+
+# ==========================================
+# MÓDULO: EXPLORADOR DE ÁRBOL RScience (UI)
+# ==========================================
 
 mod_tree_ui <- function(id) {
   ns <- NS(id)
@@ -15,9 +17,9 @@ mod_tree_ui <- function(id) {
     tags$head(
       tags$script(src = "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"),
       tags$style(HTML(paste0("
-        /* Contenedor principal: ahora es un FLEXBOX vertical */
+        /* Contenedor principal: FLEXBOX vertical */
         #", module_id, " {
-          height: 100vh;
+          height: 100%; /* CAMBIO: De 100vh a 100% para independencia total */
           width: 100%;
           background-color: #000;
           margin: 0;
@@ -28,7 +30,7 @@ mod_tree_ui <- function(id) {
           font-family: 'Segoe UI', sans-serif;
         }
 
-        /* Consola de estado: altura automática, no absoluta */
+        /* Consola de estado */
         #", module_id, " .status-console {
           background: #0a1f2a;
           color: #ADFF2F;
@@ -37,7 +39,7 @@ mod_tree_ui <- function(id) {
           padding: 10px 20px;
           font-family: 'Courier New', monospace;
           font-size: 13px;
-          flex-shrink: 0; /* No se encoge */
+          flex-shrink: 0;
           z-index: 1002;
         }
 
@@ -49,11 +51,13 @@ mod_tree_ui <- function(id) {
           padding: 0;
         }
 
-        /* Área de visualización: donde vive el árbol y los paneles */
+        /* Área de visualización */
         #", module_id, " .viewport-area {
-          flex-grow: 1; /* Ocupa todo el resto del espacio */
+          flex-grow: 1;
           position: relative;
           overflow: hidden;
+          width: 100%;
+          height: 100%;
         }
 
         #", module_id, " #tree-container {
@@ -63,7 +67,7 @@ mod_tree_ui <- function(id) {
           width: 100%;
         }
 
-        /* Ajuste de paneles para que se posicionen respecto a viewport-area */
+        /* Paneles de Control */
         #", module_id, " .panel-ctrl {
           position: absolute;
           z-index: 1000;
@@ -79,7 +83,7 @@ mod_tree_ui <- function(id) {
         #", module_id, " .panel-left  { top: 20px; left: 20px;  width: 220px; }
         #", module_id, " .panel-right { top: 20px; right: 20px; width: 260px; }
 
-        /* Estilos de Nodos y Links (sin cambios) */
+        /* Estilos de Nodos y Links */
         #", module_id, " .node text {
           pointer-events: none;
           fill: #fff;
@@ -89,27 +93,48 @@ mod_tree_ui <- function(id) {
         }
         #", module_id, " .link { fill: none; }
 
+        /* Botones de Comando */
         #", module_id, " .btn-cmd {
-          background: transparent; color: #00FFFF; border: 1px solid #00FFFF;
-          padding: 10px; width: 100%; font-weight: bold; cursor: pointer;
-          margin-bottom: 10px; border-radius: 6px; text-transform: uppercase;
+          background: transparent;
+          color: #00FFFF;
+          border: 1px solid #00FFFF;
+          padding: 10px;
+          width: 100%;
+          font-weight: bold;
+          cursor: pointer;
+          margin-bottom: 10px;
+          border-radius: 6px;
+          text-transform: uppercase;
+          transition: all 0.3s;
         }
-        #", module_id, " .btn-cmd:hover { background: #00FFFF; color: #000; }
+        #", module_id, " .btn-cmd:hover {
+          background: #00FFFF;
+          color: #000;
+          box-shadow: 0 0 15px #00FFFF;
+        }
+
+        /* Títulos de Paneles */
+        .panel-title {
+          font-weight: bold;
+          margin-bottom: 15px;
+          border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+          padding-bottom: 5px;
+          letter-spacing: 1px;
+        }
 
         #", module_id, " .collapsed { opacity: 0.1; pointer-events: none; }
       ")))
     ),
 
     div(id = module_id,
-        # 1. Consola (Seccion independiente arriba)
-        # Solo se muestra si hay contenido (controlado por show_debug en server)
+        # 1. Consola (Sección independiente arriba)
         uiOutput(ns("debug_ui_wrapper")),
 
-        # 2. Área de Visualización (Todo lo demás)
+        # 2. Área de Visualización
         div(class = "viewport-area",
             div(id = "tree-container"),
 
-            # Panel izquierdo
+            # Panel izquierdo: ACTIONS
             div(id = "panel-left", class = "panel-ctrl panel-left",
                 tags$button(id = "btn-toggle-left",
                             style="position:absolute; top:5px; right:5px; background:none; border:none; color:#0ff; cursor:pointer;",
@@ -117,22 +142,30 @@ mod_tree_ui <- function(id) {
                 div(class = "panel-title", "⚡ ACTIONS"),
                 tags$button("↺ Reset View", class = "btn-cmd", onclick = "resetMap()"),
                 tags$button("🎯 Focus Branch", class = "btn-cmd", style="border-color:#ADFF2F; color:#ADFF2F;", onclick = "runCollapseOthers()"),
-                tags$button("⇱ Expand All", class = "btn-cmd", onclick = "fullExpand()")
+                tags$button("⇱ Expand All", class = "btn-cmd", onclick = "fullExpand()"),
+
+                # BOTÓN DE CAPTURA
+                tags$button("📸 Capture SVG", class = "btn-cmd",
+                            style="border-color:#FF00FF; color:#FF00FF; margin-top: 10px;",
+                            onclick = "captureTree()")
             ),
 
-            # Panel derecho
+            # Panel derecho: VIEW MODES
             div(id = "panel-right", class = "panel-ctrl panel-right",
                 tags$button(id = "btn-toggle-right",
                             style="position:absolute; top:5px; left:5px; background:none; border:none; color:#0ff; cursor:pointer;",
                             "✖", onclick = "togglePanel('right')"),
                 div(class = "panel-title", "🛠️ VIEW MODES"),
-                div(style="margin-bottom:10px;", "GHOST MODE",
-                    tags$input(type="checkbox", onclick="toggleGhost()")),
-                div("TOP ALIGN",
-                    tags$input(type="checkbox", onclick="toggleTopAlign()"))
+                div(style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;",
+                    "GHOST MODE",
+                    tags$input(type="checkbox", onclick="toggleGhost()", style="cursor:pointer; width:18px; height:18px;")),
+                div(style="display:flex; justify-content:space-between; align-items:center;",
+                    "TOP ALIGN",
+                    tags$input(type="checkbox", onclick="toggleTopAlign()", style="cursor:pointer; width:18px; height:18px;"))
             )
         )
     ),
+    # Inyector de lógica JS
     uiOutput(ns("js_injector"))
   )
 }
@@ -141,14 +174,14 @@ mod_tree_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Carga de datos con manejo de error
+    # Carga de datos
     data_full <- tryCatch({
       Rscience2027::tree_data
     }, error = function(e) {
       data.frame(nivel1 = "Error", nivel2 = "No Data", script_id = 0)
     })
 
-    # 1. OBJETO REACTIVO PARA LA APP PRINCIPAL (CÁLCULO DE PATH Y SCRIPTS)
+    # 1. OBJETO REACTIVO PARA LA APP PRINCIPAL
     info_nodo <- reactive({
       node_name <- if (is.null(input$selected_node) ||
                        input$selected_node == "" ||
@@ -187,7 +220,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       list(node_name = node_name, path = path_final, scripts = scripts, time = format(Sys.time(), "%H:%M:%S"))
     })
 
-    # 2. CONSOLA DE ESTADO (OUTPUT DE TEXTO)
+    # 2. CONSOLA DE ESTADO
     output$status_info <- renderPrint({
       req(show_debug)
       res <- info_nodo()
@@ -196,7 +229,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       cat("SYSTEM TIME   :", res$time)
     })
 
-    # 3. WRAPPER DE LA CONSOLA (CONTROL DE VISIBILIDAD)
     output$debug_ui_wrapper <- renderUI({
       if (show_debug) {
         div(class = "status-console",
@@ -207,7 +239,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       }
     })
 
-    # 4. HELPER: CONVERSIÓN DE DATAFRAME A LISTA JERÁRQUICA
+    # 3. HELPER JERARQUÍA
     df_a_jerarquia <- function(data, name = "Rscience") {
       node <- list(name = as.character(name))
       if (ncol(data) > 0) {
@@ -224,7 +256,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       node
     }
 
-    # 5. INYECTOR JAVASCRIPT (LÓGICA D3 + INTERACTIVIDAD)
+    # 4. INYECTOR JS
     output$js_injector <- renderUI({
       req(data_full)
       df_tree <- data_full %>% select(starts_with("nivel"))
@@ -241,8 +273,10 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           if (container.empty()) return;
           container.selectAll('*').remove();
 
-          const width = container.node().clientWidth;
-          const height = container.node().clientHeight;
+          // CORRECCIÓN: Usar Rect para centro relativo al contenedor real
+          const rect = container.node().getBoundingClientRect();
+          const width = rect.width;
+          const height = rect.height;
 
           svg = container.append('svg').attr('width', '100%').attr('height', '100%');
           g = svg.append('g');
@@ -256,6 +290,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           root = d3.hierarchy(treeData, d => d.children);
           root.descendants().forEach(d => { d.id = ++i; });
 
+          // CENTRADO VERTICAL INDEPENDIENTE
           root.x0 = height / 2;
           root.y0 = 0;
           activeNode = root;
@@ -269,7 +304,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
         function update(source, customDuration) {
           const currentDuration = (customDuration !== undefined) ? customDuration : duration;
 
-          // Lógica de reordenamiento reversible
           if (activeNode) {
             reorderPathToTop(activeNode, !topAlignMode);
           }
@@ -278,7 +312,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           const links = nodes.slice(1);
 
           nodes.forEach(d => d.y = d.depth * 850);
-
           fitToViewport(nodes, currentDuration);
 
           const node = g.selectAll('g.node').data(nodes, d => d.id);
@@ -300,12 +333,10 @@ mod_tree_server <- function(id, show_debug = FALSE) {
             .text(d => d.data.name);
 
           const nodeUpdate = nodeEnter.merge(node);
-
           if (currentDuration === 0) {
              nodeUpdate.attr('transform', d => `translate(${d.y},${d.x})`);
           } else {
-             nodeUpdate.transition().duration(currentDuration)
-               .attr('transform', d => `translate(${d.y},${d.x})`);
+             nodeUpdate.transition().duration(currentDuration).attr('transform', d => `translate(${d.y},${d.x})`);
           }
 
           nodeUpdate.select('circle')
@@ -318,45 +349,28 @@ mod_tree_server <- function(id, show_debug = FALSE) {
             .style('stroke-width', '6px')
             .style('opacity', d => (ghostMode && d !== activeNode && !isAncestor(d)) ? 0.15 : 1);
 
-          if (currentDuration === 0) {
-             node.exit().remove();
-          } else {
-             node.exit().transition().duration(currentDuration)
-               .attr('transform', d => `translate(${source.y},${source.x})`).remove();
-          }
+          if (currentDuration === 0) { node.exit().remove(); }
+          else { node.exit().transition().duration(currentDuration).attr('transform', d => `translate(${source.y},${source.x})`).remove(); }
 
           const link = g.selectAll('path.link').data(links, d => d.id);
-
           const linkEnter = link.enter().insert('path', 'g').attr('class', 'link')
             .attr('d', d => {
-               if (currentDuration === 0) {
-                  return diagonal(d, d.parent);
-               } else {
-                  const o = {y: source.y0 || 0, x: source.x0 || 0};
-                  return diagonal(o, o);
-               }
+               if (currentDuration === 0) return diagonal(d, d.parent);
+               const o = {y: source.y0 || 0, x: source.x0 || 0};
+               return diagonal(o, o);
             });
 
           const linkUpdate = linkEnter.merge(link);
-
-          if (currentDuration === 0) {
-             linkUpdate.attr('d', d => diagonal(d, d.parent));
-          } else {
-             linkUpdate.transition().duration(currentDuration)
-               .attr('d', d => diagonal(d, d.parent));
-          }
+          if (currentDuration === 0) { linkUpdate.attr('d', d => diagonal(d, d.parent)); }
+          else { linkUpdate.transition().duration(currentDuration).attr('d', d => diagonal(d, d.parent)); }
 
           linkUpdate
             .style('stroke', d => (d === activeNode || isAncestor(d)) ? '#ff9100' : '#00FFFF')
             .style('stroke-width', d => (d === activeNode || isAncestor(d)) ? '25px' : '12px')
             .style('opacity', d => (ghostMode && !isAncestor(d) && d !== activeNode) ? 0.08 : 0.6);
 
-          if (currentDuration === 0) {
-             link.exit().remove();
-          } else {
-             link.exit().transition().duration(currentDuration)
-               .attr('d', d => { const o = {y: source.y, x: source.x}; return diagonal(o, o); }).remove();
-          }
+          if (currentDuration === 0) { link.exit().remove(); }
+          else { link.exit().transition().duration(currentDuration).attr('d', d => { const o = {y: source.y, x: source.x}; return diagonal(o, o); }).remove(); }
 
           nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
         }
@@ -364,23 +378,21 @@ mod_tree_server <- function(id, show_debug = FALSE) {
         function fitToViewport(targetNodes, customDuration) {
           const container = document.getElementById('tree-container');
           if (!container || !targetNodes || targetNodes.length === 0) return;
-          const width = container.clientWidth, height = container.clientHeight;
+          const rect = container.getBoundingClientRect();
+          const width = rect.width, height = rect.height;
 
           const minX = d3.min(targetNodes, d => d.x), maxX = d3.max(targetNodes, d => d.x);
           const minY = d3.min(targetNodes, d => d.y), maxY = d3.max(targetNodes, d => d.y);
-
           const contentWidth = (maxY - minY) || 1, contentHeight = (maxX - minX) || 1;
+
           const padding = 160;
           let scale = Math.min(width / (contentWidth + padding * 6), height / (contentHeight + padding * 2));
           scale = Math.min(Math.max(scale, 0.05), 0.8);
 
           const transform = d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-(minY + maxY) / 2, -(minX + maxX) / 2);
 
-          if (customDuration === 0) {
-              svg.call(zoomHandler.transform, transform);
-          } else {
-              svg.transition().duration(customDuration).ease(d3.easeCubicInOut).call(zoomHandler.transform, transform);
-          }
+          if (customDuration === 0) { svg.call(zoomHandler.transform, transform); }
+          else { svg.transition().duration(customDuration).ease(d3.easeCubicInOut).call(zoomHandler.transform, transform); }
         }
 
         function reorderPathToTop(d, revert = false) {
@@ -389,10 +401,8 @@ mod_tree_server <- function(id, show_debug = FALSE) {
             let p = curr.parent;
             let children = p.children || p._children;
             if (children) {
-              if (revert) {
-                // Restauramos el orden original basado en el ID
-                children.sort((a, b) => a.id - b.id);
-              } else {
+              if (revert) { children.sort((a, b) => a.id - b.id); }
+              else {
                 let idx = children.findIndex(c => c.id === curr.id);
                 if (idx > -1) { children.unshift(children.splice(idx, 1)[0]); }
               }
@@ -401,12 +411,59 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           }
         }
 
+        window.captureTree = function() {
+          const svgNode = document.querySelector('#tree-container svg');
+          const rect = svgNode.getBoundingClientRect();
+          const width = rect.width, height = rect.height;
+
+          const clonedSvg = svgNode.cloneNode(true);
+          d3.select(clonedSvg).selectAll('text')
+            .style('fill', '#ffffff')
+            .style('font-family', 'Segoe UI, sans-serif')
+            .style('text-shadow', '2px 2px 4px #000000');
+
+          d3.select(clonedSvg).selectAll('.link')
+            .style('fill', 'none')
+            .style('stroke-opacity', '0.6');
+
+          const serializer = new XMLSerializer();
+          let source = serializer.serializeToString(clonedSvg);
+          if(!source.match(/^<svg[^>]+xmlns=\"http\\:\\/\\/www\\.w3\\.org\\/2000\\/svg\"/)){
+              source = source.replace(/^<svg/, '<svg xmlns=\"http://www.w3.org/2000/svg\"');
+          }
+
+          const img = new Image();
+          const svgBlob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
+          const url = URL.createObjectURL(svgBlob);
+
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const scaleFactor = 2;
+            canvas.width = width * scaleFactor;
+            canvas.height = height * scaleFactor;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.scale(scaleFactor, scaleFactor);
+            ctx.drawImage(img, 0, 0);
+
+            const pngUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = pngUrl;
+            link.download = 'RScience_Capture_' + new Date().getTime() + '.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          };
+          img.src = url;
+        };
+
         function runCollapseOthers() {
           if (!activeNode || activeNode === root) return;
           var ancestors = [];
           var curr = activeNode;
           while (curr) { ancestors.push(curr.id); curr = curr.parent; }
-
           root.descendants().forEach(d => {
             if (ancestors.indexOf(d.id) === -1) {
               if (d.children) { d._children = d.children; d.children = null; }
@@ -430,8 +487,10 @@ mod_tree_server <- function(id, show_debug = FALSE) {
         function resetMap() { activeNode = root; if(root.children) root.children.forEach(collapse); update(root); }
         function fullExpand() { expand(root); update(root); }
 
-        setTimeout(initTree, 200);
-        window.addEventListener('resize', () => fitToViewport(treemap(root).descendants(), 0));
+        setTimeout(initTree, 300);
+        window.addEventListener('resize', () => {
+           if(treemap && root) fitToViewport(treemap(root).descendants(), 0);
+        });
         "
       )))
     })
