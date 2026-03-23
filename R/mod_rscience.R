@@ -4,6 +4,19 @@
 library("bslib")
 library("shiny")
 
+path_tool <- system.file("shiny", "fn03_tool_script", "tool_0001_script_001",
+                         package = "Rscience2027")
+
+# Para cargar el pack_module.R específicamente:
+source(file.path(path_tool, "pack_module.R"))
+
+path_tool02 <- system.file("shiny", "fn03_tool_script", "tool_0001_script_001", "sub_module",
+                           package = "Rscience2027")
+
+# Para cargar el pack_module.R específicamente:
+source(file.path(path_tool02, "sm01_var_selection.R"))
+source(file.path(path_tool02, "sm02_levels.R"))
+
 
 mod_rscience_ui <- function(id) {
   ns <- NS(id)
@@ -119,7 +132,7 @@ mod_rscience_ui <- function(id) {
             id = ns("engine_switcher"),
             type = "hidden",
             tabPanelBody("tab_dataset", div(class="p-3", mod_import_ui(ns("demo_import")))),
-            tabPanelBody("tab_analysis", div(class="p-4", h4("Analysis Studio Content"))),
+            tabPanelBody("tab_analysis", div(class="p-4", PACK_mod_main_ui(ns("mi_app")))),
             tabPanelBody(
               "tab_tool",
               div(
@@ -140,6 +153,18 @@ mod_rscience_ui <- function(id) {
 mod_rscience_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    ############################################################################
+
+
+    resultados <- PACK_mod_main_server(
+      id = "mi_app",
+      df_input = reactive(mtcars),
+      show_debug = TRUE
+    )
+
+    ############################################################################
+
 
     # 1. Módulos Internos
     res_import <- mod_import_server("demo_import")
