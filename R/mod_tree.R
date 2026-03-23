@@ -17,155 +17,126 @@ mod_tree_ui <- function(id) {
     tags$head(
       tags$script(src = "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"),
       tags$style(HTML(paste0("
-        /* Contenedor principal: FLEXBOX vertical */
         #", module_id, " {
-          height: 100%; /* CAMBIO: De 100vh a 100% para independencia total */
-          width: 100%;
+          height: 100%; width: 100%;
           background-color: #000;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
+          display: flex; /* Layout Horizontal */
           overflow: hidden;
           font-family: 'Segoe UI', sans-serif;
+          position: relative;
         }
 
-        /* Consola de estado */
-        #", module_id, " .status-console {
-          background: #0a1f2a;
-          color: #ADFF2F;
-          border-bottom: 2px solid #00aaff;
-          margin: 0;
-          padding: 10px 20px;
-          font-family: 'Courier New', monospace;
-          font-size: 13px;
-          flex-shrink: 0;
-          z-index: 1002;
-        }
-
-        #", module_id, " .status-console pre {
-          background: transparent;
-          border: none;
-          color: inherit;
-          margin: 0;
-          padding: 0;
-        }
-
-        /* Área de visualización */
+        /* ÁREA DEL MAPA (Ocupa todo el fondo) */
         #", module_id, " .viewport-area {
           flex-grow: 1;
           position: relative;
-          overflow: hidden;
-          width: 100%;
+          background: radial-gradient(circle, #0a1015 0%, #000 100%);
+        }
+
+        /* SIDEBAR UNIFICADA - Ahora cerrada por defecto */
+        #", module_id, " .sidebar-ctrl {
+          width: 280px;
           height: 100%;
-        }
+          background: rgba(10, 20, 25, 0.95);
+          border-left: 2px solid #00FFFF;
+          padding: 25px 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          z-index: 1001;
+          box-shadow: -10px 0 30px rgba(0,0,0,0.5);
 
-        #", module_id, " #tree-container {
+          /* ESTADO INICIAL: FUERA DE PANTALLA */
           position: absolute;
-          inset: 0;
-          height: 100%;
-          width: 100%;
+          right: 0;
+          transform: translateX(100%);
         }
 
-        /* Paneles de Control */
-        #", module_id, " .panel-ctrl {
+        /* ESTADO ABIERTO: CUANDO SE QUITA LA CLASE COLLAPSED */
+        #", module_id, " .sidebar-ctrl:not(.collapsed) {
+          transform: translateX(0);
+        }
+
+        /* BOTÓN FLOTANTE PARA ABRIR/CERRAR */
+        #", module_id, " .toggle-sidebar-btn {
           position: absolute;
-          z-index: 1000;
-          background: rgba(10, 20, 25, 0.92);
-          border: 2px solid #00FFFF;
-          border-radius: 12px;
-          color: #00FFFF;
-          padding: 16px;
-          box-shadow: 0 0 25px rgba(0, 255, 255, 0.25);
-          transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        #", module_id, " .panel-left  { top: 20px; left: 20px;  width: 220px; }
-        #", module_id, " .panel-right { top: 20px; right: 20px; width: 260px; }
-
-        /* Estilos de Nodos y Links */
-        #", module_id, " .node text {
-          pointer-events: none;
-          fill: #fff;
-          font-size: 20px !important;
-          font-weight: 900;
-          text-shadow: 3px 3px 8px #000;
-        }
-        #", module_id, " .link { fill: none; }
-
-        /* Botones de Comando */
-        #", module_id, " .btn-cmd {
-          background: transparent;
-          color: #00FFFF;
-          border: 1px solid #00FFFF;
-          padding: 10px;
-          width: 100%;
-          font-weight: bold;
-          cursor: pointer;
-          margin-bottom: 10px;
-          border-radius: 6px;
-          text-transform: uppercase;
-          transition: all 0.3s;
-        }
-        #", module_id, " .btn-cmd:hover {
+          right: 10px;
+          top: 10px;
+          z-index: 1002;
           background: #00FFFF;
           color: #000;
-          box-shadow: 0 0 15px #00FFFF;
-        }
-
-        /* Títulos de Paneles */
-        .panel-title {
+          border: none;
+          padding: 8px 12px;
+          border-radius: 5px;
           font-weight: bold;
-          margin-bottom: 15px;
-          border-bottom: 1px solid rgba(0, 255, 255, 0.3);
-          padding-bottom: 5px;
-          letter-spacing: 1px;
+          cursor: pointer;
+          box-shadow: 0 0 10px #00FFFF;
         }
 
-        #", module_id, " .collapsed { opacity: 0.1; pointer-events: none; }
+        /* ESTILOS DE BOTONES Y TOGGLES */
+        .sidebar-section { margin-bottom: 10px; }
+        .panel-title {
+          color: #00FFFF; font-weight: 900; font-size: 0.9rem;
+          border-bottom: 1px solid rgba(0,255,255,0.3); padding-bottom: 8px; margin-bottom: 15px;
+          letter-spacing: 2px;
+        }
+
+        .btn-cmd {
+          background: transparent; color: #00FFFF; border: 1px solid #00FFFF;
+          padding: 12px; width: 100%; font-weight: bold; cursor: pointer;
+          border-radius: 6px; text-transform: uppercase; transition: all 0.3s;
+          margin-bottom: 10px;
+        }
+        .btn-cmd:hover { background: #00FFFF; color: #000; box-shadow: 0 0 15px #00FFFF; }
+
+        .toggle-row {
+          display: flex; justify-content: space-between; align-items: center;
+          color: #fff; font-size: 0.85rem; padding: 5px 0;
+        }
+
+        /* D3 Estilos */
+        .node text { pointer-events: none; fill: #fff; font-size: 18px; font-weight: 700; text-shadow: 2px 2px 4px #000; }
+        .link { fill: none; stroke-opacity: 0.6; }
       ")))
     ),
 
     div(id = module_id,
-        # 1. Consola (Sección independiente arriba)
-        uiOutput(ns("debug_ui_wrapper")),
+        # Botón para abrir/cerrar menú
+        tags$button("☰ MENU", class = "toggle-sidebar-btn", onclick = "toggleSidebar()"),
 
-        # 2. Área de Visualización
+        # Área del Mapa
         div(class = "viewport-area",
-            div(id = "tree-container"),
+            div(id = "tree-container", style="width:100%; height:100%;")
+        ),
 
-            # Panel izquierdo: ACTIONS
-            div(id = "panel-left", class = "panel-ctrl panel-left",
-                tags$button(id = "btn-toggle-left",
-                            style="position:absolute; top:5px; right:5px; background:none; border:none; color:#0ff; cursor:pointer;",
-                            "✖", onclick = "togglePanel('left')"),
-                div(class = "panel-title", "⚡ ACTIONS"),
+        # Sidebar Unificada a la Derecha
+        div(id = "sidebar", class = "sidebar-ctrl",
+            # Sección 1: Acciones
+            div(class = "sidebar-section",
+                div(class = "panel-title", "⚡ SYSTEM ACTIONS"),
                 tags$button("↺ Reset View", class = "btn-cmd", onclick = "resetMap()"),
                 tags$button("🎯 Focus Branch", class = "btn-cmd", style="border-color:#ADFF2F; color:#ADFF2F;", onclick = "runCollapseOthers()"),
-                tags$button("⇱ Expand All", class = "btn-cmd", onclick = "fullExpand()"),
-
-                # BOTÓN DE CAPTURA
-                tags$button("📸 Capture SVG", class = "btn-cmd",
-                            style="border-color:#FF00FF; color:#FF00FF; margin-top: 10px;",
-                            onclick = "captureTree()")
+                tags$button("⇱ Expand All", class = "btn-cmd", onclick = "fullExpand()")
             ),
 
-            # Panel derecho: VIEW MODES
-            div(id = "panel-right", class = "panel-ctrl panel-right",
-                tags$button(id = "btn-toggle-right",
-                            style="position:absolute; top:5px; left:5px; background:none; border:none; color:#0ff; cursor:pointer;",
-                            "✖", onclick = "togglePanel('right')"),
-                div(class = "panel-title", "🛠️ VIEW MODES"),
-                div(style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;",
-                    "GHOST MODE",
-                    tags$input(type="checkbox", onclick="toggleGhost()", style="cursor:pointer; width:18px; height:18px;")),
-                div(style="display:flex; justify-content:space-between; align-items:center;",
-                    "TOP ALIGN",
-                    tags$input(type="checkbox", onclick="toggleTopAlign()", style="cursor:pointer; width:18px; height:18px;"))
+            # Sección 2: Modos de Vista
+            div(class = "sidebar-section",
+                div(class = "panel-title", "🛠️ VIEW SETTINGS"),
+                div(class = "toggle-row", "GHOST MODE",
+                    tags$input(type="checkbox", onclick="toggleGhost()", style="width:18px;height:18px;")),
+                div(class = "toggle-row", "TOP ALIGN",
+                    tags$input(type="checkbox", onclick="toggleTopAlign()", style="width:18px;height:18px;"))
+            ),
+
+            # Sección 3: Exportación
+            div(class = "sidebar-section", style="margin-top: auto;",
+                div(class = "panel-title", "📤 EXPORT"),
+                tags$button("📸 Capture PNG", class = "btn-cmd",
+                            style="border-color:#FF00FF; color:#FF00FF;", onclick = "captureTree()")
             )
         )
     ),
-    # Inyector de lógica JS
     uiOutput(ns("js_injector"))
   )
 }
@@ -174,14 +145,14 @@ mod_tree_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Carga de datos
+    # 1. CARGA DE DATOS (Mantenemos tu lógica original)
     data_full <- tryCatch({
       Rscience2027::tree_data
     }, error = function(e) {
       data.frame(nivel1 = "Error", nivel2 = "No Data", script_id = 0)
     })
 
-    # 1. OBJETO REACTIVO PARA LA APP PRINCIPAL
+    # 2. OBJETO REACTIVO (Tu lógica de filtrado y path)
     info_nodo <- reactive({
       node_name <- if (is.null(input$selected_node) ||
                        input$selected_node == "" ||
@@ -220,7 +191,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       list(node_name = node_name, path = path_final, scripts = scripts, time = format(Sys.time(), "%H:%M:%S"))
     })
 
-    # 2. CONSOLA DE ESTADO
+    # 3. CONSOLA DE DEBUG (Original)
     output$status_info <- renderPrint({
       req(show_debug)
       res <- info_nodo()
@@ -231,15 +202,11 @@ mod_tree_server <- function(id, show_debug = FALSE) {
 
     output$debug_ui_wrapper <- renderUI({
       if (show_debug) {
-        div(class = "status-console",
-            verbatimTextOutput(ns("status_info"))
-        )
-      } else {
-        NULL
-      }
+        div(class = "status-console", verbatimTextOutput(ns("status_info")))
+      } else { NULL }
     })
 
-    # 3. HELPER JERARQUÍA
+    # 4. HELPER JERARQUÍA (Original)
     df_a_jerarquia <- function(data, name = "Rscience") {
       node <- list(name = as.character(name))
       if (ncol(data) > 0) {
@@ -256,7 +223,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       node
     }
 
-    # 4. INYECTOR JS
+    # 5. INYECTOR JS COMPLETO
     output$js_injector <- renderUI({
       req(data_full)
       df_tree <- data_full %>% select(starts_with("nivel"))
@@ -273,10 +240,8 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           if (container.empty()) return;
           container.selectAll('*').remove();
 
-          // CORRECCIÓN: Usar Rect para centro relativo al contenedor real
           const rect = container.node().getBoundingClientRect();
-          const width = rect.width;
-          const height = rect.height;
+          const width = rect.width, height = rect.height;
 
           svg = container.append('svg').attr('width', '100%').attr('height', '100%');
           g = svg.append('g');
@@ -290,9 +255,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           root = d3.hierarchy(treeData, d => d.children);
           root.descendants().forEach(d => { d.id = ++i; });
 
-          // CENTRADO VERTICAL INDEPENDIENTE
-          root.x0 = height / 2;
-          root.y0 = 0;
+          root.x0 = height / 2; root.y0 = 0;
           activeNode = root;
 
           Shiny.setInputValue('", ns("selected_node"), "', 'Rscience');
@@ -303,10 +266,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
 
         function update(source, customDuration) {
           const currentDuration = (customDuration !== undefined) ? customDuration : duration;
-
-          if (activeNode) {
-            reorderPathToTop(activeNode, !topAlignMode);
-          }
+          if (activeNode) reorderPathToTop(activeNode, !topAlignMode);
 
           const nodes = treemap(root).descendants();
           const links = nodes.slice(1);
@@ -333,11 +293,8 @@ mod_tree_server <- function(id, show_debug = FALSE) {
             .text(d => d.data.name);
 
           const nodeUpdate = nodeEnter.merge(node);
-          if (currentDuration === 0) {
-             nodeUpdate.attr('transform', d => `translate(${d.y},${d.x})`);
-          } else {
-             nodeUpdate.transition().duration(currentDuration).attr('transform', d => `translate(${d.y},${d.x})`);
-          }
+          if (currentDuration === 0) { nodeUpdate.attr('transform', d => `translate(${d.y},${d.x})`); }
+          else { nodeUpdate.transition().duration(currentDuration).attr('transform', d => `translate(${d.y},${d.x})`); }
 
           nodeUpdate.select('circle')
             .style('fill', d => {
@@ -375,6 +332,15 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
         }
 
+        // --- FUNCIONES DE SIDEBAR Y VISTA ---
+        window.toggleSidebar = function() {
+          const sidebar = document.getElementById('sidebar');
+          sidebar.classList.toggle('collapsed');
+          setTimeout(() => {
+            if(treemap && root) fitToViewport(treemap(root).descendants(), 600);
+          }, 450);
+        }
+
         function fitToViewport(targetNodes, customDuration) {
           const container = document.getElementById('tree-container');
           if (!container || !targetNodes || targetNodes.length === 0) return;
@@ -385,8 +351,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           const minY = d3.min(targetNodes, d => d.y), maxY = d3.max(targetNodes, d => d.y);
           const contentWidth = (maxY - minY) || 1, contentHeight = (maxX - minX) || 1;
 
-          const padding = 160;
-          let scale = Math.min(width / (contentWidth + padding * 6), height / (contentHeight + padding * 2));
+          let scale = Math.min(width / (contentWidth + 400), height / (contentHeight + 200));
           scale = Math.min(Math.max(scale, 0.05), 0.8);
 
           const transform = d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-(minY + maxY) / 2, -(minX + maxX) / 2);
@@ -398,8 +363,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
         function reorderPathToTop(d, revert = false) {
           let curr = d;
           while (curr && curr.parent) {
-            let p = curr.parent;
-            let children = p.children || p._children;
+            let p = curr.parent; let children = p.children || p._children;
             if (children) {
               if (revert) { children.sort((a, b) => a.id - b.id); }
               else {
@@ -415,82 +379,50 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           const svgNode = document.querySelector('#tree-container svg');
           const rect = svgNode.getBoundingClientRect();
           const width = rect.width, height = rect.height;
-
           const clonedSvg = svgNode.cloneNode(true);
-          d3.select(clonedSvg).selectAll('text')
-            .style('fill', '#ffffff')
-            .style('font-family', 'Segoe UI, sans-serif')
-            .style('text-shadow', '2px 2px 4px #000000');
-
-          d3.select(clonedSvg).selectAll('.link')
-            .style('fill', 'none')
-            .style('stroke-opacity', '0.6');
-
+          d3.select(clonedSvg).selectAll('text').style('fill', '#ffffff').style('font-family', 'Segoe UI, sans-serif').style('text-shadow', '2px 2px 4px #000000');
+          d3.select(clonedSvg).selectAll('.link').style('fill', 'none').style('stroke-opacity', '0.6');
           const serializer = new XMLSerializer();
           let source = serializer.serializeToString(clonedSvg);
-          if(!source.match(/^<svg[^>]+xmlns=\"http\\:\\/\\/www\\.w3\\.org\\/2000\\/svg\"/)){
-              source = source.replace(/^<svg/, '<svg xmlns=\"http://www.w3.org/2000/svg\"');
-          }
-
+          if(!source.match(/^<svg[^>]+xmlns=\"http\\:\\/\\/www\\.w3\\.org\\/2000\\/svg\"/)){ source = source.replace(/^<svg/, '<svg xmlns=\"http://www.w3.org/2000/svg\"'); }
           const img = new Image();
           const svgBlob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
           const url = URL.createObjectURL(svgBlob);
-
           img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const scaleFactor = 2;
-            canvas.width = width * scaleFactor;
-            canvas.height = height * scaleFactor;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.scale(scaleFactor, scaleFactor);
-            ctx.drawImage(img, 0, 0);
-
+            const canvas = document.createElement('canvas'); const scaleFactor = 2;
+            canvas.width = width * scaleFactor; canvas.height = height * scaleFactor;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.scale(scaleFactor, scaleFactor); ctx.drawImage(img, 0, 0);
             const pngUrl = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.href = pngUrl;
+            const link = document.createElement('a'); link.href = pngUrl;
             link.download = 'RScience_Capture_' + new Date().getTime() + '.png';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
             URL.revokeObjectURL(url);
           };
           img.src = url;
         };
 
-        function runCollapseOthers() {
+        window.runCollapseOthers = function() {
           if (!activeNode || activeNode === root) return;
-          var ancestors = [];
-          var curr = activeNode;
+          var ancestors = []; var curr = activeNode;
           while (curr) { ancestors.push(curr.id); curr = curr.parent; }
           root.descendants().forEach(d => {
-            if (ancestors.indexOf(d.id) === -1) {
-              if (d.children) { d._children = d.children; d.children = null; }
-            }
+            if (ancestors.indexOf(d.id) === -1 && d.children) { d._children = d.children; d.children = null; }
           });
           update(activeNode);
         }
 
-        function isAncestor(d) { let curr = activeNode ? activeNode.parent : null; while(curr) { if(curr === d) return true; curr = curr.parent; } return false; }
-        function diagonal(s, d) { return `M ${s.y} ${s.x} C ${(s.y+d.y)/2} ${s.x}, ${(s.y+d.y)/2} ${d.x}, ${d.y} ${d.x}`; }
-        function collapse(d) { if(d.children) { d._children = d.children; d._children.forEach(collapse); d.children = null; } }
-        function expand(d) { if(d._children) { d.children = d._children; d._children = null; } if(d.children) d.children.forEach(expand); }
-        function toggleGhost() { ghostMode = !ghostMode; update(activeNode); }
-        function toggleTopAlign() { topAlignMode = !topAlignMode; update(activeNode); }
-        function togglePanel(side) {
-          const panel = document.getElementById('panel-' + side);
-          const btn = document.getElementById('btn-toggle-' + side);
-          panel.classList.toggle('collapsed');
-          btn.innerHTML = panel.classList.contains('collapsed') ? '☰' : '✖';
-        }
-        function resetMap() { activeNode = root; if(root.children) root.children.forEach(collapse); update(root); }
-        function fullExpand() { expand(root); update(root); }
+        window.isAncestor = function(d) { let curr = activeNode ? activeNode.parent : null; while(curr) { if(curr === d) return true; curr = curr.parent; } return false; }
+        window.diagonal = function(s, d) { return `M ${s.y} ${s.x} C ${(s.y+d.y)/2} ${s.x}, ${(s.y+d.y)/2} ${d.x}, ${d.y} ${d.x}`; }
+        window.collapse = function(d) { if(d.children) { d._children = d.children; d._children.forEach(collapse); d.children = null; } }
+        window.expand = function(d) { if(d._children) { d.children = d._children; d._children = null; } if(d.children) d.children.forEach(expand); }
+        window.toggleGhost = function() { ghostMode = !ghostMode; update(activeNode); }
+        window.toggleTopAlign = function() { topAlignMode = !topAlignMode; update(activeNode); }
+        window.resetMap = function() { activeNode = root; if(root.children) root.children.forEach(collapse); update(root); }
+        window.fullExpand = function() { expand(root); update(root); }
 
         setTimeout(initTree, 300);
-        window.addEventListener('resize', () => {
-           if(treemap && root) fitToViewport(treemap(root).descendants(), 0);
-        });
+        window.addEventListener('resize', () => { if(treemap && root) fitToViewport(treemap(root).descendants(), 0); });
         "
       )))
     })
