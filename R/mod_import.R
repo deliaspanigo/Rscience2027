@@ -30,16 +30,12 @@ mod_import_ui <- function(id) {
             transition: all 0.3s ease;
         }
 
-        /* Overlay transparente para bloquear clicks sin ensuciar la vista */
         ", root_sel, " .locked-disabled::after {
             content: '';
             position: absolute;
-            top: -8px;
-            left: -8px;
-            right: -8px;
-            bottom: -8px;
-            background: rgba(0, 0, 0, 0.03); /* Un gris casi invisible solo para indicar zona */
-            backdrop-filter: none !important;    /* ELIMINADO EL BLUR (ADIÓS ESFUMADO) */
+            top: -8px; left: -8px; right: -8px; bottom: -8px;
+            background: rgba(0, 0, 0, 0.03);
+            backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             z-index: 100;
             border-radius: 15px;
@@ -47,12 +43,11 @@ mod_import_ui <- function(id) {
             cursor: not-allowed !important;
         }
 
-        /* Estado del contenido interno cuando está bloqueado */
         ", root_sel, " .locked-disabled {
             pointer-events: none !important;
             user-select: none;
-            filter: none !important; /* Mantiene colores originales intactos */
-            opacity: 0.85;           /* Ligera transparencia para indicar 'deshabilitado' */
+            filter: none !important;
+            opacity: 0.85;
         }
 
         /* --- SELECTION HEADER (MARQUESINA DINÁMICA) --- */
@@ -62,20 +57,9 @@ mod_import_ui <- function(id) {
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
-        /* 1. Estado Inicial: Cyan (Waiting) */
-        ", root_sel, " .selection-header.waiting-mode {
-            background: #f0fdff; border: 1px solid #00cfd4; color: #008184;
-        }
-
-        /* 2. Estado Selección Hecha: Naranja (Pending Import) */
-        ", root_sel, " .selection-header.active-selection {
-            background: #fff9f0; border: 1px solid #ff9100; color: #b36600;
-        }
-
-        /* 3. Estado Final: Verde (Imported/Ready) */
-        ", root_sel, " .selection-header.confirmed {
-            background: #f6fff8; border: 1px solid #28a745; color: #1e7e34;
-        }
+        ", root_sel, " .selection-header.waiting-mode { background: #f0fdff; border: 1px solid #00cfd4; color: #008184; }
+        ", root_sel, " .selection-header.active-selection { background: #fff9f0; border: 1px solid #ff9100; color: #b36600; }
+        ", root_sel, " .selection-header.confirmed { background: #f6fff8; border: 1px solid #28a745; color: #1e7e34; }
 
         ", root_sel, " .header-id {
             font-family: 'Monaco', 'Courier New', monospace; font-weight: 700;
@@ -122,6 +106,8 @@ mod_import_ui <- function(id) {
         }
 
         .selectize-dropdown { z-index: 999999 !important; }
+
+
       ")))
     ),
 
@@ -141,7 +127,8 @@ mod_import_ui <- function(id) {
                     div(class = "row g-3",
                         div(class = "col-md-4",
                             div(id = ns("label_source"), class = "section-label", "Source Type"),
-                            selectInput(ns("source"), NULL, choices = c("Local File" = "local_file", "R Example" = "example"), width = "100%")
+                            selectInput(ns("source"), NULL, choices = c("Local File" = "local_file",
+                                                                        "R Example" = "R_dataset"), width = "100%")
                         ),
                         div(class = "col-md-8",
                             div(id = ns("label_selection"), class = "section-label", "Data Selection"),
@@ -176,29 +163,58 @@ mod_import_ui <- function(id) {
                 div(style = "width: 100%; overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #eee; padding: 10px;",
                     DTOutput(ns("preview"))
                 ),
-                uiOutput(ns("the_debug_container"))
-            )
+                listviewer::jsoneditOutput(ns("debug_json"), height = "600px")                )
         )
     )
   )
 }
 
+# ==============================================================================
+# IMPORT MODULE SERVER - v.0.1.0 (COMPLETED WITH NESTED METADATA)
+# ==============================================================================
+# ==============================================================================
+# IMPORT MODULE SERVER - v.0.1.0 (CORRECTED)
+# ==============================================================================
 mod_import_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # --- REACTIVE VALUES ---
-    data_store <- reactiveValues(
-      df = NULL, name_orig = NULL, name_mod = NULL,
-      sheet = NULL, sep = NULL, dec = NULL, header = NULL,
-      timestamp = NULL, file_obj = NULL, full_path = NULL,
-      rows = NULL, cols = NULL
+    list_default <- list(
+      "details" = "*** Rscience - Import action ***",
+      "is_done" = NULL,
+      "is_locked" = NULL,
+      "error_msg" = NULL,
+      "success_msg" = NULL,
+      "metadata" = list(
+        selected_source = NULL,
+        name_orig = NULL, name_mod = NULL,
+        sheet = NULL, sep = NULL, dec = NULL, header = NULL,
+        timestamp = NULL, file_obj = NULL, full_path = NULL,
+        rows = NULL, cols = NULL,
+        vector_colnames = NULL,
+        is_dataframe = NULL),
+      "df" = NULL
     )
-    is_locked <- reactiveVal(FALSE)
-    closed_suffix <- HTML("<span class='status-closed' style='font-size: 0.8rem;'>(Locked) <i class='fa fa-lock'></i></span>")
 
-    # --- LOGIC: LOCK & RESET ---
+    data_store <- do.call(reactiveValues, list_default)
+    is_done   <- reactiveVal(FALSE)
+    is_locked <- reactiveVal(FALSE)
+
+
+    # --- FUNCIONES DE SOPORTE ---
+    reset_data_store <- function() {
+      for (name in names(list_default)) {
+        data_store[[name]] <- list_default[[name]]
+      }
+      message("--- [DATA_STORE] Reset completo ---")
+    }
+
     toggle_import_controls <- function(lock_it) {
+      closed_suffix <- HTML("<span class='status-closed' style='font-size: 0.8rem;'>(Locked) <i class='fa fa-lock'></i></span>")
+
+      is_locked(lock_it)
+
       if (lock_it) {
         shinyjs::disable("btn_import")
         shinyjs::html("label_source", paste0("Source Type", closed_suffix))
@@ -210,37 +226,27 @@ mod_import_server <- function(id, show_debug = FALSE) {
         shinyjs::html("label_selection", "Data Selection")
         shinyjs::removeClass(id = "main_input_col", class = "locked-disabled")
       }
-      is_locked(lock_it)
+
     }
 
-    deep_reset_values <- function() {
-      data_store$df <- NULL; data_store$name_orig <- NULL; data_store$name_mod <- NULL
-      data_store$sheet <- NULL; data_store$sep <- NULL; data_store$dec <- NULL; data_store$header <- NULL
-      data_store$timestamp <- NULL; data_store$file_obj <- NULL; data_store$full_path <- NULL
-      data_store$rows <- NULL; data_store$cols <- NULL
-    }
-
+    # --- RENDER: HEADER DINÁMICO ---
     output$import_header <- renderUI({
+      # Consistencia de IDs: usamos input$selected_R_dataset
       current_name <- if(input$source == "local_file") {
         if(!is.null(input$file_input)) input$file_input$name else NULL
       } else {
-        if(!is.null(input$example_dataset) && input$example_dataset != "") input$example_dataset else NULL
+        if(!is.null(input$selected_R_dataset) && input$selected_R_dataset != "") input$selected_R_dataset else NULL
       }
 
       if (is_locked()) {
-        # ESTADO VERDE: TODO LISTO
         div(class = "selection-header confirmed",
-            span(icon("lock"), paste(" DATA IMPORTED:", data_store$name_mod)),
+            span(icon("lock"), paste(" DATA IMPORTED:", data_store$metadata$name_mod)),
             span(class = "header-id", "STATUS: READY"))
-
       } else if (!is.null(current_name)) {
-        # ESTADO NARANJA: HAY ALGO SELECCIONADO PERO NO IMPORTADO
         div(class = "selection-header active-selection",
             span(icon("file-import"), paste(" SELECTED:", current_name)),
             span(class = "header-id", "STATUS: PENDING"))
-
       } else {
-        # ESTADO CYAN: ESPERANDO
         div(class = "selection-header waiting-mode",
             span(icon("bolt"), " Waiting for user selection..."),
             span(class = "header-id", "STATUS: WAITING"))
@@ -249,10 +255,11 @@ mod_import_server <- function(id, show_debug = FALSE) {
 
     # --- RENDERS: MENUS DINÁMICOS ---
     output$menu01_local_file <- renderUI({ req(input$source == 'local_file'); fileInput(ns("file_input"), NULL, buttonLabel = "Browse...", width = "100%") })
+
     output$menu02_RData <- renderUI({
-      req(input$source == 'example')
-      selectizeInput(ns("example_dataset"), NULL, choices = c("(Select Dataset)" = "", "mtcars", "iris", "airquality"),
-                     width = "100%", options = list(dropdownParent = 'body', placeholder = '(Select Dataset)'))
+      req(input$source == 'R_dataset')
+      selectizeInput(ns("selected_R_dataset"), NULL, choices = c("(Select Dataset)" = "", "mtcars", "iris", "airquality"),
+                     width = "100%", options = list(dropdownParent = 'body'))
     })
 
     output$options_ui <- renderUI({
@@ -268,44 +275,150 @@ mod_import_server <- function(id, show_debug = FALSE) {
       } else if (ext %in% c("xls", "xlsx")) {
         sheets <- tryCatch({ readxl::excel_sheets(input$file_input$datapath) }, error = function(e) NULL)
         div(class = "mt-3", div(class = "section-label", "Sheet Selection"),
-            fluidRow(column(4, selectizeInput(ns("excel_sheet"), NULL, choices = sheets, width = "100%", options = list(dropdownParent = 'body')))))
+            fluidRow(column(6, selectizeInput(ns("excel_sheet"), "Select Sheet", choices = sheets, width = "100%", options = list(dropdownParent = 'body')))))
       }
     })
 
-    # --- ACCIONES ---
+    # --- ACCIÓN IMPORTAR ---
+    # --- ACCIÓN IMPORTAR (v.0.1.1 - Validated) ---
     observeEvent(input$btn_import, {
-      tryCatch({
-        now <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-        if (input$source == "local_file") {
-          req(input$file_input); path <- input$file_input$datapath; ext <- tolower(tools::file_ext(input$file_input$name))
-          data_store$file_obj <- input$file_input; data_store$full_path <- path; data_store$name_orig <- input$file_input$name
-          if (ext %in% c("csv", "tsv", "txt")) {
-            temp_df <- vroom::vroom(path, delim = input$sep, show_col_types = FALSE)
-            data_store$sep <- input$sep; data_store$dec <- input$dec; data_store$header <- input$header; data_store$name_mod <- input$file_input$name
-          } else {
-            req(input$excel_sheet); temp_df <- readxl::read_excel(path, sheet = input$excel_sheet)
-            data_store$sheet <- input$excel_sheet; data_store$name_mod <- paste0(input$file_input$name, " [", input$excel_sheet, "]")
-          }
-        } else {
-          req(input$example_dataset != ""); temp_df <- get(input$example_dataset, "package:datasets")
-          data_store$name_orig <- input$example_dataset; data_store$name_mod <- paste0(input$example_dataset, " (Example)")
-          data_store$full_path <- "Internal R memory"
+
+      now <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+      data_store$metadata$timestamp <- now
+      data_store$metadata$selected_source <- input$source
+
+
+      # 1. VALIDACIÓN DE ENTRADAS (v.0.1.1)
+      # ------------------------------------------------------------------------
+      if (input$source == "local_file") {
+        # Caso: Archivo Local
+        if (is.null(input$file_input)) {
+          string_error <- "Friendly message: No file has been selected for import."
+          data_store$error_msg <- string_error
+          showNotification(string_error, type = "warning")
+          return()
         }
+
+        ext <- tolower(tools::file_ext(input$file_input$name))
+        if (ext %in% c("xlsx") && (is.null(input$excel_sheet) || input$excel_sheet == "")) {
+          string_error <- "Friendly message: Select sheet from your xlsx file."
+          data_store$error_msg <- string_error
+          showNotification(string_error, type = "warning")
+          return()
+        }
+
+      } else if (input$source == "R_dataset") {
+        # Caso: Dataset de R
+        if (is.null(input$selected_R_dataset) || input$selected_R_dataset == "") {
+          string_error <- "Friendly message: Select an example dataset from the list."
+          data_store$error_msg <- string_error
+          showNotification(string_error, type = "warning")
+          return()
+        }
+
+      } else {
+        # Caso: Error interno (input$source tiene un valor no controlado)
+        string_error <- paste0(
+          "Error internal 01: Problems with input$source. The option is '",
+          input$source,
+          "' but is not a valid option."
+        )
+        data_store$error_msg <- string_error
+        showNotification(string_error, type = "error")
+        return()
+      }
+
+      # 2. PROCESAMIENTO DE DATOS
+      # ------------------------------------------------------------------------
+
+      data_store$error_msg <- NULL # Limpiamos errores anteriores
+
+      tryCatch({
+        #data_store$metadata$selected_source <- input$source
+
+        if (input$source == "local_file") {
+          path <- input$file_input$datapath
+          ext <- tolower(tools::file_ext(input$file_input$name))
+          data_store$metadata$name_orig <- input$file_input$name
+
+          if (ext %in% c("csv", "tsv", "txt")) {
+            # Uso de vroom para velocidad (ideal para Data Science)
+            temp_df <- vroom::vroom(
+              path,
+              delim = input$sep,
+              col_types = list(),
+              show_col_types = FALSE
+            )
+            data_store$metadata$name_mod <- input$file_input$name
+
+          } else if (ext %in% c("xlsx")) {
+            temp_df <- readxl::read_excel(path, sheet = input$excel_sheet)
+            data_store$metadata$name_mod <- paste0(input$file_input$name, " [", input$excel_sheet, "]")
+          }
+           else if (ext %in% c("xls")) {
+             string_error <- "Friendly message: The old '.xls' format is not supported. Please convert to '.xlsx' and try again in Rscience."
+             data_store$error_msg <- string_error
+             showNotification(string_error, type = "warning")
+             stop(paste0("Extension '", ext, "' is not supported."))
+           }else {
+             string_error <- paste0("Friendly message: Your '", ext, "' file is not valid in Rscience. In Rscience, the valid formats for external files are xlsx, txt, csv, and tsv.")
+             data_store$error_msg <- string_error
+            stop(paste0("Extension '", ext, "' is not supported."))
+           }
+        } else {
+          # Carga de datasets de R
+          temp_df <- get(input$selected_R_dataset, "package:datasets")
+          data_store$metadata$name_mod <- paste0(input$selected_R_dataset, " (R Dataset)")
+        }
+
+        # 3. ACTUALIZACIÓN DEL DATA_STORE
+        # ------------------------------------------------------------------------
         data_store$df <- as.data.frame(temp_df)
-        data_store$rows <- nrow(data_store$df); data_store$cols <- ncol(data_store$df); data_store$timestamp <- now
-        toggle_import_controls(TRUE)
-      }, error = function(e) showNotification(e$message, type = "error"))
+        data_store$metadata$rows <- nrow(data_store$df)
+        data_store$metadata$cols <- ncol(data_store$df)
+        data_store$metadata$vector_colnames <- colnames(data_store$df)
+
+
+        # Finalización exitosa
+        data_store$metadata$is_dataframe <- is.data.frame(data_store$df)
+        if(data_store$metadata$is_dataframe == TRUE) is_done(TRUE)
+
+        if(is_done() == TRUE) {
+          isolate({
+          #print("A")
+          str_message <- paste("Success:", data_store$metadata$name_mod, "imported.")
+          data_store$"success_msg" <- str_message
+          showNotification(str_message, type = "message")
+          toggle_import_controls(TRUE)
+          })
+        }
+
+        if(is_locked() == TRUE) {
+          isolate({
+          #print("B")
+
+          str_message <- paste("Success: Import session locked.")
+          data_store$"success_msg" <- str_message
+          showNotification(str_message, type = "message")
+          })
+        }
+
+      }, error = function(e) {
+        # Captura errores de lectura (archivo corrupto, delimitador erróneo, etc.)
+        data_store$error_msg <- e$message
+        showNotification(paste("Error Internal 02:", e$message), type = "error")
+      })
     })
 
-    # EDIT: Resetea los valores reactivos y desbloquea para nuevos cambios
-    observeEvent(input$btn_edit,  {
-      deep_reset_values()
+    # --- ACCIONES EDIT Y RESET ---
+    observeEvent(input$btn_edit, {
+      reset_data_store()
+      #data_store$is_done <- FALSE
       toggle_import_controls(FALSE)
     })
 
-    # RESET: Limpia todo e interfaz al estado inicial
     observeEvent(input$btn_reset, {
-      deep_reset_values()
+      reset_data_store()
       shinyjs::reset("main_input_col")
       toggle_import_controls(FALSE)
     })
@@ -313,35 +426,28 @@ mod_import_server <- function(id, show_debug = FALSE) {
     # --- OUTPUTS ---
     output$preview <- renderDT({
       req(data_store$df)
-      datatable(data_store$df, rownames = TRUE, class = 'cell-border hover',
-                options = list(scrollX = TRUE, pageLength = 5, dom = 'ltip',
-                               rowCallback = JS("function(row, data, displayNum, displayIndex) {
-                                 $(row).css('background-color', displayIndex % 2 === 0 ? '#f0ffff' : '#ffffff');
-                               }"),
-                               initComplete = JS("function(settings, json) {
-                                 $(this.api().table().header()).css({'background-color': '#00d4ff', 'color': 'white', 'text-transform': 'uppercase'});
-                               }")))
+      datatable(data_store$df, options = list(scrollX = TRUE, pageLength = 5))
     })
 
     output$dataset_info_ui <- renderUI({
       req(data_store$df)
       div(class = "file-info-banner", fluidRow(
-        column(6, span(style="font-weight:900; color:#28a745; font-size:1.1rem;", "DATASET: "), span(style="font-size:1.1rem; font-weight:600;", data_store$name_mod)),
-        column(3, span(style="font-weight:900; color:#28a745;", "ROWS: "), span(data_store$rows)),
-        column(3, span(style="font-weight:900; color:#28a745;", "COLS: "), span(data_store$cols))
+        column(6, span(style="font-weight:900; color:#28a745;", "DATASET: "), span(data_store$metadata$name_mod)),
+        column(3, span(style="font-weight:900; color:#28a745;", "ROWS: "), span(data_store$metadata$rows)),
+        column(3, span(style="font-weight:900; color:#28a745;", "COLS: "), span(data_store$metadata$cols))
       ))
     })
 
-    # Panel de Debug Limpio
-    output$the_debug_container <- renderUI({
-      req(show_debug)
-      div(class = "debug-panel-clean",
-          div(style = "color: #007bff; font-weight: bold; margin-bottom: 10px;", "DEBUG: DATA_STORE CONTENT"),
-          verbatimTextOutput(ns("debug_print"))
-      )
-    })
-    output$debug_print <- renderPrint({ reactiveValuesToList(data_store) })
+    # --- LÓGICA DE DEBUG DINÁMICA ---
 
-    return(reactive({ list(df = data_store$df, locked = is_locked(), metadata = reactiveValuesToList(data_store)) }))
+
+    # El renderPrint que ya tenías (ahora sí tiene un destino en la UI)
+    output$debug_json <- listviewer::renderJsonedit({
+      req(show_debug)
+      # Convertimos reactiveValues a lista normal para el visor
+      listviewer::jsonedit(listdata =reactiveValuesToList(data_store), mode = "text")
+    })
+
+    return(reactive({ reactiveValuesToList(data_store) }))
   })
 }

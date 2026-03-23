@@ -91,6 +91,25 @@ mod_rscience_ui <- function(id) {
         #", ns("demo_import-preview"), " table.dataTable tbody tr:hover {
           background-color: #ccf5ff !important;
         }
+
+        /* Color del Switch cuando está ENCENDIDO */
+        #", wrapper_id, " .form-check-input:checked {
+            background-color: #00d4ff !important;
+            border-color: #00d4ff !important;
+        }
+
+        /* Color de la sombra/foco al hacer clic */
+        #", wrapper_id, " .form-check-input:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 0.25rem rgba(0, 212, 255, 0.25);
+        }
+
+        /* Estilo del Switch cuando está APAGADO */
+        #", wrapper_id, " .form-check-input {
+            background-color: #dee2e6;
+            border-color: #ced4da;
+            background-image: url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='black'/%3e%3c/svg%3e\") !important;
+        }
       ")))
     ),
 
@@ -264,16 +283,70 @@ mod_rscience_server <- function(id) {
 
 
 
-    # 4. Status Mini (Opcional)
-    output$txt_status_mini <- renderUI({
-      if (shiny::isTruthy(res_import()) && isTRUE(res_import()$is_ready)) {
-        span(class = "badge bg-info", "Data Ready")
-      } else {
-        span(class = "badge bg-light text-dark", "System Idle")
+    ############################################################################
+
+    # ==========================================================================
+    # LÓGICA DE CONTROL POR ETAPAS (CHECK POINTS)
+    # ==========================================================================
+
+    # El Big Bang es la semilla inicial (siempre TRUE)
+    bigbang <- TRUE
+
+    # --- STAGE 01: DATASET, TOOLS, SCRIPT ---
+
+    ## 1.1. Dataset Check
+    # Verifica si el módulo de importación tiene datos listos
+    check_dataset <- reactive({
+      isTruthy(res_import()) && isTRUE(res_import()$is_ready)
+    })
+
+    ## 1.2. Tool Check
+    # Verifica si se ha seleccionado una herramienta válida
+    check_tool <- reactive({
+      isTruthy(res_tool()) && !is.null(res_tool()$selected_tool)
+    })
+
+    ## 1.3 Script Check
+    # Aquí podrías verificar si el script se ha generado o cargado
+    # Por ahora lo dejamos como TRUE o una condición lógica de tus reactivos
+    check_script <- reactive({
+      # Ejemplo: isTruthy(res_script()$ready)
+      TRUE
+    })
+
+    ## 1.4 Check Point Stage 01
+    # Consolidación del estado de la Etapa 1
+    stage01_status <- reactive({
+      previous <- bigbang
+
+      # Vector de validaciones individuales de esta etapa
+      vector_each_check <- c(
+        dataset = check_dataset(),
+        tool    = check_tool(),
+        script  = check_script()
+      )
+
+      # Combinamos con el estado previo (Big Bang)
+      all_done <- c(previous = previous, vector_each_check)
+
+      # La etapa está terminada solo si TODOS los checks son TRUE
+      is_done <- all(all_done)
+
+      list(
+        checks = vector_each_check,
+        all_done = all_done,
+        is_done = is_done
+      )
+    })
+
+    # Ejemplo de uso: Mostrar en consola cuando Stage 01 esté completo
+    observe({
+      if (stage01_status()$is_done) {
+        message("--- [STAGE 01 COMPLETE] ---")
       }
     })
 
-    # 5. El botón Home no necesita lógica interna adicional
-    # porque el Orquestador lo escucha mediante input[["engine_v1-btn_go_home"]]
+
+
   })
 }
