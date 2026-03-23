@@ -7,6 +7,15 @@ library("vroom")
 library("readxl")
 library("bslib")
 
+# ==============================================================================
+# IMPORT MODULE UI - v.0.1.0 (CLEAN LOCK & DYNAMIC COLORS)
+# ==============================================================================
+library("shinyjs")
+library("DT")
+library("vroom")
+library("readxl")
+library("bslib")
+
 mod_import_ui <- function(id) {
   ns <- NS(id)
   root_sel <- paste0(".", ns("import-container"))
@@ -15,29 +24,35 @@ mod_import_ui <- function(id) {
     shinyjs::useShinyjs(),
     tags$head(
       tags$style(HTML(paste0("
-        /* --- BLOQUEO DE COLUMNA CON OVERLAY AJUSTADO --- */
-        ", root_sel, " .lock-wrapper { position: relative; transition: all 0.3s ease; }
+        /* --- BLOQUEO DE COLUMNA: NITIDEZ TOTAL --- */
+        ", root_sel, " .lock-wrapper {
+            position: relative;
+            transition: all 0.3s ease;
+        }
 
+        /* Overlay transparente para bloquear clicks sin ensuciar la vista */
         ", root_sel, " .locked-disabled::after {
             content: '';
             position: absolute;
-            /* Bajamos el sombreado para no tapar los headers de las columnas */
-            top: -2px;
-            left: -5px;
-            right: -5px;
-            bottom: -5px;
-            background: rgba(240, 240, 240, 0.4);
-            backdrop-filter: blur(2px);
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            background: rgba(0, 0, 0, 0.03); /* Un gris casi invisible solo para indicar zona */
+            backdrop-filter: none !important;    /* ELIMINADO EL BLUR (ADIÓS ESFUMADO) */
+            -webkit-backdrop-filter: none !important;
             z-index: 100;
             border-radius: 15px;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px dashed rgba(0,0,0,0.1);
             cursor: not-allowed !important;
         }
 
+        /* Estado del contenido interno cuando está bloqueado */
         ", root_sel, " .locked-disabled {
             pointer-events: none !important;
             user-select: none;
-            filter: grayscale(0.3);
+            filter: none !important; /* Mantiene colores originales intactos */
+            opacity: 0.85;           /* Ligera transparencia para indicar 'deshabilitado' */
         }
 
         /* --- SELECTION HEADER (MARQUESINA DINÁMICA) --- */
@@ -51,7 +66,6 @@ mod_import_ui <- function(id) {
         ", root_sel, " .selection-header.waiting-mode {
             background: #f0fdff; border: 1px solid #00cfd4; color: #008184;
         }
-
 
         /* 2. Estado Selección Hecha: Naranja (Pending Import) */
         ", root_sel, " .selection-header.active-selection {

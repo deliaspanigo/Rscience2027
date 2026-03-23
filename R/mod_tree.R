@@ -20,20 +20,19 @@ mod_tree_ui <- function(id) {
         #", module_id, " {
           height: 100%; width: 100%;
           background-color: #000;
-          display: flex; /* Layout Horizontal */
+          display: flex;
           overflow: hidden;
           font-family: 'Segoe UI', sans-serif;
           position: relative;
         }
 
-        /* ÁREA DEL MAPA (Ocupa todo el fondo) */
         #", module_id, " .viewport-area {
           flex-grow: 1;
           position: relative;
           background: radial-gradient(circle, #0a1015 0%, #000 100%);
         }
 
-        /* SIDEBAR UNIFICADA */
+        /* SIDEBAR UNIFICADA: Ahora por defecto está colapsada */
         #", module_id, " .sidebar-ctrl {
           width: 280px;
           height: 100%;
@@ -43,19 +42,21 @@ mod_tree_ui <- function(id) {
           display: flex;
           flex-direction: column;
           gap: 20px;
-          transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           z-index: 1001;
           box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-        }
 
-        /* Estado colapsado de la sidebar */
-        #", module_id, " .sidebar-ctrl.collapsed {
-          transform: translateX(100%);
+          /* ESTADO INICIAL: Escondida a la derecha */
           position: absolute;
           right: 0;
+          transform: translateX(100%);
+          transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* BOTÓN FLOTANTE PARA ABRIR/CERRAR */
+        /* Clase que quitaremos/pondremos para mostrarla */
+        #", module_id, " .sidebar-ctrl.active {
+          transform: translateX(0);
+        }
+
         #", module_id, " .toggle-sidebar-btn {
           position: absolute;
           right: 10px;
@@ -71,7 +72,6 @@ mod_tree_ui <- function(id) {
           box-shadow: 0 0 10px #00FFFF;
         }
 
-        /* ESTILOS DE BOTONES Y TOGGLES */
         .sidebar-section { margin-bottom: 10px; }
         .panel-title {
           color: #00FFFF; font-weight: 900; font-size: 0.9rem;
@@ -92,24 +92,20 @@ mod_tree_ui <- function(id) {
           color: #fff; font-size: 0.85rem; padding: 5px 0;
         }
 
-        /* D3 Estilos */
         .node text { pointer-events: none; fill: #fff; font-size: 18px; font-weight: 700; text-shadow: 2px 2px 4px #000; }
         .link { fill: none; stroke-opacity: 0.6; }
       ")))
     ),
 
     div(id = module_id,
-        # Botón para abrir/cerrar menú
         tags$button("☰ MENU", class = "toggle-sidebar-btn", onclick = "toggleSidebar()"),
 
-        # Área del Mapa
         div(class = "viewport-area",
             div(id = "tree-container", style="width:100%; height:100%;")
         ),
 
-        # Sidebar Unificada a la Derecha
+        # La sidebar nace sin la clase 'active', por lo tanto está oculta
         div(id = "sidebar", class = "sidebar-ctrl",
-            # Sección 1: Acciones
             div(class = "sidebar-section",
                 div(class = "panel-title", "⚡ SYSTEM ACTIONS"),
                 tags$button("↺ Reset View", class = "btn-cmd", onclick = "resetMap()"),
@@ -117,7 +113,6 @@ mod_tree_ui <- function(id) {
                 tags$button("⇱ Expand All", class = "btn-cmd", onclick = "fullExpand()")
             ),
 
-            # Sección 2: Modos de Vista
             div(class = "sidebar-section",
                 div(class = "panel-title", "🛠️ VIEW SETTINGS"),
                 div(class = "toggle-row", "GHOST MODE",
@@ -126,7 +121,6 @@ mod_tree_ui <- function(id) {
                     tags$input(type="checkbox", onclick="toggleTopAlign()", style="width:18px;height:18px;"))
             ),
 
-            # Sección 3: Exportación
             div(class = "sidebar-section", style="margin-top: auto;",
                 div(class = "panel-title", "📤 EXPORT"),
                 tags$button("📸 Capture PNG", class = "btn-cmd",
@@ -207,6 +201,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
 
     # 4. INYECTOR JS (Base estable + Mejoras estéticas solicitadas)
     # 4. INYECTOR JS (Base estable + Mejoras estéticas solicitadas)
+    # 4. INYECTOR JS (Versión Neon Completa)
     output$js_injector <- renderUI({
       req(data_full)
       df_tree <- data_full %>% select(starts_with("nivel"))
@@ -226,6 +221,16 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       const rect = container.node().getBoundingClientRect();
 
       svg = container.append('svg').attr('width', '100%').attr('height', '100%');
+
+      // --- DEFINICIÓN DE FILTRO GLOW (NEÓN) ---
+      const defs = svg.append('defs');
+      const filter = defs.append('filter').attr('id', 'glow');
+      filter.append('feGaussianBlur').attr('stdDeviation', '4').attr('result', 'coloredBlur');
+      const feMerge = filter.append('feMerge');
+      feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+      feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+      // ----------------------------------------
+
       g = svg.append('g');
 
       zoomHandler = d3.zoom().scaleExtent([0.01, 8])
@@ -240,7 +245,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       root = d3.hierarchy(treeData, d => d.children);
       root.descendants().forEach(d => { d.id = ++i; });
 
-      // Posición inicial del root
       root.x0 = rect.height / 2;
       root.y0 = 0;
       activeNode = root;
@@ -263,8 +267,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       const links = nodes.slice(1);
 
       nodes.forEach(d => d.y = d.depth * 950);
-
-      // Llamamos al nuevo ajuste de cámara lateral
       fitToLeftAnchor(nodes, currentDuration);
 
       const node = g.selectAll('g.node').data(nodes, d => d.id);
@@ -281,7 +283,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
 
       nodeEnter.append('circle').attr('r', 28);
 
-      // --- BLOQUE MODIFICADO PARA SOPORTAR /n ---
+      // --- SOPORTE PARA /n ---
       const textElement = nodeEnter.append('text')
         .attr('x', d => d.children || d._children ? -50 : 50)
         .attr('text-anchor', d => d.children || d._children ? 'end' : 'start');
@@ -290,9 +292,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
         const name = d.data.name || '';
         const lines = name.split('/n');
         const el = d3.select(this);
-
-        // Offset vertical para que el bloque de texto quede centrado con el círculo
-        // Si hay 1 línea, offset es 0. Si hay 2, sube 0.5em para que el centro esté en el medio.
         const vOffset = (lines.length - 1) * 0.5;
 
         lines.forEach((line, index) => {
@@ -302,7 +301,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
             .text(line.trim());
         });
       });
-      // --- FIN DEL BLOQUE MODIFICADO ---
 
       const nodeUpdate = nodeEnter.merge(node);
       if (currentDuration === 0) { nodeUpdate.attr('transform', d => `translate(${d.y},${d.x})`); }
@@ -317,6 +315,8 @@ mod_tree_server <- function(id, show_debug = FALSE) {
         })
         .style('stroke', d => (d === activeNode) ? '#00FF00' : '#fff')
         .style('stroke-width', d => (d === activeNode) ? '8px' : '6px')
+        // Aplicar brillo también a los nodos activos
+        .style('filter', d => (d === activeNode || window.isAncestor(d)) ? 'url(#glow)' : 'none')
         .style('opacity', d => (ghostMode && d !== activeNode && !window.isAncestor(d)) ? 0.15 : 1);
 
       if (currentDuration === 0) { node.exit().remove(); }
@@ -334,10 +334,15 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       if (currentDuration === 0) { linkUpdate.attr('d', d => diagonal(d, d.parent)); }
       else { linkUpdate.transition().duration(currentDuration).attr('d', d => diagonal(d, d.parent)); }
 
+      // --- CONFIGURACIÓN DE CONECTORES (OPACIDAD Y BRILLO) ---
       linkUpdate
         .style('stroke', d => (d === activeNode || window.isAncestor(d)) ? '#ff9100' : '#00FFFF')
-        .style('stroke-width', d => (d === activeNode || window.isAncestor(d)) ? '25px' : '12px')
-        .style('opacity', d => (ghostMode && !window.isAncestor(d) && d !== activeNode) ? 0.08 : 0.6);
+        .style('stroke-width', d => (d === activeNode || window.isAncestor(d)) ? '22px' : '10px')
+        .style('filter', d => (d === activeNode || window.isAncestor(d)) ? 'url(#glow)' : 'none')
+        .style('opacity', d => {
+            if (d === activeNode || window.isAncestor(d)) return 1; // Máximo brillo para la rama activa
+            return ghostMode ? 0.08 : 0.4; // Desvanecido para el resto
+        });
 
       if (currentDuration === 0) { link.exit().remove(); }
       else { link.exit().transition().duration(currentDuration).attr('d', d => { const o = {y: source.y, x: source.x}; return diagonal(o, o); }).remove(); }
@@ -350,34 +355,28 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       const container = document.getElementById('tree-container');
       if (!container || !targetNodes || targetNodes.length === 0) return;
       const rect = container.getBoundingClientRect();
-
       const minX = d3.min(targetNodes, d => d.x);
       const maxX = d3.max(targetNodes, d => d.x);
       const minY = d3.min(targetNodes, d => d.y);
       const maxY = d3.max(targetNodes, d => d.y);
-
       const contentHeight = (maxX - minX) || 1;
       const contentWidth = (maxY - minY) + 950;
-
       let scale = Math.min(rect.width / contentWidth, rect.height / (contentHeight + 200));
       scale = Math.min(Math.max(scale, 0.05), 0.7);
-
-      const transform = d3.zoomIdentity
-        .translate(150 * scale, rect.height / 2)
-        .scale(scale)
-        .translate(0, -(minX + maxX) / 2);
-
-      if (customDuration === 0) {
-        svg.call(zoomHandler.transform, transform);
-      } else {
-        svg.transition().duration(customDuration).ease(d3.easeCubicInOut).call(zoomHandler.transform, transform);
-      }
+      const transform = d3.zoomIdentity.translate(150 * scale, rect.height / 2).scale(scale).translate(0, -(minX + maxX) / 2);
+      if (customDuration === 0) { svg.call(zoomHandler.transform, transform); }
+      else { svg.transition().duration(customDuration).ease(d3.easeCubicInOut).call(zoomHandler.transform, transform); }
     }
 
     window.toggleSidebar = function() {
       const sidebar = document.getElementById('sidebar');
-      if(sidebar) sidebar.classList.toggle('collapsed');
-      setTimeout(() => { if(treemap && root) fitToLeftAnchor(treemap(root).descendants(), 600); }, 450);
+      // Ahora usamos 'active' para mostrarlo u ocultarlo
+      if(sidebar) sidebar.classList.toggle('active');
+
+      // Reajustar el mapa después de que termine la animación (450ms)
+      setTimeout(() => {
+        if(treemap && root) fitToLeftAnchor(treemap(root).descendants(), 600);
+      }, 450);
     }
 
     function reorderPathToTop(d, revert = false) {
