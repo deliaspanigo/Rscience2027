@@ -120,7 +120,13 @@ mod_rscience_ui <- function(id) {
             type = "hidden",
             tabPanelBody("tab_dataset", div(class="p-3", mod_import_ui(ns("demo_import")))),
             tabPanelBody("tab_analysis", div(class="p-4", h4("Analysis Studio Content"))),
-            tabPanelBody("tab_tool", div(class="p-3", mod_tools_ui(ns("my_tool")))),
+            tabPanelBody(
+              "tab_tool",
+              div(
+                style = "height: calc(100vh - 80px); overflow-y: auto; overflow-x: hidden;",
+                mod_tools_ui(ns("my_tool"))
+              )
+            ),
             tabPanelBody("tab_welcome", div(class="vh-100 d-flex align-items-center justify-content-center", h4("Select a module", class="text-muted")))
           )
         )
