@@ -114,27 +114,28 @@ mod_rscience_ui <- function(id) {
                   hr(),
                   div(class = "section-title", "1. Setup Phase"),
                   input_switch(ns("sw_dataset"), "Dataset Selection", value = TRUE),
-                  input_switch(ns("sw_tool"), "Tool & Script Engine", value = FALSE),
+                  input_switch(ns("sw_tool"), "Tool Engine", value = FALSE),
+                  input_switch(ns("sw_script"), "Script Engine", value = FALSE),
                   hr(),
+                  #######################################################################################
                   div(class = "section-title", "2. Information Phase"),
-                  input_switch(ns("sw_analysis33"), "Theory", value = FALSE),
-                  input_switch(ns("sw_analysis00"), "Bibliography", value = FALSE),
-                  input_switch(ns("sw_analysis11"), "Cite Rscience!", value = FALSE),
-
+                  input_switch(ns("sw_theory"), "Theory", value = FALSE),
+                  input_switch(ns("sw_bibliography"), "Bibliography", value = FALSE),
+                  input_switch(ns("sw_cite"), "Cite Rscience!", value = FALSE),
                   hr(),
-
-                  div(class = "section-title", "3. Execution Phase"),
-                  input_switch(ns("sw_analysis"), "Settings", value = FALSE),
-                  input_switch(ns("sw_analysis4433"), "Shiny Outputs", value = FALSE),
-                  input_switch(ns("sw_analysis55433"), "Automatic Statistic Asesor (ASA)", value = FALSE),
-
+                  #######################################################################################                  div(class = "section-title", "3. Execution Phase"),
+                  input_switch(ns("sw_settings"), "Settings", value = FALSE),
+                  input_switch(ns("sw_shiny"), "Shiny Outputs", value = FALSE),
+                  input_switch(ns("sw_asesor"), "Automatic Statistic Asesor (ASA)", value = FALSE),
+                  #######################################################################################
                   hr(),
                   div(class = "section-title", "4. R Code Phase"),
-                  input_switch(ns("sw_analysis774433"), "Scripts + Comments", value = FALSE),
-                  input_switch(ns("sw_analysis664433"), "Scripts", value = FALSE),
+                  input_switch(ns("sw_script_comments"), "Scripts + Comments", value = FALSE),
+                  input_switch(ns("sw_script_basic"), "Scripts", value = FALSE),
+                  #######################################################################################
                   hr(),
                   div(class = "section-title", "5. Final Phase"),
-                  input_switch(ns("Reporting"), "Reporting and Download", value = FALSE),
+                  input_switch(ns("sw_reporting"), "Reporting and Download", value = FALSE),
 
               ),
 
@@ -148,16 +149,28 @@ mod_rscience_ui <- function(id) {
           tabsetPanel(
             id = ns("engine_switcher"),
             type = "hidden",
+            tabPanelBody("tab_welcome", div(class="vh-100 d-flex align-items-center justify-content-center", h4("Select a module", class="text-muted"))),
+            #######################################################################################
             tabPanelBody("tab_dataset", div(class="p-3", mod_import_ui(ns("demo_import")))),
-            tabPanelBody("tab_analysis", div(class="p-4", PACK_mod_main_ui(ns("mi_app")))),
-            tabPanelBody(
-              "tab_tool",
-              div(
-                #style = "height: calc(100vh - 80px); overflow-y: auto; overflow-x: hidden;",
-                mod_tools_ui(ns("my_tool"))
-              )
-            ),
-            tabPanelBody("tab_welcome", div(class="vh-100 d-flex align-items-center justify-content-center", h4("Select a module", class="text-muted")))
+            tabPanelBody("tab_tool", div(mod_tools_ui(ns("my_tool")))),
+            tabPanelBody("tab_script", "Waiting for script..."),
+            #######################################################################################
+            tabPanelBody("tab_theory", "Waiting for Theory..."),
+            tabPanelBody("tab_bibliography", "Waiting for bibliography..."),
+            tabPanelBody("tab_cite", "Waiting for Cite..."),
+            #######################################################################################
+            tabPanelBody("tab_settings", div(class="p-4", PACK_mod_main_ui(ns("mi_app")))),
+            tabPanelBody("tab_shiny", "Waiting for Shiny..."),
+            tabPanelBody("tab_asesor", "Waiting for Asesor..."),
+            #######################################################################################
+            tabPanelBody("tab_script_comments", "Waiting for Scripts comments..."),
+            tabPanelBody("tab_script_basic", "Waiting for Scripts basics..."),
+            #######################################################################################
+            tabPanelBody("tab_reporting", "Waiting for Reporting..."),
+            #######################################################################################
+            tabPanelBody("tab_EXTRA", "EXTRA")
+
+
           )
         )
     )
@@ -187,21 +200,19 @@ mod_rscience_server <- function(id) {
     res_import <- mod_import_server("demo_import")
     res_tool   <- mod_tools_server("my_tool") # Descomentar cuando esté listo
 
-    # 2. Lógica de Navegación (Switches -> Tabs)
-    observe({
-      target <- "tab_welcome"
-      if (isTRUE(input$sw_dataset)) {
-        target <- "tab_dataset"
-      } else if (isTRUE(input$sw_analysis)) {
-        target <- "tab_analysis"
-      } else if (isTRUE(input$sw_tool)) {
-        target <- "tab_tool"
-      }
-      updateTabsetPanel(session, "engine_switcher", selected = target)
-    })
-
     # 3. Exclusividad de Switches
-    all_sw <- c("sw_dataset", "sw_tool", "sw_analysis")
+    all_sw <- c("sw_dataset", "sw_tool", "sw_script",
+                ##################################################
+                "sw_theory", "sw_bibliography", "sw_cite",
+                ##################################################
+                "sw_settings", "sw_shiny", "sw_asesor",
+                ##################################################
+                "sw_script_comments", "sw_script_basic",
+                ##################################################
+                "sw_reporting"
+                )
+
+
     lapply(all_sw, function(id_sw) {
       observeEvent(input[[id_sw]], {
         if (input[[id_sw]]) {
@@ -212,6 +223,46 @@ mod_rscience_server <- function(id) {
         }
       }, ignoreInit = TRUE)
     })
+
+    # 2. Lógica de Navegación (Switches -> Tabs)
+    observe({
+      target <- "tab_welcome"
+        ######################################
+      if (isTRUE(input$sw_dataset)) {
+        target <- "tab_dataset"
+      } else if (isTRUE(input$sw_tool)) {
+        target <- "tab_tool"
+      } else if (isTRUE(input$sw_script)) {
+        target <- "tab_script"
+        ######################################
+      } else if (isTRUE(input$sw_theory)) {
+        target <- "tab_theory"
+      } else if (isTRUE(input$sw_bibliography)) {
+        target <- "tab_bibliography"
+      } else if (isTRUE(input$sw_cite)) {
+        target <- "tab_cite"
+        ######################################
+      } else if (isTRUE(input$sw_settings)) {
+        target <- "tab_settings"
+      } else if (isTRUE(input$sw_shiny)) {
+        target <- "tab_shiny"
+      } else if (isTRUE(input$sw_asesor)) {
+        target <- "tab_asesor"
+        ######################################
+      } else if (isTRUE(input$sw_script_comments)) {
+        target <- "tab_script_comments"
+      } else if (isTRUE(input$sw_script_basic)) {
+        target <- "tab_script_basic"
+        ######################################
+      } else if (isTRUE(input$sw_reporting)) {
+        target <- "tab_reporting"
+      }
+
+
+      updateTabsetPanel(session, "engine_switcher", selected = target)
+    })
+
+
 
     # 4. Status Mini (Opcional)
     output$txt_status_mini <- renderUI({
