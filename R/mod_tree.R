@@ -240,10 +240,11 @@ mod_tree_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Datos de respaldo por seguridad
+    # Intentamos cargar los datos desde el paquete
     data_full <- tryCatch({
       Rscience2027::tree_data
     }, error = function(e) {
+      # Fallback por si la estructura de datos no está disponible
       data.frame(nivel1 = "Error", nivel2 = "No Data", script_id = 0)
     })
 
@@ -312,7 +313,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       node
     }
 
-    # 4. INYECTOR JAVASCRIPT (LÓGICA DE ANIMACIÓN SECUENCIAL)
+    # 4. INYECTOR JAVASCRIPT (LÓGICA D3.JS AJUSTADA PARA INICIO 100% ESTÁTICO)
     output$js_injector <- renderUI({
       req(data_full)
       df_tree <- data_full %>% select(starts_with("nivel"))
@@ -339,84 +340,49 @@ mod_tree_server <- function(id, show_debug = FALSE) {
             .on('zoom', (event) => g.attr('transform', event.transform));
           svg.call(zoomHandler);
 
-          treemap = d3.tree().nodeSize([180, 850]);
+          treemap = d3.tree().nodeSize([180, 800]);
 
           root = d3.hierarchy(treeData, d => d.children);
           root.descendants().forEach(d => { d.id = ++i; });
 
+          // Posicionamiento inicial seco
           root.x0 = height / 2;
           root.y0 = 0;
           activeNode = root;
 
           Shiny.setInputValue('", ns("selected_node"), "', 'Rscience');
+          if (root.children) root.children.forEach(collapse);
 
-          // Al inicio, colapsamos todos los descendientes de la raíz.
-          if (root.children) {
-            root.children.forEach(collapse);
-          }
-
-          update(root);
+          // PASO CLAVE: Llamamos a update con duración 0 para el inicio total estático
+          update(root, 0);
         }
 
-        function update(source) {
+        function update(source, customDuration) {
+          const currentDuration = (customDuration !== undefined) ? customDuration : duration;
+
           if (topAlignMode && activeNode) reorderPathToTop(activeNode);
 
-          // 1. Calculamos la estructura de datos FINAL (LAYOUT predictivo)
           const nodes = treemap(root).descendants();
           const links = nodes.slice(1);
-
-          // Fijamos la distancia entre niveles
           nodes.forEach(d => d.y = d.depth * 850);
 
-          // 2. EJECUTAMOS EL ZOOM PREDICTIVO (Sincronizado con la animación)
-          fitToViewport(nodes);
+          fitToViewport(nodes, currentDuration);
 
-          // 3. GESTIÓN DE LINKS (Creación y Animación secuencial)
-          const link = g.selectAll('path.link').data(links, d => d.id);
-
-          // Creamos los links en la posición inicial (origen del padre)
-          const linkEnter = link.enter().insert('path', 'g').attr('class', 'link')
-            .attr('d', d => {
-              const o = {y: source.y0 || 0, x: source.x0 || 0};
-              return diagonal(o, o);
-            });
-
-          // Animación de los links existentes y nuevos (crecimiento de ramas)
-          linkEnter.merge(link).transition().duration(duration)
-            .attr('d', d => diagonal(d, d.parent))
-            .style('stroke', d => (d === activeNode || isAncestor(d)) ? '#ff9100' : '#00FFFF')
-            .style('stroke-width', d => (d === activeNode || isAncestor(d)) ? '25px' : '12px')
-            .style('opacity', d => (ghostMode && !isAncestor(d) && d !== activeNode) ? 0.08 : 0.6);
-
-          link.exit().transition().duration(duration)
-            .attr('d', d => { const o = {y: source.y, x: source.x}; return diagonal(o, o); })
-            .remove();
-
-          // 4. GESTIÓN DE NODOS (Creación y Animación secuencial)
+          // --- GESTIÓN DE NODOS (Ya funcionaba directo) ---
           const node = g.selectAll('g.node').data(nodes, d => d.id);
 
-          // Creamos los nodos hijos en la posición del padre (origen)
           const nodeEnter = node.enter().append('g').attr('class', 'node')
-            .attr('transform', d => `translate(${source.y0 || 0},${source.x0 || 0})`)
+            // Posición inicial: si es inicio seco, va directo a d.y, d.x, sino al source
+            .attr('transform', d => (currentDuration === 0) ? `translate(${d.y},${d.x})` : `translate(${source.y0 || 0},${source.x0 || 0})`)
             .on('click', (event, d) => {
               activeNode = d;
               Shiny.setInputValue('", ns("selected_node"), "', d.data.name, {priority: 'event'});
-
-              // --- SECUENCIA DE ANIMACIÓN: PADRE -> RAMAS -> HIJOS ---
-              if (d.children) {
-                d._children = d.children;
-                d.children = null;
-                update(d); // Colapsar es inmediato
-              } else {
-                d.children = d._children;
-                d._children = null;
-                // Al expandir, forzamos que source (el padre) anime primero su estado 'abierto'
-                update(d);
-              }
+              if (d.children) { d._children = d.children; d.children = null; }
+              else { d.children = d._children; d._children = null; }
+              update(d);
             });
 
           nodeEnter.append('circle').attr('r', 28);
-
           nodeEnter.append('text').attr('dy', '.35em')
             .attr('x', d => d.children || d._children ? -45 : 45)
             .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
@@ -424,74 +390,82 @@ mod_tree_server <- function(id, show_debug = FALSE) {
 
           const nodeUpdate = nodeEnter.merge(node);
 
-          // Animación de los nodos existentes y nuevos (avance hacia el final de la rama)
-          nodeUpdate.transition().duration(duration)
-            .attr('transform', d => `translate(${d.y},${d.x})`);
+          if (currentDuration === 0) {
+             nodeUpdate.attr('transform', d => `translate(${d.y},${d.x})`);
+          } else {
+             nodeUpdate.transition().duration(currentDuration)
+               .attr('transform', d => `translate(${d.y},${d.x})`);
+          }
 
-          // --- ESTILO DE NODO FINAL (VERDE) CORREGIDO ---
           nodeUpdate.select('circle')
-            .style('fill', d => {
-              // Si NO tiene hijos (es nodo final) -> VERDE
-              if (!d.children && !d._children) return '#00FF00';
-              // Si está seleccionado o es ancestro -> NARANJA
-              if (d === activeNode || isAncestor(d)) return '#ff9100';
-              // Por defecto -> CIAN
-              return '#00FFFF';
-            })
-            // El stroke (borde interior) es NARANJA solo si está seleccionado, sino BLANCO
-            .style('stroke', d => (d === activeNode) ? '#ff9100' : '#fff')
-            .style('stroke-width', '6px')
-            // El borde VERDE distintivo se mantiene siempre en los nodos finales
-            .style('border', d => (!d.children && !d._children) ? '4px solid #00FF00' : 'none')
+            .style('fill', d => (d === activeNode || isAncestor(d)) ? '#ff9100' : (!d.children && !d._children ? '#00FF00' : '#00FFFF'))
             .style('opacity', d => (ghostMode && d !== activeNode && !isAncestor(d)) ? 0.15 : 1);
 
-          node.exit().transition().duration(duration)
-            .attr('transform', d => `translate(${source.y},${source.x})`)
-            .remove();
+          if (currentDuration === 0) {
+             node.exit().remove();
+          } else {
+             node.exit().transition().duration(currentDuration)
+               .attr('transform', d => `translate(${source.y},${source.x})`).remove();
+          }
 
-          // Guardar posiciones para el próximo ciclo
+          // --- GESTIÓN DE LINKS (CORREGIDO PARA INICIO DIRECTO) ---
+          const link = g.selectAll('path.link').data(links, d => d.id);
+
+          // Factor clave: Si es inicio seco (duration 0), colocamos el path DIRECTO en su lugar final
+          const linkEnter = link.enter().insert('path', 'g').attr('class', 'link')
+            .attr('d', d => {
+               if (currentDuration === 0) {
+                  return diagonal(d, d.parent); // Directo a la posición final
+               } else {
+                  const o = {y: source.y0 || 0, x: source.x0 || 0};
+                  return diagonal(o, o); // Desde el padre para la animación
+               }
+            });
+
+          const linkUpdate = linkEnter.merge(link);
+
+          if (currentDuration === 0) {
+             linkUpdate.attr('d', d => diagonal(d, d.parent));
+          } else {
+             linkUpdate.transition().duration(currentDuration)
+               .attr('d', d => diagonal(d, d.parent));
+          }
+
+          linkUpdate
+            .style('stroke', d => (d === activeNode || isAncestor(d)) ? '#ff9100' : '#00FFFF')
+            .style('stroke-width', d => (d === activeNode || isAncestor(d)) ? '25px' : '12px')
+            .style('opacity', d => (ghostMode && !isAncestor(d) && d !== activeNode) ? 0.08 : 0.6);
+
+          if (currentDuration === 0) {
+             link.exit().remove();
+          } else {
+             link.exit().transition().duration(currentDuration)
+               .attr('d', d => { const o = {y: source.y, x: source.x}; return diagonal(o, o); }).remove();
+          }
+
           nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
         }
 
-        function fitToViewport(targetNodes) {
+        function fitToViewport(targetNodes, customDuration) {
           const container = document.getElementById('tree-container');
           if (!container || !targetNodes || targetNodes.length === 0) return;
           const width = container.clientWidth, height = container.clientHeight;
 
-          // Calculamos límites basados en las posiciones futuras (LAYOUT predictivo)
           const minX = d3.min(targetNodes, d => d.x), maxX = d3.max(targetNodes, d => d.x);
           const minY = d3.min(targetNodes, d => d.y), maxY = d3.max(targetNodes, d => d.y);
 
           const contentWidth = (maxY - minY) || 1, contentHeight = (maxX - minX) || 1;
           const padding = 160;
-          // Factor de escala predictivo
           let scale = Math.min(width / (contentWidth + padding * 6), height / (contentHeight + padding * 2));
           scale = Math.min(Math.max(scale, 0.05), 0.8);
 
-          const midX = (minY + maxY) / 2;
-          const midY = (minX + maxX) / 2;
+          const transform = d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-(minY + maxY) / 2, -(minX + maxX) / 2);
 
-          const transform = d3.zoomIdentity
-            .translate(width / 2, height / 2)
-            .scale(scale)
-            .translate(-midX, -midY);
-
-          svg.transition().duration(duration)
-            .ease(d3.easeCubicInOut)
-            .call(zoomHandler.transform, transform);
-        }
-
-        // --- FUNCIONES DE CONTROL (Resto del código intacto) ---
-
-        function runCollapseOthers() {
-          if (!activeNode || activeNode === root) return;
-          const ancestors = [];
-          let curr = activeNode;
-          while (curr) { ancestors.push(curr.id); curr = curr.parent; }
-          root.descendants().forEach(d => {
-            if (!ancestors.includes(d.id) && d.children) { d._children = d.children; d.children = null; }
-          });
-          update(activeNode);
+          if (customDuration === 0) {
+             svg.call(zoomHandler.transform, transform);
+          } else {
+             svg.transition().duration(customDuration).ease(d3.easeCubicInOut).call(zoomHandler.transform, transform);
+          }
         }
 
         function isAncestor(d) { let curr = activeNode ? activeNode.parent : null; while(curr) { if(curr === d) return true; curr = curr.parent; } return false; }
@@ -506,7 +480,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           panel.classList.toggle('collapsed');
           btn.innerHTML = panel.classList.contains('collapsed') ? '☰' : '✖';
         }
-        function resetMap() { activeNode = root; if(root.children) { root.children.forEach(collapse); } update(root); }
+        function resetMap() { activeNode = root; if(root.children) root.children.forEach(collapse); update(root); }
         function fullExpand() { expand(root); update(root); }
 
         function reorderPathToTop(d) {
@@ -516,14 +490,17 @@ mod_tree_server <- function(id, show_debug = FALSE) {
             let children = p.children || p._children;
             if (children) {
               let idx = children.findIndex(c => c.id === curr.id);
-              if (idx > -1) { children.unshift(children.splice(idx, 1)[0]); }
+              if (idx > -1) {
+                let element = children.splice(idx, 1)[0];
+                children.unshift(element);
+              }
             }
             curr = p;
           }
         }
 
         setTimeout(initTree, 200);
-        window.addEventListener('resize', () => fitToViewport(treemap(root).descendants()));
+        window.addEventListener('resize', () => fitToViewport(treemap(root).descendants(), 0));
         "
       )))
     })
