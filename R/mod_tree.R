@@ -240,11 +240,9 @@ mod_tree_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # Intentamos cargar los datos desde el paquete
     data_full <- tryCatch({
       Rscience2027::tree_data
     }, error = function(e) {
-      # Fallback por si la estructura de datos no está disponible
       data.frame(nivel1 = "Error", nivel2 = "No Data", script_id = 0)
     })
 
@@ -313,7 +311,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       node
     }
 
-    # 4. INYECTOR JAVASCRIPT (LÓGICA D3.JS AJUSTADA PARA INICIO 100% ESTÁTICO)
+    # 4. INYECTOR JAVASCRIPT (LÓGICA DE ANIMACIÓN SECUENCIAL Y SECADO INICIAL)
     output$js_injector <- renderUI({
       req(data_full)
       df_tree <- data_full %>% select(starts_with("nivel"))
@@ -340,7 +338,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
             .on('zoom', (event) => g.attr('transform', event.transform));
           svg.call(zoomHandler);
 
-          treemap = d3.tree().nodeSize([180, 800]);
+          treemap = d3.tree().nodeSize([180, 850]);
 
           root = d3.hierarchy(treeData, d => d.children);
           root.descendants().forEach(d => { d.id = ++i; });
@@ -353,26 +351,31 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           Shiny.setInputValue('", ns("selected_node"), "', 'Rscience');
           if (root.children) root.children.forEach(collapse);
 
-          // PASO CLAVE: Llamamos a update con duración 0 para el inicio total estático
+          // PASO CLAVE 1: Llamamos a update con duración 0 para el inicio ordenado
           update(root, 0);
         }
 
+        // Modificamos update para aceptar una duración opcional
         function update(source, customDuration) {
           const currentDuration = (customDuration !== undefined) ? customDuration : duration;
 
           if (topAlignMode && activeNode) reorderPathToTop(activeNode);
 
+          // 1. Calculamos la estructura de datos FINAL (LAYOUT predictivo)
           const nodes = treemap(root).descendants();
           const links = nodes.slice(1);
+
+          // Fijamos la distancia entre niveles
           nodes.forEach(d => d.y = d.depth * 850);
 
+          // 2. EJECUTAMOS EL ZOOM PREDICTIVO (Sincronizado con la animación)
           fitToViewport(nodes, currentDuration);
 
-          // --- GESTIÓN DE NODOS (Ya funcionaba directo) ---
+          // 3. GESTIÓN DE NODOS
           const node = g.selectAll('g.node').data(nodes, d => d.id);
 
           const nodeEnter = node.enter().append('g').attr('class', 'node')
-            // Posición inicial: si es inicio seco, va directo a d.y, d.x, sino al source
+            // PASO CLAVE 2: Para la expansión fluida, los nuevos nodos deben nacer en la posición actual del padre (x0, y0)
             .attr('transform', d => (currentDuration === 0) ? `translate(${d.y},${d.x})` : `translate(${source.y0 || 0},${source.x0 || 0})`)
             .on('click', (event, d) => {
               activeNode = d;
@@ -390,6 +393,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
 
           const nodeUpdate = nodeEnter.merge(node);
 
+          // Animación sincronizada secuencial ( PADRE -> RAMAS -> HIJOS )
           if (currentDuration === 0) {
              nodeUpdate.attr('transform', d => `translate(${d.y},${d.x})`);
           } else {
@@ -398,7 +402,14 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           }
 
           nodeUpdate.select('circle')
-            .style('fill', d => (d === activeNode || isAncestor(d)) ? '#ff9100' : (!d.children && !d._children ? '#00FF00' : '#00FFFF'))
+            .style('fill', d => {
+              if (!d.children && !d._children) return '#00FF00';
+              if (d === activeNode || isAncestor(d)) return '#ff9100';
+              return '#00FFFF';
+            })
+            // El stroke (borde interior) es NARANJA solo si está seleccionado, sino BLANCO
+            .style('stroke', d => (d === activeNode) ? '#ff9100' : '#fff')
+            .style('stroke-width', '6px')
             .style('opacity', d => (ghostMode && d !== activeNode && !isAncestor(d)) ? 0.15 : 1);
 
           if (currentDuration === 0) {
@@ -408,22 +419,24 @@ mod_tree_server <- function(id, show_debug = FALSE) {
                .attr('transform', d => `translate(${source.y},${source.x})`).remove();
           }
 
-          // --- GESTIÓN DE LINKS (CORREGIDO PARA INICIO DIRECTO) ---
+          // 4. GESTIÓN DE LINKS
           const link = g.selectAll('path.link').data(links, d => d.id);
 
-          // Factor clave: Si es inicio seco (duration 0), colocamos el path DIRECTO en su lugar final
+          // PASO CLAVE 3: Para que las ramas fluyan, deben nacer como un punto en la posición actual del padre
           const linkEnter = link.enter().insert('path', 'g').attr('class', 'link')
             .attr('d', d => {
                if (currentDuration === 0) {
                   return diagonal(d, d.parent); // Directo a la posición final
                } else {
+                  // Si es expansión, nacen encogidos en el padre actual
                   const o = {y: source.y0 || 0, x: source.x0 || 0};
-                  return diagonal(o, o); // Desde el padre para la animación
+                  return diagonal(o, o);
                }
             });
 
           const linkUpdate = linkEnter.merge(link);
 
+          // Animación secuencial ( PADRE -> RAMAS -> HIJOS )
           if (currentDuration === 0) {
              linkUpdate.attr('d', d => diagonal(d, d.parent));
           } else {
@@ -443,9 +456,11 @@ mod_tree_server <- function(id, show_debug = FALSE) {
                .attr('d', d => { const o = {y: source.y, x: source.x}; return diagonal(o, o); }).remove();
           }
 
+          // Guardar posiciones para el próximo ciclo
           nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
         }
 
+        // Modificamos fitToViewport para aceptar duración personalizada
         function fitToViewport(targetNodes, customDuration) {
           const container = document.getElementById('tree-container');
           if (!container || !targetNodes || targetNodes.length === 0) return;
@@ -466,6 +481,31 @@ mod_tree_server <- function(id, show_debug = FALSE) {
           } else {
              svg.transition().duration(customDuration).ease(d3.easeCubicInOut).call(zoomHandler.transform, transform);
           }
+        }
+
+        // --- ARREGLO DE FOCUS BRANCH ---
+        function runCollapseOthers() {
+          if (!activeNode || activeNode === root) return;
+
+          // Identificar ancestros para mantener la rama abierta
+          var ancestors = [];
+          var curr = activeNode;
+          while (curr) {
+            ancestors.push(curr.id);
+            curr = curr.parent;
+          }
+
+          // Colapsar todo lo que no sea ancestro
+          root.descendants().forEach(d => {
+            if (ancestors.indexOf(d.id) === -1) {
+              if (d.children) {
+                d._children = d.children;
+                d.children = null;
+              }
+            }
+          });
+
+          update(activeNode);
         }
 
         function isAncestor(d) { let curr = activeNode ? activeNode.parent : null; while(curr) { if(curr === d) return true; curr = curr.parent; } return false; }
@@ -490,10 +530,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
             let children = p.children || p._children;
             if (children) {
               let idx = children.findIndex(c => c.id === curr.id);
-              if (idx > -1) {
-                let element = children.splice(idx, 1)[0];
-                children.unshift(element);
-              }
+              if (idx > -1) { children.unshift(children.splice(idx, 1)[0]); }
             }
             curr = p;
           }
