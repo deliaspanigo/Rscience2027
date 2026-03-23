@@ -1,0 +1,672 @@
+Para la toma de decisiones, debemos tener en cuenta 3 aspectos:  
+- Si se cumplen o no todos los requisitos del modelo.  
+- Si se rechaza o no Ho de Anova.  
+- Si se encuentran o no al menos 2 grupos en el test de Tukey.  
+
+Tenemos entonces que el análisis de todo el set de resultados conforma un total
+de 2^3 = 8 combinaciones posibles.  
+Esos 8 casos pueden resumirse directamente en 5 casos estadísticos.  
+Cualquier conjunto de resultados obtenido cae en un caso, solo en un caso y nada más que en un caso, sin excepciones.  
+Conformamos entonces la estructura inicial de un analista de datos automatizado.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-z33"
+  const panel = document.getElementById('mi-z33');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[1].click();
+  }
+});
+</script>
+```
+
+### Tabla General de casos
+::: {.panel-tabset #mi-z33}
+#### R Code
+
+```{r eval=TRUE, echo=TRUE}
+
+
+df_decision_cases_init <- data.frame(
+  "Statistic Case" =          c("Case 1"         , "Case 2"         , "Case 3"         , "Case 4"    , "Case 5"    ),
+  "All requeriments OK" =     c(  "No"           ,   "Yes"          ,  "Yes"           , "Yes"       ,  "Yes"      ),
+  "Anova rejected" =          c("No/Yes"         ,   "No"           ,  "No"            , "Yes"       ,  "Yes"      ), 
+  "Tukey at least 2 groups" = c("No/Yes"         ,   "No"           ,  "Yes"           , "No"        ,  "Yes"      ),
+  "Decision" =                c("Decision Case 1", "Decision Case 2", "Decision Case 3", "Decision Case 4", "Decision Case 5")
+)
+
+df_decision_cases_init
+```
+
+####  Table
+Como es una tabla particularmente importante, nos daremos el lujo de detallarla también de una hermosa manera.
+```{r eval=TRUE, echo=FALSE}
+
+knitr::kable(df_decision_cases_init)
+```
+:::
+
+
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-z55"
+  const panel = document.getElementById('mi-z55');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[2].click();
+  }
+});
+</script>
+```
+
+Tenemos ya el marco genereal de casos, y nosotros ya tenemos la información suficiente como para determinar
+en cual de estos casos nos encontramos.
+
+::: {.panel-tabset #mi-z55}
+####  R Code
+
+Las siguientes sentencias lo que hacen es detectar nuestros resultados a que caso corresponde.
+Primero ordenamos la información de nuestro análisis en el mismo orden que la tabla.
+```{r eval=TRUE, echo = TRUE}
+vector_observed_details <- c(AQ_all_requeriments_ok, AQ_anova_rejected_ho,  AQ_tukey_groups)
+names(vector_observed_details) <- c("All_requeriments_ok", "anova_rejected_ho", "tukey_groups")
+vector_observed_details
+```
+
+Ahora buscamos esas características en la tabla, y detallamos la fila:
+```{r eval=TRUE, echo = TRUE}
+selected_col <- 1:length(vector_observed_details) + 1
+
+# 2. Realizar la comparación elemento por elemento
+# Comparamos las columnas seleccionadas de df_decision_cases 
+# con los elementos de vector_observed_details
+match_matrix <- mapply(
+  function(pattern, text) {
+    grepl(pattern, text, fixed = TRUE)
+  }, 
+  pattern = vector_observed_details, 
+  text = df_decision_cases_init[, selected_col]
+)
+
+# 3. Identificar la fila donde *todos* los elementos coinciden
+# La coincidencia total se da cuando la suma de 'TRUE' (1) en una fila
+# es igual al número total de características (length(selected_col)).
+row_match_index <- which(rowSums(match_matrix) == length(selected_col))
+row_match_index
+
+```
+
+####  Full table cases
+```{r eval=TRUE, echo=FALSE}
+
+knitr::kable(df_decision_cases_init)%>%
+    kableExtra::row_spec(
+    row = row_match_index, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+```
+
+####  Selected Case
+```{r eval=TRUE, echo=FALSE}
+
+knitr::kable(df_decision_cases_init[row_match_index, ])%>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+```
+:::
+
+Dentro del total de casos, nuestros datos se encuentran entonces en el caso número `r row_match_index`.  
+Lo que haremos a continuación es completar toda la casuística asociada a cada parte del análisis, y para luego simplemente poder visualizar las interpretación de nuestro caso en particular.
+
+### Asesor estadístico automatizado - Visión General
+Comenzamos detallando la visión general y los aspectos que comunmente tiene en mente un asesor estadístico humano a la hora de analizar el test de Anova. Lo que se otorga es una visión global resumina con detalles teóricos.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-tabset"
+  const panel = document.getElementById('mi-tabset');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[2].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-tabset}
+####  R Code
+Conformamos en el código de R un dataframe que contiene el conjunto de criterios estadísticos a ser tenidos en cuenta a la hora de interpretar el test de Anova. 
+```{r eval=TRUE, echo=TRUE}
+
+df_decision_cases_01_human <- df_decision_cases_init
+
+df_decision_cases_01_human$"Decision"[1] <- "Cuando no se cumplen todos los requisitos del modelo, inmediatamente el análisis de Anova queda descartado. El descarte del análisis ocurre indistintamente de si no se cumple la normalidad de los residuos, la homogeneidad o ambos requisitos. Indistintamente de los valores estadísticos obtenidos en el test de Anova y en el test de Tukey, no es válido sacar conclusiones de ningún tipo. En análisis queda descartado. Debe entonces buscarse otra herramienta estadística para analizar los datos de este dataset. La herramienta más rápida de recomendar es el test de Kruskal-Wallis; pero un mejor análisis de las características del dataset tal vez permitan usar alguna herramienta de modelos lineales generales mixtos, o modelos lineales generalizados, o estadística exacta. En cualquier caso hace falta buscar otra herramienta si o si. Continuar con las interpretaciones estadísticas sin el cumplimiento de los requisistos es un error grave de quien se inicia en la estadística, y una práctica común de quien no tiene el suficiente conocimiento estadístico para analizar de manera correcta a la realidad que intenta analizar.
+Si a pesar de todas estas advertencias usted continua, se expone severamente a que su trabajo sea duramente criticado por colegas, tribunales evaluativos y árbitros de publicaciones."
+
+df_decision_cases_01_human$"Decision"[2] <- "Como se cumplen los requisitos del modelo it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. The null hypothesis of ANOVA is not rejected. Según Anova, all means are statistically equal. La utilización de cualquier test comparaciones múltiple está supeditada al rechazo de la hipótesis nula de Anova, por lo tanto, queda inmediatamente descartada la utilización de cualquier test de comparaciones múltiple para analizar este dataset, ya sea el test de Tukey o cualquier otro.
+La teoría estadística indica que el test de Anova es un test más potente que cualquier test de comparaciones múltiples.
+Si bien en este la salida de Tukey coincide con la visión de Anova, en este contexto el test de Tukey no es válido. Nada debe decirse respecto al test de Tukey o cualquier test de comparaciones que se quiera utilizar.
+En este caso afirmar que no hay diferencias por que Tukey no detectó grupos o afirmar que la interpretación es más fuerte por que anova y tukey coinciden es un error ya que en este caso no es válido sacar conclusiones de cualquier test de comparaciones múltiples.
+If the operator needs to make a recommendation, they should recommend any factor level equally.
+The fact of not rejecting the null hypothesis indicates that the mathematical differences between the means are due only to chance. Otra forma de decir esto es que de repetirse el experimento por segunda vez existe una gran probabilidad de que incluso ocurra que intercambio del valor de las medias entre los niveles del factor con la misma diferencia entre medias que ocurrió en la primera experiencia. Es un error común y grave insistir en que hay diferencias en alguna parte de los niveles del factor cuando se cumplen los requisitos del modelo y no se rechaza Ho de Anova.
+La acción por parte del operador (usted) de insistir en diferencias cuando no se rechazó la hipótesis nula manifiesta una falta total de conocimientos estadísticos para interpretar los resultados obtenidos.
+Como resumen, la teoría estadística indica que si se cumplen los requisitos del modelo el criterio de anova es un criterio de toma de decisiones superior a cualquier criterio que pueda determinar el operador. En este caso el criterio estadístico es el correcto en cualquier contexto."
+
+
+df_decision_cases_01_human$"Decision"[3] <- "Como se cumplen los requisitos del modelo it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. The null hypothesis of ANOVA is not rejected. Según Anova, all means are statistically equal. La utilización de cualquier test comparaciones múltiple está supeditada al rechazo de la hipótesis nula de Anova, por lo tanto, queda inmediatamente descartada la utilización de cualquier test de comparaciones múltiple para analizar este dataset, ya sea el test de Tukey o cualquier otro.
+La teoría estadística indica que el test de Anova es un test más potente que cualquier test de comparaciones múltiples.
+Si bien en este caso usted tiene una salida de Tukey que le indica grupos, el test de Tukey no es válido. Nada debe decirse respecto al test de Tukey o cualquier test de comparaciones que se quiera utilizar.
+En este caso afirmar hay diferencias por que Tukey detectó grupos o afirmar que la interpretación del test de Tukey es más fuerte que Anova es un error muy grave ya que en este caso no es válido sacar conclusiones de ningún test de comparaciones múltiples.
+If the operator needs to make a recommendation, they should recommend any factor level equally.
+The fact of not rejecting the null hypothesis indicates that the mathematical differences between the means are due only to chance. Otra forma de decir esto es que de repetirse el experimento por segunda vez existe una gran probabilidad de que incluso ocurra que intercambio del valor de las medias entre los niveles del factor con la misma diferencia entre medias que ocurrió en la primera experiencia. Es un error común y grave insistir en que hay diferencias en alguna parte de los niveles del factor cuando se cumplen los requisitos del modelo y no se rechaza Ho de Anova.
+La acción por parte del operador (usted) de insistir en diferencias entre los niveles del factor cuando no se rechazó la hipótesis nula de anova manifiesta una falta total de conocimientos estadísticos para interpretar los resultados obtenidos.
+Como resumen, la teoría estadística indica que si se cumplen los requisitos del modelo el criterio de anova es un criterio de toma de decisiones superior a cualquier criterio que pueda determinar el operador. En este caso el criterio estadístico es el correcto en cualquier contexto."
+
+df_decision_cases_01_human$"Decision"[4] <- "All ANOVA requirements are met. It is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. The null hypothesis of ANOVA is rejected. There is at least one different mean. The differences between the means are not only due to chance. At this point, ANOVA provides sufficient evidence to say that there are statistically significant differences between the factor level with the highest mean and the factor level with the lowest mean. By rejecting the null hypothesis of ANOVA, it is valid to interpret cualqueir test de comparaciones elegido, en este caso the Tukey test. In this case, the Tukey test does not distinguish statistical groups even though ANOVA rejected the null hypothesis. ANOVA is a more powerful test than Tukey, therefore it is affirmed that there are differences at least between the factor level with the largest mean and the factor level with the smallest one; and nothing can be said about the rest of the levels. It is a rare case, but it happens. Consider changing the multiple comparison test to another one, if appropriate, with the hope of being able to detect differences between factor levels with a different comparison test than Tukey.
+La teoría estadística indica que las diferencias estadísticas entre niveles del factor pueden no ser diferencias significativas en reales en el área de estudio. El operador (usted) debe contextualizar la información estadística y decidir con buen criterio si las diferencias estadísticas son significativas en el contexto del trabajo. En caso de análisis el criterio del operador es superior al criterio estadístico."
+
+df_decision_cases_01_human$"Decision"[5] <- "All ANOVA requirements are met. The conclusions obtained from ANOVA are valid. The null hypothesis of ANOVA is rejected. There is at least one different mean. The differences between the means are not only due to chance. At this point, ANOVA provides sufficient evidence to say that there are statistically significant differences between the factor level with the highest mean and the factor level with the lowest mean. By rejecting the null hypothesis of ANOVA, it is valid to interpret cualquier test de comparaciones múltiples, en esta oportunidad the Tukey test. In this case, the Tukey test distinguishes at least 2 statistical groups. The operator must observe the Tukey table and interpret the groups according to the letters assigned by the Tukey test, taking into account that Tukey can assign multiple letters to each factor level. The operator must make recommendations of factor levels taking into account the statistical framework and the original work framework. It is common to recommend the highest means or the lowest means according to the context of the data.
+In the context of Tukey, factor levels that share at least 1 letter are statistically equal. It takes some time to get used to correctly interpreting the Tukey table. There are also other contexts where the lowest or highest means are not necessarily sought, such as specifically looking for which factor levels are statistically equal to a particular level. The Tukey test can also be applied in this context.
+El operador (usted) debe contextualizar la información estadística y decidir con buen criterio si las diferencias estadísticas son significativas en el contexto del trabajo. En caso de análisis el criterio del operador es superior al criterio estadístico."
+
+
+colnames(df_decision_cases_01_human)[ncol(df_decision_cases_01_human)] <- "General_Decision"
+```
+
+
+
+Podemos visualizar el caso seleccionado en la salida de R
+```{r eval=TRUE, echo = TRUE}
+df_selected_row_case <- df_decision_cases_01_human[row_match_index, ]
+df_selected_row_case
+```
+
+####  Full table cases
+Detallamos en un formato más estético nuestra tabla con los 5 casos.  
+La fila que corresponde a nuestro caso de análisis será en color.
+```{r eval=TRUE, echo = FALSE}
+
+my_df <- df_decision_cases_01_human
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = row_match_index, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+
+####  Selected case
+Detallamos en un formato más estético solo el caso de análisis que se aplica a nuestros datos. 
+```{r eval=TRUE, echo = FALSE}
+
+# 4. Extraer la fila o el resultado deseado
+
+
+my_df <-  df_selected_row_case
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+:::
+
+
+ASDASDASD
+
+### Asesor estadístico automatizado - Model Requeriments
+Comenzamos detallando la visión general y los aspectos que comunmente tiene en mente un asesor estadístico humano a la hora de analizar el test de Anova. Lo que se otorga es una visión global resumina con detalles teóricos.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-tabset111"
+  const panel = document.getElementById('mi-tabset111');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[2].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-tabset111}
+####  R Code
+Conformamos en el código de R un dataframe que contiene el conjunto de criterios estadísticos a ser tenidos en cuenta a la hora de interpretar el test de Anova. 
+```{r eval=TRUE, echo=TRUE}
+
+df_decision_cases_02_model_requeriments <- df_decision_cases_init
+
+df_decision_cases_02_model_requeriments$"Decision"[1] <- "El test estadístico anova tiene 3 puntos sobre los que se basa para tomar decisiones: forma, dispersión y posición. La forma será la distribución normal de los residuos. La dispersión será varianzas homogéneas en los residuos y la posición será la media de la variable respuesta para uno de los niveles del factor. Garantizando que la forma y la dispersión de los residuos tienen cierta estructura en particular es que anova logra poner a prueba la posición en la variable respuesta. Por ello es requisito el cumplimiento de normalidad y homogeneidad de varianzas de los residuos, y solo con el cumplimiento de ambos requisitos de manerea simultánea es válido tomar la interpretación del las medias. Al no cumplir con todos los requisitos de manera simultánea debe ser descartado el análisis de anova indistintamente de los resultados que hubiera arrojado. No hay escapatoria y debe usted buscar otra herramienta estadística para interpretar estos resultados."
+
+df_decision_cases_02_model_requeriments$"Decision"[2] <- "Como se cumplen los requisitos del modelo it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. El hecho de que los residuos posean distribución normal y homogeneidad de varianzas en una característica que muchas veces es pasada por algo como un detalle menor. Lo que está usted viendo es una característica especial de datos. en muchos contextos pensar en el por qué los residuos de los niveles del factor son normales y homogéneos lleva a ideas que no se habían tenido en cuenta y enriquese muchísimo el trabajo que se está realizando. Si bien Anova es un test para las medias, Anova es abreviación 'Analisis de la Varianza' y no 'Analisis de las Medias', justamente por que através del análisis de la descomposición de varianzas en que logra decir algo de las medias. Pensar entonces en las varianzas de los residuos puede ser una idea interesante."
+
+
+df_decision_cases_02_model_requeriments$"Decision"[3] <- df_decision_cases_02_model_requeriments$"Decision"[2]
+
+df_decision_cases_02_model_requeriments$"Decision"[4] <- df_decision_cases_02_model_requeriments$"Decision"[2]
+
+df_decision_cases_02_model_requeriments$"Decision"[5] <- df_decision_cases_02_model_requeriments$"Decision"[2]
+
+colnames(df_decision_cases_02_model_requeriments)[ncol(df_decision_cases_02_model_requeriments)] <- "Requeriments_Decision"
+```
+
+
+
+Podemos visualizar el caso seleccionado en la salida de R
+```{r eval=TRUE, echo = TRUE}
+df_selected_row_case <- df_decision_cases_02_model_requeriments[row_match_index, ]
+df_selected_row_case
+```
+
+####  Full table cases
+Detallamos en un formato más estético nuestra tabla con los 5 casos.  
+La fila que corresponde a nuestro caso de análisis será en color.
+```{r eval=TRUE, echo = FALSE}
+
+my_df <- df_decision_cases_02_model_requeriments
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = row_match_index, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+
+####  Selected case
+Detallamos en un formato más estético solo el caso de análisis que se aplica a nuestros datos. 
+```{r eval=TRUE, echo = FALSE}
+
+# 4. Extraer la fila o el resultado deseado
+
+
+my_df <-  df_selected_row_case
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+:::
+
+ASDASDASD
+
+### Asesor estadístico automatizado - Anova
+Comenzamos detallando la visión general y los aspectos que comunmente tiene en mente un asesor estadístico humano a la hora de analizar el test de Anova. Lo que se otorga es una visión global resumina con detalles teóricos.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-tabset222"
+  const panel = document.getElementById('mi-tabset222');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[2].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-tabset222}
+####  R Code
+Conformamos en el código de R un dataframe que contiene el conjunto de criterios estadísticos a ser tenidos en cuenta a la hora de interpretar el test de Anova. 
+```{r eval=TRUE, echo=TRUE}
+
+df_decision_cases_03_anova <- df_decision_cases_init
+
+df_decision_cases_03_anova$"Decision"[1] <- "No se cumplen los requisitos del modelo. El test estadístico anova tiene el requisito indispensable de normaldiad de los residuos y homogeneidad de varianzas. Ambos requisitos deben cumplirse de manera conjunta para que sea válido realizar conclusiones sobre los niveles del factor. Continuar con la interpretación estadística sin el cumplimiento de todos los requisitos es un error catastrófico. Los requisitos del modelo de Anova no son optativos y tampoco pueden asuminarse. Los requisitos del modelo son la base fundamental sobre la que se basa el test de Anova para tomar decisiones sobre las medias de los niveles del factor. En este caso, usted deberá buscar otra herramienta estadística para realizar el análisis de sus datos."
+
+df_decision_cases_03_anova$"Decision"[2] <- "Como se cumplen los requisitos del modelo it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. No se rechaza la hipótesis nula de Anova, por lo tanto no existen diferencias estadísticamente significativas entre los niveles del factor. Todos los niveles del factor son estadísticamente iguales. Si se necesita hacer una recomendación de niveles del factor, todos los nivelesl del factor deben ser recomendados por igual.
+En el caso en que se cumplen los requisitos del modelo y no se rechaza la hipótesis nula las diferencias matemáticas observadas entre los niveles del factor es solo por azar. Esto quiere decir que si se repitiera la experiencia podría ocurrir uno de dos escenarios.
+Escenario 1) Las diferencias entre las medias serían aún menor y también podría cambiar el orden de las medias si se ordenan los niveles del factor de mayor a menor.
+Escenario 2) Las diferencias y las medias se mantienen pero las medias recaen en diferentes niveles del factor, cambiando entonces el orden de los niveles del factor si se ordenan los niveles del mayor a menor.
+
+La teoría estadística es muy clara al respecto e indica que en caso de no rechazar la hipótesis nula entonces no existen diferencias, y si a ojo del operador si existen diferencias, prevalece el criterio estadístico por sobre el criterio del operador.
+La acciones de insistir y argumentar en favor de conceptos como diferencias marginales o a ojímetro por parte del operador eso es un error estadístico grave que manifiesta un desconocimiento profundo de la estadística por parte del operador. 
+"
+
+
+df_decision_cases_03_anova$"Decision"[3] <- df_decision_cases_03_anova$"Decision"[2]
+
+
+df_decision_cases_03_anova$"Decision"[4] <- "Como se cumplen los requisitos del modelo it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. Se rechaza la hipótesis nula de Anova, por lo tanto existen diferencias estadísticamente significativas entre los niveles del factor. Las diferencias encontradas entre los niveles del factor no son solo por azar. Existen al menos dos grupos dentro de los niveles del factor. Anova garantiza que hay diferencias estadísticamente significativas entre el nivel del factor con la media menor y el nivel del factor con la media mayor. Solo eso. Nada dice del resto de los niveles del factor. La utilización de cualquier test de comparaciones está supeditada al rechazo de hipótesis nula de Anova. En este caso entonces es válido utilizar cualquier test de comparaciones múltiples para intentar visualizar una estructura de grupos entre los niveles del factor.
+
+Si existe una discrepancia entre el test de Anova que indica que hay diferencias significativas y el operador que a su ojo no ve diferencias significativas, la teoría estadística es muy clara al respecto. Este marco en el cual anova indica que hay diferencias y el criterio del operador dice que no hay diferencias, el criterio del operador prevalece siempre y cuando sea argumento de manera correcta y profunda.
+
+Como el test de anova es váido, y se ha rechazado la hipótesis nula de Anova, entonces es válido realizar cualquier test de comparaciones múltiple. En este caso 
+"
+
+df_decision_cases_03_anova$"Decision"[5] <- df_decision_cases_03_anova$"Decision"[4]
+
+colnames(df_decision_cases_03_anova)[ncol(df_decision_cases_03_anova)] <- "Anova_Decision"
+```
+
+
+
+Podemos visualizar el caso seleccionado en la salida de R
+```{r eval=TRUE, echo = TRUE}
+df_selected_row_case <- df_decision_cases_03_anova[row_match_index, ]
+df_selected_row_case
+```
+
+####  Full table cases
+Detallamos en un formato más estético nuestra tabla con los 5 casos.  
+La fila que corresponde a nuestro caso de análisis será en color.
+```{r eval=TRUE, echo = FALSE}
+
+my_df <- df_decision_cases_03_anova
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = row_match_index, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+
+####  Selected case
+Detallamos en un formato más estético solo el caso de análisis que se aplica a nuestros datos. 
+```{r eval=TRUE, echo = FALSE}
+
+# 4. Extraer la fila o el resultado deseado
+
+
+my_df <-  df_selected_row_case
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+:::
+
+ASDASDASD
+
+### Asesor estadístico automatizado - Tukey
+Comenzamos detallando la visión general y los aspectos que comunmente tiene en mente un asesor estadístico humano a la hora de analizar el test de Anova. Lo que se otorga es una visión global resumina con detalles teóricos.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-tabset333"
+  const panel = document.getElementById('mi-tabset333');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[2].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-tabset333}
+####  R Code
+Conformamos en el código de R un dataframe que contiene el conjunto de criterios estadísticos a ser tenidos en cuenta a la hora de interpretar el test de Anova. 
+```{r eval=TRUE, echo=TRUE}
+
+df_decision_cases_04_tukey <- df_decision_cases_init
+
+df_decision_cases_04_tukey$"Decision"[1] <- "La utilización del test de Tukey está supeditada a la validez del modelo de Anova y al rechazo de la hipótesis de anova. Al no se cumplen los requisitos del modelo no es válido el test de Anova y por lo tanto tampoco es válido el test de Tukey. La información relacionada al test de Tukey debe ser descartada. Como ya se ha detallado antes, en este contexto continuar con la interpretación estadística es un error estadístico grave que manifiesta un desconocimiento total del criterios estadísticos para tomar decisiones."
+
+df_decision_cases_04_tukey$"Decision"[2] <- "La utilización del test de Tukey está supeditada a la validez del modelo de Anova y al rechazo de la hipótesis de anova. Como el modelo es válido por cumplirse los requisitos y no se ha rechazado la hipótesis nula de anova, inmediatamente queda descartada la utilización no solo de Tukey sino de cualquier otro test de comparaciones múltiple. Todos los niveles del factor son estadísticamente iguales.
+En este caso 2 Anova y Tukey son coherentes, en el sentido que ambos detallan que existe un solo grupo estadístico.  
+La idea de afirmar que los resultados tienen más peso por que Anova y Tukey son coherentes en solo detectar un grupo, es un error ya desde un principio no es válido sacar ningún tipo de conclusiones o afirmaciones basado en cualquier test de comparaciones múltiple ya que la hipótesis nula de anova no ha sido rechazada.
+"
+
+
+df_decision_cases_04_tukey$"Decision"[3] <- "La utilización del test de Tukey está supeditada a la validez del modelo de Anova y al rechazo de la hipótesis de anova. Como el modelo es válido por cumplirse los requisitos y efectivamente  se ha rechazado la hipótesis nula de anova, inmediatamente queda habilitada la posibilidad de algún test de comparaciones múltiples. Para nustro caso es el test de Tukey. Al utilziar el test de Tukey recordar la importancia de detallar en la sentencia que utiliza al test de Tukey en R si hay o no descalance en repeticiones entre los niveles del factor.
+En este caso 3 Anova y Tukey no son coherentes, en el sentido que Anova detalla que existen diferencias y Tukey no las encuentra.  
+La teoría estadística indica que siempre prevalece Anova por sobr Tukey por ser Anova un test más pontente, por lo tanto existen diferencias estadísticamente significativas al menos entre el nivel del factor con la media menor y el nivel del factor con la media mayor; y nada podrá decirse del resto de los niveles del factor.
+En algunos contextos esta situación dificulta la interprtación estadística o la posibilidad de recomendar niveles del factor. En tal caso, si es correcto, puede ayudar utilizar otro test de comparacicones múltiple que no sea Tukey, con la idea de encontrar efectivamente grupos entre los niveles del factor.
+La discrepacia entre Anova y Tukey no es muy común, pero es posible. La mayoría de los casos se dan sobre todo cuando el operador insiste en ingresar al test estadístico sin cumplir los requisitos del modelo, o cuando el operador no detalla en la sentencia de R que hay un desbalance en los niveles del factor para que internamente Tukey aplique una corrección a su estimación. Pero aún cumpliendo los requisitos y detallando el argumento de manera correcta existe una chance de que esto pueda ocurrir ya que despsués de todo Anova y Tukey son dos test diferentes.
+"
+
+df_decision_cases_04_tukey$"Decision"[4] <- "La utilización del test de Tukey está supeditada a la validez del modelo de Anova y al rechazo de la hipótesis de anova. Como el modelo es válido por cumplirse los requisitos y no  se ha rechazado la hipótesis nula de anova, inmediatamente queda inhabilitada la posibilidad de aplicar algún test de comparaciones múltiples para acompañar al test de Anova. 
+Indistintamente de los grupos estadísticos que pudieramos obtener en Tukey, el test de Tukey no debe ser tenido en cuenta para sacar conclusiones de ningún tipo.
+
+La teoría estadística indica que el test de Anova es más potente que el test de Tukey y que hay una gerarquía
+entre ellos a la hora de tomar decisiones: el test de Tukey solo es válido si se rechaza Ho de Anova.
+
+Esta incoherencia entre el test de Anova y el test de Tukey suele verse cuando el operador es aún más incoherente 
+y analiza Anova y Tukey sin cumplimiento requisitos del modelo. 
+
+En este caso 4, todos los nivelesl del factor son estadísticamente iguales.
+Y queda imposibilitada la utilización de cualquier test de comparaciones múltiple.
+"
+
+
+df_decision_cases_04_tukey$"Decision"[5] <- "La utilización del test de Tukey está supeditada a la validez del modelo de Anova y al rechazo de la hipótesis de anova. Como el modelo es válido por cumplirse los requisitos y efeectivametne se ha rechazado la hipótesis nula de anova, inmediatamente queda abierta la posibilidad de aplicar algún test de comparaciones múltiples para acompañar al test de Anova. 
+En este caso 5 hay coherencia entre Anova y Tukey, en el sentido que ambos encuentran al menos dos grupos en los niveles del factor.
+
+La garantía de Anova es que existen diferencias estadísticamente significativas entre el nivel del factor con la media menor y el nivel del factor con la media mayor.
+Tukey entonces nos otorga una estructura de cómo son los grupos dentro de los niveles del factor.
+
+El test de Tukey tiene la particularidad de que genera grupos intermedios. Cada nivel del factor puede pertenecer a más de un grupo estadístico. Lleva un tiempo acostumbarse a como interpretar el test de Tukey. Todos los nivelesl del factor que comparte al menos una letra de grupo son estadísticamente iguales entre si.
+Es muy imporante contextualizar los grupos estadísticos en marco de referencia del trabajo.
+"
+
+colnames(df_decision_cases_04_tukey)[ncol(df_decision_cases_04_tukey)] <- "Tukey_Decision"
+```
+
+
+
+Podemos visualizar el caso seleccionado en la salida de R
+```{r eval=TRUE, echo = TRUE}
+df_selected_row_case <- df_decision_cases_04_tukey[row_match_index, ]
+df_selected_row_case
+```
+
+####  Full table cases
+Detallamos en un formato más estético nuestra tabla con los 5 casos.  
+La fila que corresponde a nuestro caso de análisis será en color.
+```{r eval=TRUE, echo = FALSE}
+
+my_df <- df_decision_cases_04_tukey
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = row_match_index, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+
+####  Selected case
+Detallamos en un formato más estético solo el caso de análisis que se aplica a nuestros datos. 
+```{r eval=TRUE, echo = FALSE}
+
+# 4. Extraer la fila o el resultado deseado
+
+
+my_df <-  df_selected_row_case
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+:::
+
+ASDASDASDASD

@@ -1,0 +1,210 @@
+---
+title: "Rscience"
+format: 
+  html: 
+    output-file: "action01_STONE.html"
+    embed-resources: true
+execute: 
+  enabled: true
+---
+
+Tool: Rs003_LM_QQ_FIX_BAL_ANOVA_1Way_s001  
+QMD File name: action01_STONE.qmd
+
+This qmd:  
+- Clears the environment.  
+- Locates the original file.  
+- Generates a copy.  
+- Applies the "my_variable" modifications.  
+    
+```{r step00_time_start, eval=TRUE, echo=FALSE, results='asis'}
+# Captura del tiempo inicial
+time_start <- Sys.time()
+
+cat("<b>Runner Execution Started:</b>", format(time_start, "%Y-%m-%d %H:%M:%S"), "<br>")
+cat("<hr>")
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+library("fs")
+library("knitr")
+library("tidyverse")
+library("kableExtra")
+
+# Funtions
+# source(file = "fn_local.R")
+source(file = "../AAA_fn/fn_actions.R")
+```
+
+---
+
+```{r basics, eval=TRUE, echo=FALSE, results='asis'}
+# Files
+   str_file_hidder_runner_html <- "action01_STONE.html"
+   str_old_qmd_file_name <-       "f00_01_RQuarto.qmd"
+   str_new_qmd_file_name <-       "f00_01_RQuarto.qmd"
+   
+# Folders
+   str_folder_input_external  <- "../f00_01_BankCode"
+   str_folder_output_external <- "../f00_03_MOD_code"
+   str_folder_output_local    <- "zzz_output_local"
+
+# paths
+   str_path_old <- file.path(str_folder_output_local, str_old_qmd_file_name)
+   str_path_new <- file.path(str_folder_output_local, str_new_qmd_file_name)
+
+```
+
+
+
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Folders
+str_folder_FROM <- str_folder_input_external
+str_folder_TO <- str_folder_output_local
+str_folder_TO_external  <- str_folder_output_external
+
+vector_qmd_file_paths_FROM <- list.files(path = str_folder_FROM , 
+                                            pattern = "\\.qmd$", 
+                                            full.names = T)
+vector_qmd_file_names <- basename(vector_qmd_file_paths_FROM)
+
+vector_qmd_file_paths_TO <- file.path(str_folder_TO, vector_qmd_file_names)
+vector_qmd_file_paths_TO_external <- file.path(str_folder_TO_external, vector_qmd_file_names)
+
+
+```
+
+
+# Checking input folder and files (FROM)
+## FROM files: files must exists.
+```{r step91_01_01, eval=TRUE, echo=FALSE, results='asis'}
+
+step91_01_01 <- function(){
+  
+
+the_output <- fn_check_multi_files(vector_file_path = vector_qmd_file_paths_FROM)
+
+    if(!the_output) knitr::knit_exit()
+}
+step91_01_01()
+```
+
+
+# Checking external output folder
+```{r step02_03_01, eval=TRUE, echo=FALSE, results='asis'}
+
+step02_03_01 <- function(){
+  
+  the_output <- fn_check_and_create_and_clean_single_folder_SUPER_POWER(str_folder_path = str_folder_output_external)
+  if(!the_output) knitr::knit_exit()
+}
+step02_03_01()
+```
+
+
+# Checking local output folder
+```{r step992_03_01, eval=TRUE, echo=FALSE, results='asis'}
+
+step992_03_01 <- function(){
+  
+  the_output <- fn_check_and_create_and_clean_single_folder(str_folder_path = str_folder_output_local)
+  if(!the_output) knitr::knit_exit()
+}
+step992_03_01()
+```
+
+
+
+
+# Copying files FROM-TO.  (external to outpuit local)
+```{r step02_05_01, eval=TRUE, echo=FALSE, results='asis'}
+
+step02_05_01 <- function(){
+  
+the_output <- fn_copy_verify_multi_files(vector_from_file_path = vector_qmd_file_paths_FROM, 
+                           vector_to_file_path = vector_qmd_file_paths_TO)
+if(!the_output) knitr::knit_exit()
+}
+step02_05_01()
+```
+
+
+## Verify existence after copy on TO.
+```{r step02_05_02, eval=TRUE, echo=FALSE, results='asis'}
+
+step02_05_02 <- function(){
+  
+the_output <- fn_check_multi_files(vector_file_path = vector_qmd_file_paths_TO)
+if(!the_output) knitr::knit_exit()
+}
+step02_05_02()
+```
+
+
+## Aplicando los cmaibos en los archivos de local output
+```{r sssss222, eval=TRUE, echo=FALSE, results='asis'}
+
+# 
+# step302_05_02 <- function(){
+#   
+# the_output <- fn_rename_single_file(str_file_path_from = str_path_old,
+#                                     str_file_path_to = str_path_new)
+# if(!the_output) knitr::knit_exit()
+# }
+# step302_05_02()
+```
+
+
+   
+# Copying files FROM-TO.  (local output to external local)
+```{r step02_05_0122, eval=TRUE, echo=FALSE, results='asis'}
+
+step02_05_0122 <- function(){
+  
+the_output <- fn_copy_verify_multi_files(vector_from_file_path = vector_qmd_file_paths_TO, 
+                           vector_to_file_path = vector_qmd_file_paths_TO_external)
+if(!the_output) knitr::knit_exit()
+}
+step02_05_0122()
+```
+
+
+## Verify existence after copy on TO.
+```{r step02_05_02333, eval=TRUE, echo=FALSE, results='asis'}
+
+step02_05_02333 <- function(){
+  
+the_output <- fn_check_multi_files(vector_file_path = vector_qmd_file_paths_TO_external)
+if(!the_output) knitr::knit_exit()
+}
+step02_05_02333()
+```
+
+# Final Summary
+```{r step_final_time_end, eval=TRUE, echo=FALSE, results='asis'}
+# 1. Cálculos de tiempo
+time_end <- Sys.time()
+time_duration <- difftime(time_end, time_start, units = "auto")
+str_duration <- format(time_duration, digits = 3)
+
+# 2. Conteo de archivos
+total_out <- length(list.files(str_folder_output_local, pattern = "^zzz_output_"))
+
+# 3. Construcción del HTML (Asegurando que no haya espacios extraños al inicio)
+html_summary <- paste0(
+  "<hr>",
+  "<div style='background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 5px; font-family: sans-serif; color: #333;'>",
+  "  <b style='display: block; color: #495057; font-size: 1.1em; margin-bottom: 10px;'>🏁 Final Execution Summary</b>",
+  "  <div style='margin-bottom: 5px;'>🕒 <b>Start Time:</b> ", format(time_start, "%H:%M:%S"), "</div>",
+  "  <div style='margin-bottom: 5px;'>🏁 <b>End Time:&nbsp;</b> ", format(time_end, "%H:%M:%S"), "</div>",
+  "  <div style='margin-bottom: 5px;'>⌛ <b>Total Duration:</b> <span style='color: #007bff; font-weight: bold;'>", str_duration, "</span></div>",
+  "  <div style='margin-bottom: 5px;'>📦 <b>Generated Files:</b> ", total_out, " files in local output</div>",
+  "</div>",
+  "<div style='text-align: center; margin-top: 10px;'><small style='color: #6c757d;'>End of Rscience Automated Runner</small></div>"
+)
+
+# Usamos cat con fill = TRUE para asegurar que el buffer se limpie correctamente
+cat(html_summary, fill = TRUE)
+```

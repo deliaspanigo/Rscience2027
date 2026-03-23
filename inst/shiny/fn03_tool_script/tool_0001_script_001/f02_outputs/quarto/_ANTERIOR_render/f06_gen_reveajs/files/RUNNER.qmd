@@ -1,0 +1,182 @@
+---
+title: "ANOVA Report"
+author: "Rscience"
+date: today
+lang: en
+
+# Configuración de Formato RevealJS
+format:
+  revealjs:
+    output-file: "RUNNER.html"
+    self-contained: true
+    transition: none
+    theme: sky
+    background-color: "#F8F9FA"
+    navigation-mode: linear
+    controls: true
+    controls-layout: edges
+    controls-back-arrows: visible
+    progress: true
+    mouse-wheel: true
+    slide-number: true
+    footer: "Rscience - Anova 1 way"
+    mathjax: cdn
+
+
+---
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+library("yaml")
+library("webshot2")
+library("chromote")
+library("knitr")
+
+# Sourcing local files
+source("fns.R")
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 150,
+  fig.align = "center"
+)
+```
+
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+library("yaml")
+library("webshot2")
+library("chromote")
+library("knitr")
+
+# Sourcing local files
+source("fns.R")
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Settings
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 150,
+  fig.align = "center"
+)
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Basiscs
+
+str_input_folder_path <- "../../zzz_zzz_output"
+str_file_name_RData_internal <- "zzz_output_f03_RData.RData"
+str_file_path_RData_internal <- file.path(str_input_folder_path, str_file_name_RData_internal)
+
+
+# Loading objects
+load(str_file_path_RData_internal)
+
+```
+
+
+
+
+
+
+
+
+\newpage
+# Anova Outpus
+## Anova Table
+```{r include=TRUE}
+fn_show_table_dynamic(object_name = "df_percentiles", caption_text = "")
+
+```
+
+## Tukey Table and Plot
+```{r include=TRUE}
+fn_show_table_dynamic(object_name = "df_stats_rv", caption_text = "")
+
+```
+
+```{r}
+#| warning: false
+#| echo: false
+#| out.width: "800px"
+#| out.height: "500px"
+# Guardar temporalmente como imagen
+# g <- plot007_factor
+# 
+#     g_sin_menu <- plotly::config(g, displayModeBar = FALSE)
+#     
+#     # 3b. Guardar el gráfico sin menú a un archivo HTML temporal
+#     temp_html <- tempfile(fileext = ".html")
+#     # Usamos selfcontained=TRUE para incluir todos los datos y librerías en el HTML
+#     htmlwidgets::saveWidget(g_sin_menu, temp_html, selfcontained = TRUE)
+#     
+#     # 3c. Exportar el archivo HTML temporal a PNG
+#     archivo_png <- file.path(paste0("aver", ".png"))
+#     
+#     # Parámetros opcionales de tamaño
+#     webshot2::webshot(url = temp_html, 
+#                       file = archivo_png,
+#                       vwidth = 900, 
+#                       vheight = 700)
+#     
+#     # 3d. Limpiar el archivo temporal
+#     unlink(temp_html)
+#     
+# # tmp_img <- "aver.png"
+# # plotly::export(, file = tmp_img)
+# 
+# # Insertar la imagen en el PDF
+# knitr::include_graphics(archivo_png)
+```
+
+```{r}
+
+plot_box
+
+```
+
+```{r}
+
+#| warning: false
+#| echo: false
+#| out.width: "800px"
+#| out.height: "500px"
+# Guardar temporalmente como imagen
+# g <- plot007_factor
+# 
+#     g_sin_menu <- plotly::config(g, displayModeBar = FALSE)
+#     
+#     # 3b. Guardar el gráfico sin menú a un archivo HTML temporal
+#     temp_html <- tempfile(fileext = ".html")
+#     # Usamos selfcontained=TRUE para incluir todos los datos y librerías en el HTML
+#     htmlwidgets::saveWidget(g_sin_menu, temp_html, selfcontained = TRUE)
+#     
+#     # 3c. Exportar el archivo HTML temporal a PNG
+#     archivo_png <- file.path(paste0("aver", ".png"))
+#     
+#     # Parámetros opcionales de tamaño
+#     webshot2::webshot(url = temp_html, 
+#                       file = archivo_png,
+#                       vwidth = 900, 
+#                       vheight = 700)
+#     
+#     # 3d. Limpiar el archivo temporal
+#     unlink(temp_html)
+    
+# tmp_img <- "aver.png"
+# plotly::export(, file = tmp_img)
+
+# Insertar la imagen en el PDF
+# knitr::include_graphics(archivo_png)
+```
+

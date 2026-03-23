@@ -1,11 +1,11 @@
 # 1. Preparar y Guardar los cambios (incluyendo el DESCRIPTION limpio)
 git add .
-git commit -m "Release: Version 0.0.24"
+git commit -m "Release: Version 0.1.0"
 
 # 2. Etiquetar la versión
 # Borramos el tag local por si acaso ya se creó con error antes
-git tag -d v0.0.24 2>/dev/null
-git tag -a v0.0.24 -m "Versión estable 0.0.24 del paquete"
+git tag -d v0.1.0 2>/dev/null
+git tag -a v0.1.0 -m "Versión estable 0.1.0 del paquete"
 
 # 3. Subir cambios y etiquetas a GitHub
 git push origin main --follow-tags

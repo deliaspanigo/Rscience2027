@@ -1,0 +1,79 @@
+---
+title: "ANOVA Analysis Report"
+subtitle: "Statistical Results & Visualizations"
+author: "Rscience"
+date: today
+format:
+ html:
+   embed-resources: true
+   theme: flatly
+   echo: false
+   warning: false
+   message: false
+   page-layout: full
+---
+
+```{r setup}
+library(knitr)
+library(DT)
+library(ggplot2)
+library(plotly)
+
+# Rutas y Carga de Objetos
+str_input_folder_path <- "../../zzz_zzz_output"
+str_file_name_RData_internal <- "zzz_output_f03_RData.RData"
+str_file_path_RData_internal <- file.path(str_input_folder_path, str_file_name_RData_internal)
+
+if(file.exists(str_file_path_RData_internal)) {
+ load(str_file_path_RData_internal)
+}
+```
+
+::: {.column-screen-inset}
+## Resultados Principales {.tabset .panel-tabset}
+
+### 📈 Gráfico Interactivo
+
+```{r}
+#| out-width: "100%"
+if(exists("plot_box")) {
+ ggplotly(plot_box, height = 600) |> 
+   layout(margin = list(t = 50, b = 50))
+}
+```
+
+### 📊 Tabla de Percentiles
+
+```{r}
+if(exists("df_percentiles")) {
+ datatable(df_percentiles, 
+           filter = 'top', 
+           extensions = 'Buttons',
+           options = list(
+             pageLength = 15, 
+             scrollX = TRUE,
+             dom = 'Bfrtip',
+             buttons = c('copy', 'csv', 'excel')
+           ),
+           class = 'cell-border stripe')
+}
+```
+
+### 🧪 Comparaciones Tukey
+
+```{r}
+if(exists("df_stats_rv")) {
+ datatable(df_stats_rv, 
+           options = list(pageLength = 15, scrollX = TRUE),
+           class = 'hover order-column')
+}
+```
+
+:::
+
+---
+
+<div style="text-align: center; color: gray; font-size: 0.8em;">
+ Reporte generado automáticamente por Rscience Pipeline. 
+ Este documento es autocontenido y no requiere conexión a base de datos.
+</div>

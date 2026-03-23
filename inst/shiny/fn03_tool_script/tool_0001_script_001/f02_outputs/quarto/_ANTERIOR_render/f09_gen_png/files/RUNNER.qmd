@@ -1,0 +1,216 @@
+---
+title: "Rscience - Parameterized Report"
+format:
+  html:
+    output-file: "RUNNER.html"
+    theme: cosmo
+---    
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+  library("webshot2")
+  library("chromote")
+  library("knitr")
+  library("plotly")
+  library("htmlwidgets")
+  library("webshot2")
+  library("zip")
+
+source(file = "../../AAA_fn/fn_actions.R")
+source(file = "../../AAA_fn/fn_extract.R")
+source(file = "../../AAA_fn/fn_run.R")
+
+# Sourcing local files
+source("fns.R")
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Settings
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 150,
+  fig.align = "center"
+)
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Files
+  str_file_name_RData_internal <- "zzz_output_f03_RData.RData"
+  str_file_name_zip <- "RUNNER.zip"
+
+
+# Folders
+  str_input_folder_path <- "../../zzz_zzz_output"
+  str_html_folder <- "html_folder"
+  str_png_folder  <- "png_folder"
+  
+# Paths
+  str_file_path_RData_internal <- file.path(str_input_folder_path, str_file_name_RData_internal)
+  str_file_path_zip <- file.path(str_input_folder_path, str_file_name_zip)
+
+
+# Loading objects
+  temp_env <- new.env()
+  load(str_file_path_RData_internal, envir = temp_env)
+  list_OBJ <- as.list(temp_env)
+  rm(temp_env)
+
+# Creating and cleaning folders
+  fn_check_and_create_and_clean_single_folder(str_folder_path = str_html_folder)
+    fn_check_and_create_and_clean_single_folder(str_folder_path = str_png_folder)
+
+    
+  # clean_and_create_folder(folder_path = str_html_folder)
+  # clean_and_create_folder(folder_path = str_png_folder)
+  
+
+# Deleting files from path
+  base::unlink(str_file_name_zip, recursive = TRUE)
+  
+```
+
+
+
+
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+vector_names_plots <- grep("^plot", names(list_OBJ), value = TRUE)
+list_plots <- list_OBJ[vector_names_plots]
+
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+# 1. Bucle para guardar los objetos ggplot como PNG
+for(k in 1:length(list_plots)) {
+  
+  # Obtener el nombre y el objeto
+  str_file_name <- names(list_plots)[k]
+  selected_ggplot_obj <- list_plots[[str_file_name]]
+  
+  # Definir la ruta del PNG
+  str_png_file  <- paste0(str_file_name, ".png")
+  str_png_path  <- base::file.path(str_png_folder, str_png_file)
+  
+  # 2. Guardar directamente a PNG usando ggsave
+  # Nota: Ajusta width, height y dpi según necesites para el Excel
+  ggplot2::ggsave(
+    filename = str_png_path,
+    plot = selected_ggplot_obj,
+    device = "png",
+    width = 8,      # Pulgadas
+    height = 5,     # Pulgadas
+    dpi = 300,      # Alta resolución para que no se vea pixelado en Excel
+    bg = "white"    # Fondo blanco (algunos temas de ggplot son transparentes por defecto)
+  )
+}
+
+# 
+# # 2. Guardar el objeto plotly como un archivo HTML temporal
+# for(k in 1:length(list_plots)) {
+#   
+#   str_file_name <- names(list_plots)[k]
+#   selected_plotly_obj <- list_plots[[str_file_name]]
+#   
+#   str_html_file <- paste0(str_file_name, ".html")
+#   str_png_file  <- paste0(str_file_name, ".png")
+#   
+#   str_html_path <- base::file.path(str_html_folder, str_html_file)
+#   str_png_path  <- base::file.path(str_png_folder,  str_png_file)
+#   
+#   # Modificación del objeto con plotly::config
+#   selected_plotly_obj_mod <- plotly::config(selected_plotly_obj, displayModeBar = FALSE)
+#   
+#   # Guardar como HTML
+#   htmlwidgets::saveWidget(
+#     widget = selected_plotly_obj_mod, 
+#     file = str_html_file, 
+#     selfcontained = TRUE
+#   )
+#   
+#   base::file.rename(from = str_html_file, to = str_html_path)
+#   
+#   # 3. Usar webshot2 para convertir ese HTML en un archivo PNG
+#   webshot2::webshot(
+#     url = str_html_path, 
+#     file = str_png_path, 
+#     delay = 2
+#   )
+# }
+
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+ 
+# 3. Zip file 
+zip::zipr(
+  zipfile = str_file_name_zip,
+    files   = c(str_png_folder)
+
+  # files   = c(str_html_folder, str_png_folder)
+)
+
+
+```
+
+
+
+
+
+
+
+
+```{r}
+#| label: integrity-check
+#| echo: false
+#| results: asis
+
+# 1. Helper function for folders
+get_folder_info <- function(path) {
+  exists <- base::dir.exists(path)
+  count  <- if(exists) length(base::list.files(path, all.files = FALSE)) else 0
+  status <- if(exists) "✅ Exists" else "❌ Missing"
+  return(list(status = status, count = count))
+}
+
+# 2. Helper function for files (ZIP)
+get_file_info <- function(path) {
+  exists <- base::file.exists(path)
+  status <- if(exists) "✅ Exists"  else " Missing"
+  return(status)
+}
+
+# 3. Gathering data
+html_data <- get_folder_info(str_html_folder)
+png_data  <- get_folder_info(str_png_folder)
+zip_data  <- get_file_info(str_file_name_zip)
+
+# 4. Building the Summary Table
+summary_df <- base::data.frame(
+  "Resource Type" = c("HTML Storage", "PNG Storage", "Final Output"),
+  "System Path"   = c(str_html_folder, str_png_folder, str_file_name_zip),
+  "Current Status" = c(html_data$status, png_data$status, zip_data),
+  "File Count"    = c(html_data$count, png_data$count, "N/A"),
+  check.names     = FALSE
+)
+
+# 5. Rendering the table
+knitr::kable(
+  summary_df, 
+  caption = "File System Integrity Summary",
+  align   = "llcc",
+  format  = "markdown"
+)
+
+
+```
+
+
+
+  

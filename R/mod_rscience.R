@@ -4,13 +4,13 @@
 library("bslib")
 library("shiny")
 
-path_tool <- system.file("shiny", "fn03_tool_script", "tool_0001_script_001",
+path_tool <- system.file("shiny", "fn03_tool_script", "tool_0001_script_001", "f01_settings",
                          package = "Rscience2027")
 
 # Para cargar el pack_module.R específicamente:
 source(file.path(path_tool, "pack_module.R"))
 
-path_tool02 <- system.file("shiny", "fn03_tool_script", "tool_0001_script_001", "sub_module",
+path_tool02 <- system.file("shiny", "fn03_tool_script", "tool_0001_script_001", "f01_settings", "sub_module",
                            package = "Rscience2027")
 
 # Para cargar el pack_module.R específicamente:
@@ -116,9 +116,26 @@ mod_rscience_ui <- function(id) {
                   input_switch(ns("sw_dataset"), "Dataset Selection", value = TRUE),
                   input_switch(ns("sw_tool"), "Tool & Script Engine", value = FALSE),
                   hr(),
-                  div(class = "section-title", "2. Execution Phase"),
-                  input_switch(ns("sw_analysis"), "Data Analysis Studio", value = FALSE),
-                  hr()
+                  div(class = "section-title", "2. Information Phase"),
+                  input_switch(ns("sw_analysis33"), "Theory", value = FALSE),
+                  input_switch(ns("sw_analysis00"), "Bibliography", value = FALSE),
+                  input_switch(ns("sw_analysis11"), "Cite Rscience!", value = FALSE),
+
+                  hr(),
+
+                  div(class = "section-title", "3. Execution Phase"),
+                  input_switch(ns("sw_analysis"), "Settings", value = FALSE),
+                  input_switch(ns("sw_analysis4433"), "Shiny Outputs", value = FALSE),
+                  input_switch(ns("sw_analysis55433"), "Automatic Statistic Asesor (ASA)", value = FALSE),
+
+                  hr(),
+                  div(class = "section-title", "4. R Code Phase"),
+                  input_switch(ns("sw_analysis774433"), "Scripts + Comments", value = FALSE),
+                  input_switch(ns("sw_analysis664433"), "Scripts", value = FALSE),
+                  hr(),
+                  div(class = "section-title", "5. Final Phase"),
+                  input_switch(ns("Reporting"), "Reporting and Download", value = FALSE),
+
               ),
 
               div(style = "padding: 15px 1.5rem; background: rgba(255,255,255,0.4);",

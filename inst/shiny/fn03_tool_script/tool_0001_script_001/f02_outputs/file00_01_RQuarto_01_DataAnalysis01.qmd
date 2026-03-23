@@ -1,0 +1,133 @@
+
+Tomaremos los valores p del test de normalidad de Shapiro-Wilk para los residuos, el valor p del test de homogeneidad de varianza de Bartlett para los residuos, el valor p del test de Anova y la cantidad de grupos estadísticos detectados por el test de Tukey.
+Con esta información y el valor alfa armaremos una tabla resumen general del lo que ha ocurrido en el análisis de datos. Esta tabla no representa la interpretación final del test, pero es un buen comienzo.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-z99"
+  const panel = document.getElementById('mi-z99');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[1].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-z99}
+### R Code
+
+```{r eval=TRUE, echo=TRUE}
+
+  # From Shapiro test ----------------------------------------------------------
+  p_value_normality_internal <- list_test_residuals_normality$"p.value"
+  
+  check_normality_ho_rejected  <- p_value_normality_internal < alpha_value
+  status_normality_ho   <- ifelse(test = check_normality_ho_rejected, 
+                                   yes = "Ho Rejected", 
+                                    no = "Ho no rejected")
+  
+  AQ_normality_rejected_ho <- ifelse(test = check_normality_ho_rejected, 
+                                      yes = "Yes", 
+                                       no = "No")
+    
+  AQ_normality_is_valid <- "Yes, it is."
+
+  p_value_normality_external <- ifelse(test = p_value_normality_internal < 0.01, 
+                                        yes = "<<0.01", 
+                                         no = as.character(p_value_normality_internal))
+  # From bartlett test ---------------------------------------------------------
+  p_value_homogeneity_internal  <- list_test_residuals_homogeneity$"p.value"
+  check_homogeneity_ho_rejected  <- p_value_homogeneity_internal < alpha_value
+  status_homogeneity_ho <- ifelse(test = check_homogeneity_ho_rejected, 
+                                   yes = "Ho Rejected", 
+                                    no = "Ho no rejected")
+  
+  AQ_homogeneity_rejected_ho <- ifelse(test = check_homogeneity_ho_rejected, 
+                                        yes = "Yes", 
+                                         no = "No")
+    
+  AQ_homogeneity_is_valid <- "Yes, it is."
+
+  p_value_homogeneity_external <- ifelse(test = p_value_normality_external < 0.01, 
+                                          yes = "<<0.01", 
+                                           no = as.character(p_value_normality_external))
+  
+  # Check for all requeriments -------------------------------------------------
+  check_ok_all_requeriments     <- sum(check_normality_ho_rejected, check_homogeneity_ho_rejected) == 0
+  AQ_all_requeriments_ok <- ifelse(test = check_ok_all_requeriments, 
+                                    yes = "Yes", 
+                                     no = "No")
+
+  # Anova ----------------------------------------------------------------------
+  p_value_anova_internal <- df_table_anova$"Pr(>F)"[1]
+  check_anova_ho_rejected <-   p_value_homogeneity_internal < alpha_value
+  status_anova_ho <- ifelse(test = check_anova_ho_rejected, 
+                             yes = "Ho Rejected", 
+                              no = "Ho no rejected")
+  
+  AQ_anova_rejected_ho <- ifelse(test = check_anova_ho_rejected, 
+                                  yes = "Yes", 
+                                   no = "No")
+    
+  AQ_anova_is_valid <- ifelse(test = check_ok_all_requeriments, 
+                               yes = "Yes, it is.", 
+                                no = "No, is not!!!")
+  
+  p_value_anova_external <- ifelse(test = p_value_anova_internal < 0.01, 
+                                    yes = "<<0.01", 
+                                     no = as.character(p_value_anova_internal))
+  
+  # Tukey ----------------------------------------------------------------------
+  amount_groups_tukey <- length(unique(df_tukey_table_classroom$"groups"))
+  check_tukey_groups      <- amount_groups_tukey >= 2
+  status_tukey <- ifelse(test = check_tukey_groups, 
+                          yes = "At least two groups of means.", 
+                           no = "Only one group.")
+  
+  AQ_tukey_groups <- ifelse(test = check_tukey_groups, 
+                             yes = "Yes", 
+                              no = "No")
+    
+  AQ_tukey_is_valid <- ifelse(test = check_ok_all_requeriments && check_anova_ho_rejected, 
+                               yes = "Yes, it is.", 
+                                no = "No, is not!!!")
+
+  # Anova and Tukey ----------------------------------------------------------------------
+  check_anova_tukey_coherence      <- check_anova_ho_rejected == check_tukey_groups
+  
+  
+  # DF summary ----------------------------------------------------------------------
+  vector_p_value_internal <- c(p_value_normality_internal, p_value_homogeneity_internal, p_value_anova_internal)
+  vector_p_value_external <- c(p_value_normality_external, p_value_homogeneity_external, p_value_anova_external)
+  vector_logic_rejected <- vector_p_value_internal < alpha_value
+  vector_ho_decision <- ifelse(test = vector_logic_rejected, yes = "Ho Rejected", "Ho no rejected")
+  vector_ho_rejected <- ifelse(test = vector_logic_rejected, yes = "Yes", "No")
+  
+  df_summary_anova <- data.frame(
+    "name"        = c("Shapiro-Wilk test"       , "Bartlett test"             , "Anova 1 way"         , "Tukey"),
+    "test"        = c("Normality"               , "Homogeneity"               , "Analysis of Variance", "Mean groups"),
+    "variable"    = c("residuals"               , "residuals"                 , var_name_rv           , var_name_rv),
+    "p_value"     = c(p_value_normality_internal, p_value_homogeneity_internal, p_value_anova_internal, NA),
+    "alpha_value" = c(alpha_value               , alpha_value                 , alpha_value           , alpha_value),
+    "Decision"    = c(status_normality_ho       , status_homogeneity_ho       , status_anova_ho       , status_tukey),
+    "Valid"       = c(AQ_normality_is_valid     , AQ_homogeneity_is_valid     , AQ_anova_is_valid     , AQ_tukey_is_valid)
+  )
+  
+  df_summary_anova
+```
+
+### Table
+Como es una tabla particularmente importante, nos daremos el lujo de detallarla también de una hermosa manera.
+```{r eval=TRUE, echo=FALSE}
+
+knitr::kable(df_summary_anova, 
+             align = c('l', 'l', 'c', 'r', 'r', 'c', 'c'))
+```
+
+:::

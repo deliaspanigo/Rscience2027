@@ -1,0 +1,161 @@
+---
+title: "Rscience - Hidden Runner"
+format: 
+  html: 
+    output-file: "RUNNER.html"
+    embed-resources: true
+    number-sections: true
+    number-depth: 3
+    include-in-header:
+      text: |
+        <style>
+        h1, h2, .title {
+          border-bottom: none !important;
+          margin-bottom: 10px;
+        }
+        </style>
+execute: 
+  enabled: true
+---
+
+Tool: Rs003_LM_QQ_FIX_BAL_ANOVA_1Way_s001  
+File name qmd: fn05_RUNNER.qmd
+File name html: fn05_RUNNER.html
+
+
+```{r step00_time_start, eval=TRUE, echo=FALSE, results='asis'}
+# Captura del tiempo inicial
+time_start <- Sys.time()
+
+cat("<b>Runner Execution Started:</b>", format(time_start, "%Y-%m-%d %H:%M:%S"), "<br>")
+cat("<hr>")
+```
+
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+library("fs")
+library("knitr")
+library("tidyverse")
+library("kableExtra")
+
+# Funtions
+# Funtions
+source(file = "../AAA_fn/fn_actions.R")
+source(file = "../AAA_fn/fn_extract.R")
+source(file = "../AAA_fn/fn_run.R")
+```
+
+---
+
+```{r basics, eval=TRUE, echo=FALSE, results='asis'}
+# Files
+   str_file_stone_html <- "RUNNER.html"
+   str_regex_remove_html_files <- ".html$"
+   str_file_name_Rscript_external <- "zzz_output_f03_gen_Rscript_external.R"
+   
+# Folders
+   str_folder_output_external <- "../zzz_zzz_output"
+   str_folder_output_local    <- "zzz_output_local"
+
+# Paths
+   str_Rscript_external_path_EXTERNAL    <- file.path(str_folder_output_external, str_file_name_Rscript_external)
+   str_Rscript_external_path_LOCAL    <- file.path(str_folder_output_local, str_file_name_Rscript_external)
+
+
+   
+
+```
+
+```{r step02_01_0522551, eval=TRUE, echo=FALSE, results='asis'}
+step_download_script <- function(script_path) {
+  library("base64enc")
+  library("fs")
+
+  if (!fs::file_exists(script_path)) return(NULL)
+
+  file_name <- fs::path_file(script_path)
+  # file_name <- "Rscript_analysis.R"
+  # 1. Leer y codificar el archivo en Base64
+  # Esto incrusta el archivo dentro del HTML para descarga offline
+  raw_bytes <- base::readBin(script_path, "raw", n = fs::file_info(script_path)$size)
+  base64_string <- base64enc::base64encode(raw_bytes)
+  
+  # 2. Crear el enlace de descarga con estilo de botón
+  # El atributo 'download' fuerza la descarga en lugar de abrirlo
+  download_link <- paste0(
+    "<a href='data:application/octet-stream;base64,", base64_string, "' ",
+    "download='", file_name, "' style='",
+    "background-color: #007bff; color: white; padding: 8px 16px; ",
+    "text-decoration: none; border-radius: 4px; font-weight: bold; ",
+    "display: inline-flex; align-items: center; gap: 8px; font-family: sans-serif; font-size: 13px;'>",
+    "<span>📥 Download Original Script: </span><code>", file_name, "</code></a><br><br>"
+  )
+  
+  base::cat(download_link)
+}
+
+# Ejecución (ubicar antes del visualizador de código)
+# step_download_script(str_Rscript_external_path_LOCAL)
+step_download_script(str_Rscript_external_path_EXTERNAL)
+```
+
+
+
+
+```{r step02_01_05551, eval=TRUE, echo=FALSE, results='asis'}
+
+step_show_code <- function(script_path) {
+  # 1. Verification
+  if (!fs::file_exists(script_path)) {
+    cat("<span style='color: #dc3545;'>✘ <b>Error:</b> Script not found for display.</span><br>")
+    return(FALSE)
+  }
+
+  # 2. Header
+  cat("<b>Source Code Audit:</b><br>")
+  cat(paste0("<small style='color: #6c757d; font-style: italic;'>File: ", fs::path_file(script_path), "</small><br><br>"))
+
+  # 3. Read Code
+  code_content <- base::readLines(script_path, warn = FALSE)
+  
+  # 4. Generate Collapsible HTML Block with Syntax Highlighting
+  # We use the 'details' tag and a manual markdown code block inside
+  cat("<details style='border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; background-color: #fcfcfc;'>")
+  cat("<summary style='cursor: pointer; font-weight: bold; color: #007bff;'>Click to expand / collapse script source code</summary>")
+  cat("\n\n```r\n")
+  cat(paste(code_content, collapse = "\n"))
+  cat("\n```\n\n")
+  cat("</details><br>")
+}
+
+# Execution using your local path variable
+# step_show_code(str_Rscript_external_path_LOCAL)
+step_show_code(str_Rscript_external_path_EXTERNAL)
+```
+
+# Final Summary
+```{r step_final_time_end, eval=TRUE, echo=FALSE, results='asis'}
+# 1. Cálculos de tiempo
+time_end <- Sys.time()
+time_duration <- difftime(time_end, time_start, units = "auto")
+str_duration <- format(time_duration, digits = 3)
+
+
+
+# 3. Construcción del HTML (Asegurando que no haya espacios extraños al inicio)
+html_summary <- paste0(
+  "<hr>",
+  "<div style='background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 5px; font-family: sans-serif; color: #333;'>",
+  "  <b style='display: block; color: #495057; font-size: 1.1em; margin-bottom: 10px;'>🏁 Final Execution Summary</b>",
+  "  <div style='margin-bottom: 5px;'>🕒 <b>Start Time:</b> ", format(time_start, "%H:%M:%S"), "</div>",
+  "  <div style='margin-bottom: 5px;'>🏁 <b>End Time:&nbsp;</b> ", format(time_end, "%H:%M:%S"), "</div>",
+  "  <div style='margin-bottom: 5px;'>⌛ <b>Total Duration:</b> <span style='color: #007bff; font-weight: bold;'>", str_duration, "</span></div>",
+  "</div>",
+  "<div style='text-align: center; margin-top: 10px;'><small style='color: #6c757d;'>End of Rscience Automated Runner</small></div>"
+)
+
+# Usamos cat con fill = TRUE para asegurar que el buffer se limpie correctamente
+cat(html_summary, fill = TRUE)
+```
+

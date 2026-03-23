@@ -1,0 +1,177 @@
+---
+title: "Rscience - Parameterized Report"
+format:
+  html:
+    output-file: "RUNNER.html"
+    theme: cosmo
+---    
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+library("yaml")
+library("webshot2")
+library("chromote")
+library("knitr")
+
+# Sourcing local files
+source("fns.R")
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Settings
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 150,
+  fig.align = "center"
+)
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Files
+  str_file_name_xlsx <- "RUNNER.xlsx"
+  str_file_name_RData_internal <- "zzz_output_f03_RData.RData"
+
+# Folders
+  str_input_folder_path <- "../../zzz_zzz_output"
+  str_png_folder <- "png_folder"
+  
+# Paths
+  str_file_path_RData_internal <- file.path(str_input_folder_path, str_file_name_RData_internal)
+
+
+# Loading objects
+  load(str_file_path_RData_internal)
+
+# Creating folder
+  if(!dir.exists(str_png_folder)) dir.create(str_png_folder)
+```
+
+
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+library(plotly)
+library(htmlwidgets)
+library(webshot2)
+
+# 2. Guardar el objeto plotly como un archivo HTML temporal
+# str_temp_html_file <- "temp_plot.html"
+# str_temp_html_path <- file.path(str_png_folder, str_temp_html_file)
+# 
+# str_plot007_png_file <- "plot007_factor.png"
+# str_plot007_png_path <- file.path(str_png_folder, str_plot007_png_file)
+# 
+# plot007_factor_mod <- plot007_factor %>% 
+#   config(displayModeBar = FALSE)
+# saveWidget(plot007_factor_mod, str_temp_html_path, selfcontained = TRUE)
+# 
+# # 3. Usar webshot2 para convertir ese HTML en un archivo PNG
+# webshot(url = str_temp_html_path, file = str_plot007_png_path, delay = 2)
+# 
+# # 4. (Opcional) Eliminar el archivo temporal
+# invisible(file.remove(str_temp_html_path))
+```
+
+```{r }
+# Cargar el paquete openxlsx
+# Si no lo tienes: install.packages("openxlsx")
+library(openxlsx) 
+
+# --- VARIABLES DE EJEMPLO (Ajusta estas rutas y nombres) ---
+
+# Tus dataframes (asumiendo que existen)
+# df_table_anova_classroom <- data.frame(...)
+# df_tukey_table_classroom <- data.frame(...)
+# df_normality <- data.frame(...)
+
+# 1. Ruta del archivo PNG que quieres insertar
+# ¡Asegúrate de que esta ruta sea correcta!
+# archivo_png_path <- file.path(str_png_folder, "plot007_factor.png") 
+
+# Nombre del archivo Excel de salida
+# -----------------------------------------------------------
+
+# 2. Crear una lista con los dataframes
+list_of_dataframes <- list(
+    "ANOVA_Modelo" = df_percentiles,
+    "Tukey" = df_stats_rv,
+    "Normality" = minidataset
+)
+
+# 3. Crear un nuevo libro de trabajo (Workbook)
+wb <- createWorkbook()
+
+# 4. Iterar sobre la lista para agregar las hojas de dataframes
+for (sheet_name in names(list_of_dataframes)) {
+    # Agregar hoja con el nombre de la lista
+    addWorksheet(wb, sheet_name) 
+    
+    # Escribir los datos en esa hoja
+    writeData(wb, sheet = sheet_name, x = list_of_dataframes[[sheet_name]])
+}
+
+# 5. Agregar la hoja para la imagen PNG
+sheet_name_png <- "Grafico_Principal"
+addWorksheet(wb, sheet_name_png)
+
+# 6. Insertar la imagen PNG en la nueva hoja
+# 'startRow' y 'startCol' definen la esquina superior izquierda de la imagen (Ej: celda A1)
+
+# insertImage(
+#     wb = wb, 
+#     sheet = sheet_name_png, 
+#     file = str_plot007_png_path,
+#     startRow = 2,  # Comienza en la fila 2
+#     startCol = 2,  # Comienza en la columna B
+#     width = 10,    # Ancho deseado (en cm o unidades relativas)
+#     height = 6     # Alto deseado
+# )
+
+library(ggplot2)
+library(openxlsx)
+
+# 1. Crear el objeto ggplot
+mi_grafico <- ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) +
+  geom_point(size = 3) +
+  theme_minimal() +
+  labs(title = "Distribución de Iris", subtitle = "Exportado a Excel")
+
+# 2. Guardar el gráfico como PNG en una ruta temporal o específica
+# Ajustamos dpi = 300 para que se vea nítido en el Excel
+mi_grafico <- plot_box
+ruta_png <- "gt.png"
+ggsave(ruta_png, plot = mi_grafico, width = 8, height = 5, dpi = 300)
+
+# 3. Crear el Excel y añadir la hoja
+wb <- createWorkbook()
+addWorksheet(wb, "Analisis")
+
+# 4. Insertar la imagen guardada
+# startCol y startRow indican en qué celda se posiciona la esquina superior izquierda
+insertImage(
+  wb, 
+  sheet = "Analisis", 
+  file = ruta_png, 
+  width = 10,     # Ancho en pulgadas dentro del Excel
+  height = 6,    # Alto en pulgadas dentro del Excel
+  startCol = 2,  # Columna B
+  startRow = 2,  # Fila 2
+  units = "in"
+)
+
+# 5. Guardar el archivo Excel
+# saveWorkbook(wb, "Reporte_con_Imagen.xlsx", overwrite = TRUE)
+
+# Opcional: Borrar el archivo PNG temporal después de crear el Excel
+# file.remove(ruta_png)
+
+# 7. Guardar el libro de trabajo completo
+saveWorkbook(wb, file = str_file_name_xlsx, overwrite = TRUE)
+
+message(paste("Archivo Excel con dataframes e imagen PNG guardado en:", str_file_name_xlsx))
+```
+ 
+  

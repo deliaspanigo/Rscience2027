@@ -1,0 +1,212 @@
+---
+title: "Rscience - Hidden Runner"
+format: 
+  html: 
+    output-file: "STONE.html"
+    embed-resources: true
+    number-sections: true
+    number-depth: 3
+    include-in-header:
+      text: |
+        <style>
+        h1, h2, .title {
+          border-bottom: none !important;
+          margin-bottom: 10px;
+        }
+        </style>
+execute: 
+  enabled: true
+---
+
+Tool: Rs003_LM_QQ_FIX_BAL_ANOVA_1Way_s001  
+File name qmd: STONE.qmd
+File name html: STONE.html
+
+```{r step00_time_start, eval=TRUE, echo=FALSE, results='asis'}
+# Captura del tiempo inicial
+time_start <- Sys.time()
+
+cat("<b>Runner Execution Started:</b>", format(time_start, "%Y-%m-%d %H:%M:%S"), "<br>")
+cat("<hr>")
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+ #Cargar configuración desde _quarto.yml
+library("yaml")
+library("quarto")
+library("fs") 
+library("knitr")
+library("tidyverse")
+library("kableExtra")
+
+# Funtions
+source(file = "../AAA_fn/fn_actions.R")
+source(file = "../AAA_fn/fn_extract.R")
+source(file = "../AAA_fn/fn_run.R")
+
+```
+
+```{r basics, eval=TRUE, echo=FALSE, results='asis'}
+# Files
+    str_file_name_RData_internal_file <- "zzz_output_f03_RData.RData"
+    str_file_hidden_runner_xlsx_file <- "STONE.html"
+    str_stone_gen_report_qmd_file <-     "RUNNER.qmd"
+    str_stone_gen_report_old_xlsx_file <- "RUNNER.xlsx"
+    str_stone_gen_report_new_xlsx_file <- paste0("zzz_output_f08_", str_stone_gen_report_old_xlsx_file)
+
+# Folders
+    str_folder_output_local    <- "zzz_output_local"
+    str_folder_stone           <- "files"
+    str_folder_output_external <- "../zzz_zzz_output"
+
+# Paths
+    str_file_name_RData_internal_path <- file.path(str_folder_output_external, str_file_name_RData_internal_file)
+    str_stone_gen_report_qmd_path <- file.path(str_folder_stone, str_stone_gen_report_qmd_file)
+    str_stone_gen_report_old_xlsx_path <- file.path(str_folder_stone, str_stone_gen_report_old_xlsx_file)
+    str_stone_gen_report_new_xlsx_path <- file.path(str_folder_output_local, str_stone_gen_report_new_xlsx_file)
+
+```
+
+# Basics status and cleaning.
+## Checking Hidden Runner HTML file at local folder.
+::: {.callout-note}
+File HTML hidden-runner must not exists or be deleted previous execution.
+::: 
+```{r step01_01_01, eval=TRUE, echo=FALSE, results='asis'}
+step01_01_01 <- function(){
+  
+  the_output <- fn_delete_single_file(str_file_path = str_file_hidden_runner_xlsx_file)
+  if(!the_output) knitr::knit_exit()
+}
+step01_01_01()
+```
+
+
+## Output local folder.
+
+::: {.callout-note}
+Must exists a <code>`r str_folder_output_local`</code> at local folder and must be empty before render files.
+::: 
+
+```{r step01_03_01, eval=TRUE, echo=FALSE, results='asis'}
+step01_03_01 <- function(){
+  
+    the_output <- fn_check_and_create_and_clean_single_folder(str_folder_path = str_folder_output_local)
+ 
+  if(!the_output) knitr::knit_exit()
+}
+step01_03_01()
+```
+
+
+
+
+## Stone folder.
+
+::: {.callout-note}
+Must exists a <code>`r str_folder_stone`</code> at local folder.
+::: 
+
+```{r step01_04_01, eval=TRUE, echo=FALSE, results='asis'}
+step01_04_01 <- function(){
+  
+  the_output <- fn_check_single_folder(str_folder_path = str_folder_stone)
+  if(!the_output) knitr::knit_exit()
+}
+step01_04_01()
+```
+
+## Render output file
+```{r step01_05_01, eval=TRUE, echo=FALSE, results='asis'}
+step01_05_01 <- function(){
+  
+  the_output <- fn_delete_single_file(str_file_path = str_stone_gen_report_old_xlsx_path)
+  if(!the_output) knitr::knit_exit()
+}
+step01_05_01()
+```
+
+
+## External output folder.
+
+::: {.callout-note}
+Must exists a <code>`r str_folder_output_external`</code> at local folder.
+::: 
+
+```{r step01_06_01, eval=TRUE, echo=FALSE, results='asis'}
+step01_06_01 <- function(){
+  
+  the_output <- fn_check_single_folder(str_folder_path = str_folder_output_external)
+  if(!the_output) knitr::knit_exit()
+}
+step01_06_01()
+```
+
+
+
+
+
+
+
+
+# Rendering RQuarto 
+```{r step02_01_01, eval=TRUE, echo=FALSE, results='asis'}
+step02_01_01 <- function(){
+  
+  library("quarto")
+    # str_RQuarto_xlsx_old_path
+  quarto::quarto_render(input = str_stone_gen_report_qmd_path, 
+                        execute_dir = dirname(str_stone_gen_report_qmd_path), 
+                        quiet = F)
+  
+  the_output <- fn_check_single_file(str_file_path = str_stone_gen_report_old_xlsx_path)
+  if(!the_output) knitr::knit_exit()
+    
+  
+  the_output <- fn_rename_single_file(str_file_path_from = str_stone_gen_report_old_xlsx_path, 
+                                      str_file_path_to = str_stone_gen_report_new_xlsx_path)
+
+  if(!the_output) knitr::knit_exit()
+}
+step02_01_01()
+```
+
+
+# Export zzz_output files and folders.
+```{r step_export, eval=TRUE, echo=FALSE, results='asis'}
+the_output <- fn_export_files_zzz_output(str_file_path_from = str_folder_output_local, 
+                                         str_file_path_to =   str_folder_output_external,
+                                         bln_overwrite = FALSE,
+                                         bln_production = TRUE)
+if(!the_output) knitr::knit_exit()
+```
+
+
+# Final Summary
+```{r step_final_time_end, eval=TRUE, echo=FALSE, results='asis'}
+# 1. Cálculos de tiempo
+time_end <- Sys.time()
+time_duration <- difftime(time_end, time_start, units = "auto")
+str_duration <- format(time_duration, digits = 3)
+
+
+
+# 3. Construcción del HTML (Asegurando que no haya espacios extraños al inicio)
+html_summary <- paste0(
+  "<hr>",
+  "<div style='background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 5px; font-family: sans-serif; color: #333;'>",
+  "  <b style='display: block; color: #495057; font-size: 1.1em; margin-bottom: 10px;'>🏁 Final Execution Summary</b>",
+  "  <div style='margin-bottom: 5px;'>🕒 <b>Start Time:</b> ", format(time_start, "%H:%M:%S"), "</div>",
+  "  <div style='margin-bottom: 5px;'>🏁 <b>End Time:&nbsp;</b> ", format(time_end, "%H:%M:%S"), "</div>",
+  "  <div style='margin-bottom: 5px;'>⌛ <b>Total Duration:</b> <span style='color: #007bff; font-weight: bold;'>", str_duration, "</span></div>",
+  "</div>",
+  "<div style='text-align: center; margin-top: 10px;'><small style='color: #6c757d;'>End of Rscience Automated Runner</small></div>"
+)
+
+# Usamos cat con fill = TRUE para asegurar que el buffer se limpie correctamente
+cat(html_summary, fill = TRUE)
+```
+
+
+
