@@ -33,7 +33,7 @@ mod_tree_ui <- function(id) {
           background: radial-gradient(circle, #0a1015 0%, #000 100%);
         }
 
-        /* SIDEBAR UNIFICADA - Ahora cerrada por defecto */
+        /* SIDEBAR UNIFICADA */
         #", module_id, " .sidebar-ctrl {
           width: 280px;
           height: 100%;
@@ -46,16 +46,13 @@ mod_tree_ui <- function(id) {
           transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           z-index: 1001;
           box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-
-          /* ESTADO INICIAL: FUERA DE PANTALLA */
-          position: absolute;
-          right: 0;
-          transform: translateX(100%);
         }
 
-        /* ESTADO ABIERTO: CUANDO SE QUITA LA CLASE COLLAPSED */
-        #", module_id, " .sidebar-ctrl:not(.collapsed) {
-          transform: translateX(0);
+        /* Estado colapsado de la sidebar */
+        #", module_id, " .sidebar-ctrl.collapsed {
+          transform: translateX(100%);
+          position: absolute;
+          right: 0;
         }
 
         /* BOTÓN FLOTANTE PARA ABRIR/CERRAR */
