@@ -214,176 +214,218 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       tags$script(HTML(paste0(
         sprintf("var treeData = %s;", tree_json),
         "
-        var root, svg, g, treemap, zoomHandler, i = 0, duration = 600;
-        var activeNode = null, ghostMode = false, topAlignMode = false;
-        var currentScale = 1;
+    var root, svg, g, treemap, zoomHandler, i = 0, duration = 600;
+    var activeNode = null, ghostMode = false, topAlignMode = false;
+    var currentScale = 1;
 
-        function initTree() {
-          const container = d3.select('#tree-container');
-          if (container.empty()) return;
-          container.selectAll('*').remove();
-          const rect = container.node().getBoundingClientRect();
+    function initTree() {
+      const container = d3.select('#tree-container');
+      if (container.empty()) return;
+      container.selectAll('*').remove();
+      const rect = container.node().getBoundingClientRect();
 
-          svg = container.append('svg').attr('width', '100%').attr('height', '100%');
-          g = svg.append('g');
+      svg = container.append('svg').attr('width', '100%').attr('height', '100%');
+      g = svg.append('g');
 
-          zoomHandler = d3.zoom().scaleExtent([0.01, 8])
-            .on('zoom', (event) => {
-               currentScale = event.transform.k;
-               g.attr('transform', event.transform);
-               updateTextSizes();
-            });
-          svg.call(zoomHandler);
+      zoomHandler = d3.zoom().scaleExtent([0.01, 8])
+        .on('zoom', (event) => {
+           currentScale = event.transform.k;
+           g.attr('transform', event.transform);
+           updateTextSizes();
+        });
+      svg.call(zoomHandler);
 
-          treemap = d3.tree().nodeSize([180, 850]);
-          root = d3.hierarchy(treeData, d => d.children);
-          root.descendants().forEach(d => { d.id = ++i; });
-          root.x0 = rect.height / 2; root.y0 = 0;
-          activeNode = root;
+      treemap = d3.tree().nodeSize([180, 950]);
+      root = d3.hierarchy(treeData, d => d.children);
+      root.descendants().forEach(d => { d.id = ++i; });
 
-          Shiny.setInputValue('", ns("selected_node"), "', 'Rscience');
-          if (root.children) root.children.forEach(collapse);
-          update(root, 0);
-        }
+      // Posición inicial del root
+      root.x0 = rect.height / 2;
+      root.y0 = 0;
+      activeNode = root;
 
-        function updateTextSizes() {
-          let fontSize = Math.max(18, 16 / currentScale);
-          g.selectAll('g.node text').style('font-size', fontSize + 'px');
-        }
+      Shiny.setInputValue('", ns("selected_node"), "', 'Rscience');
+      if (root.children) root.children.forEach(window.collapse);
+      update(root, 0);
+    }
 
-        function update(source, customDuration) {
-          const currentDuration = (customDuration !== undefined) ? customDuration : duration;
-          if (activeNode) reorderPathToTop(activeNode, !topAlignMode);
+    function updateTextSizes() {
+      let fontSize = Math.max(18, 16 / currentScale);
+      g.selectAll('g.node text').style('font-size', fontSize + 'px');
+    }
 
-          const nodes = treemap(root).descendants();
-          const links = nodes.slice(1);
-          nodes.forEach(d => d.y = d.depth * 850);
+    function update(source, customDuration) {
+      const currentDuration = (customDuration !== undefined) ? customDuration : duration;
+      if (activeNode) reorderPathToTop(activeNode, !topAlignMode);
 
-          fitToViewport(nodes, currentDuration);
+      const nodes = treemap(root).descendants();
+      const links = nodes.slice(1);
 
-          const node = g.selectAll('g.node').data(nodes, d => d.id);
-          const nodeEnter = node.enter().append('g').attr('class', 'node')
-            .attr('transform', d => (currentDuration === 0) ? `translate(${d.y},${d.x})` : `translate(${source.y0 || 0},${source.x0 || 0})`)
-            .on('click', (event, d) => {
-              activeNode = d;
-              Shiny.setInputValue('", ns("selected_node"), "', d.data.name, {priority: 'event'});
-              if (d.children) { d._children = d.children; d.children = null; }
-              else { d.children = d._children; d._children = null; }
-              update(d);
-            });
+      nodes.forEach(d => d.y = d.depth * 950);
 
-          nodeEnter.append('circle').attr('r', 28);
-          nodeEnter.append('text').attr('dy', '.35em')
-            .attr('x', d => d.children || d._children ? -45 : 45)
-            .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
-            .text(d => d.data.name);
+      // Llamamos al nuevo ajuste de cámara lateral
+      fitToLeftAnchor(nodes, currentDuration);
 
-          const nodeUpdate = nodeEnter.merge(node);
-          if (currentDuration === 0) { nodeUpdate.attr('transform', d => `translate(${d.y},${d.x})`); }
-          else { nodeUpdate.transition().duration(currentDuration).attr('transform', d => `translate(${d.y},${d.x})`); }
+      const node = g.selectAll('g.node').data(nodes, d => d.id);
 
-          // --- LÓGICA DE COLOR SOLICITADA ---
-          nodeUpdate.select('circle')
-            .style('fill', d => {
-              if (d === activeNode) return '#ff9100'; // Naranja si es el clickeado
-              if (!d.children && !d._children) return '#00FF00'; // Verde si es hoja
-              if (window.isAncestor(d)) return '#ff9100'; // Naranja si es ancestro
-              return '#00FFFF'; // Cian ramas
-            })
-            .style('stroke', d => (d === activeNode) ? '#00FF00' : '#fff') // Borde verde si es seleccionado
-            .style('stroke-width', d => (d === activeNode) ? '8px' : '6px')
-            .style('opacity', d => (ghostMode && d !== activeNode && !window.isAncestor(d)) ? 0.15 : 1);
+      const nodeEnter = node.enter().append('g').attr('class', 'node')
+        .attr('transform', d => (currentDuration === 0) ? `translate(${d.y},${d.x})` : `translate(${source.y0 || 0},${source.x0 || 0})`)
+        .on('click', (event, d) => {
+          activeNode = d;
+          Shiny.setInputValue('", ns("selected_node"), "', d.data.name, {priority: 'event'});
+          if (d.children) { d._children = d.children; d.children = null; }
+          else { d.children = d._children; d._children = null; }
+          update(d);
+        });
 
-          if (currentDuration === 0) { node.exit().remove(); }
-          else { node.exit().transition().duration(currentDuration).attr('transform', d => `translate(${source.y},${source.x})`).remove(); }
+      nodeEnter.append('circle').attr('r', 28);
+      nodeEnter.append('text').attr('dy', '.35em')
+        .attr('x', d => d.children || d._children ? -50 : 50)
+        .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
+        .text(d => d.data.name);
 
-          const link = g.selectAll('path.link').data(links, d => d.id);
-          const linkEnter = link.enter().insert('path', 'g').attr('class', 'link')
-            .attr('d', d => {
-               if (currentDuration === 0) return diagonal(d, d.parent);
-               const o = {y: source.y0 || 0, x: source.x0 || 0};
-               return diagonal(o, o);
-            });
+      const nodeUpdate = nodeEnter.merge(node);
+      if (currentDuration === 0) { nodeUpdate.attr('transform', d => `translate(${d.y},${d.x})`); }
+      else { nodeUpdate.transition().duration(currentDuration).attr('transform', d => `translate(${d.y},${d.x})`); }
 
-          const linkUpdate = linkEnter.merge(link);
-          if (currentDuration === 0) { linkUpdate.attr('d', d => diagonal(d, d.parent)); }
-          else { linkUpdate.transition().duration(currentDuration).attr('d', d => diagonal(d, d.parent)); }
+      nodeUpdate.select('circle')
+        .style('fill', d => {
+          if (d === activeNode) return '#ff9100';
+          if (!d.children && !d._children) return '#00FF00';
+          if (window.isAncestor(d)) return '#ff9100';
+          return '#00FFFF';
+        })
+        .style('stroke', d => (d === activeNode) ? '#00FF00' : '#fff')
+        .style('stroke-width', d => (d === activeNode) ? '8px' : '6px')
+        .style('opacity', d => (ghostMode && d !== activeNode && !window.isAncestor(d)) ? 0.15 : 1);
 
-          linkUpdate
-            .style('stroke', d => (d === activeNode || window.isAncestor(d)) ? '#ff9100' : '#00FFFF')
-            .style('stroke-width', d => (d === activeNode || window.isAncestor(d)) ? '25px' : '12px')
-            .style('opacity', d => (ghostMode && !window.isAncestor(d) && d !== activeNode) ? 0.08 : 0.6);
+      if (currentDuration === 0) { node.exit().remove(); }
+      else { node.exit().transition().duration(currentDuration).attr('transform', d => `translate(${source.y},${source.x})`).remove(); }
 
-          if (currentDuration === 0) { link.exit().remove(); }
-          else { link.exit().transition().duration(currentDuration).attr('d', d => { const o = {y: source.y, x: source.x}; return diagonal(o, o); }).remove(); }
+      const link = g.selectAll('path.link').data(links, d => d.id);
+      const linkEnter = link.enter().insert('path', 'g').attr('class', 'link')
+        .attr('d', d => {
+           if (currentDuration === 0) return diagonal(d, d.parent);
+           const o = {y: source.y0 || 0, x: source.x0 || 0};
+           return diagonal(o, o);
+        });
 
-          nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
-          updateTextSizes();
-        }
+      const linkUpdate = linkEnter.merge(link);
+      if (currentDuration === 0) { linkUpdate.attr('d', d => diagonal(d, d.parent)); }
+      else { linkUpdate.transition().duration(currentDuration).attr('d', d => diagonal(d, d.parent)); }
 
-        window.toggleSidebar = function() {
-          const sidebar = document.getElementById('sidebar');
-          if(sidebar) sidebar.classList.toggle('collapsed');
-          setTimeout(() => { if(treemap && root) fitToViewport(treemap(root).descendants(), 600); }, 450);
-        }
+      linkUpdate
+        .style('stroke', d => (d === activeNode || window.isAncestor(d)) ? '#ff9100' : '#00FFFF')
+        .style('stroke-width', d => (d === activeNode || window.isAncestor(d)) ? '25px' : '12px')
+        .style('opacity', d => (ghostMode && !window.isAncestor(d) && d !== activeNode) ? 0.08 : 0.6);
 
-        function fitToViewport(targetNodes, customDuration) {
-          const container = document.getElementById('tree-container');
-          if (!container || !targetNodes || targetNodes.length === 0) return;
-          const rect = container.getBoundingClientRect();
-          const minX = d3.min(targetNodes, d => d.x), maxX = d3.max(targetNodes, d => d.x);
-          const minY = d3.min(targetNodes, d => d.y), maxY = d3.max(targetNodes, d => d.y);
-          const contentWidth = (maxY - minY) || 1, contentHeight = (maxX - minX) || 1;
-          let scale = Math.min(rect.width / (contentWidth + 400), rect.height / (contentHeight + 200));
-          scale = Math.min(Math.max(scale, 0.05), 0.8);
-          const transform = d3.zoomIdentity.translate(rect.width / 2, rect.height / 2).scale(scale).translate(-(minY + maxY) / 2, -(minX + maxX) / 2);
-          if (customDuration === 0) { svg.call(zoomHandler.transform, transform); }
-          else { svg.transition().duration(customDuration).ease(d3.easeCubicInOut).call(zoomHandler.transform, transform); }
-        }
+      if (currentDuration === 0) { link.exit().remove(); }
+      else { link.exit().transition().duration(currentDuration).attr('d', d => { const o = {y: source.y, x: source.x}; return diagonal(o, o); }).remove(); }
 
-        function reorderPathToTop(d, revert = false) {
-          let curr = d;
-          while (curr && curr.parent) {
-            let p = curr.parent; let children = p.children || p._children;
-            if (children) {
-              if (revert) children.sort((a, b) => a.id - b.id);
-              else {
-                let idx = children.findIndex(c => c.id === curr.id);
-                if (idx > -1) children.unshift(children.splice(idx, 1)[0]);
-              }
-            }
-            curr = p;
+      nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+      updateTextSizes();
+    }
+
+    // --- NUEVA FUNCIÓN DE ANCLAJE A LA IZQUIERDA ---
+    function fitToLeftAnchor(targetNodes, customDuration) {
+      const container = document.getElementById('tree-container');
+      if (!container || !targetNodes || targetNodes.length === 0) return;
+      const rect = container.getBoundingClientRect();
+
+      const minX = d3.min(targetNodes, d => d.x);
+      const maxX = d3.max(targetNodes, d => d.x);
+      const minY = d3.min(targetNodes, d => d.y);
+      const maxY = d3.max(targetNodes, d => d.y);
+
+      const contentHeight = (maxX - minX) || 1;
+      const contentWidth = (maxY - minY) + 950; // Margen para los textos de la derecha
+
+      // Calculamos escala pero permitimos que el root esté fijo
+      let scale = Math.min(rect.width / contentWidth, rect.height / (contentHeight + 200));
+      scale = Math.min(Math.max(scale, 0.05), 0.7);
+
+      // El truco está aquí: el translate en Y (vertical) se centra,
+      // pero el translate en X (horizontal) se fija a un margen izquierdo constante (150px)
+      const transform = d3.zoomIdentity
+        .translate(150 * scale, rect.height / 2) // 150 es el margen desde la izquierda
+        .scale(scale)
+        .translate(0, -(minX + maxX) / 2); // Solo centramos verticalmente
+
+      if (customDuration === 0) {
+        svg.call(zoomHandler.transform, transform);
+      } else {
+        svg.transition().duration(customDuration).ease(d3.easeCubicInOut).call(zoomHandler.transform, transform);
+      }
+    }
+
+    window.toggleSidebar = function() {
+      const sidebar = document.getElementById('sidebar');
+      if(sidebar) sidebar.classList.toggle('collapsed');
+      setTimeout(() => { if(treemap && root) fitToLeftAnchor(treemap(root).descendants(), 600); }, 450);
+    }
+
+    function reorderPathToTop(d, revert = false) {
+      let curr = d;
+      while (curr && curr.parent) {
+        let p = curr.parent; let children = p.children || p._children;
+        if (children) {
+          if (revert) children.sort((a, b) => a.id - b.id);
+          else {
+            let idx = children.findIndex(c => c.id === curr.id);
+            if (idx > -1) children.unshift(children.splice(idx, 1)[0]);
           }
         }
+        curr = p;
+      }
+    }
 
-        window.isAncestor = function(d) {
-          let curr = activeNode ? activeNode.parent : null;
-          while(curr) { if(curr === d) return true; curr = curr.parent; }
-          return false;
-        }
+    window.isAncestor = function(d) {
+      let curr = activeNode ? activeNode.parent : null;
+      while(curr) { if(curr === d) return true; curr = curr.parent; }
+      return false;
+    }
 
-        window.diagonal = function(s, d) { return `M ${s.y} ${s.x} C ${(s.y+d.y)/2} ${s.x}, ${(s.y+d.y)/2} ${d.x}, ${d.y} ${d.x}`; }
-        window.collapse = function(d) { if(d.children) { d._children = d.children; d._children.forEach(window.collapse); d.children = null; } }
-        window.expand = function(d) { if(d._children) { d.children = d._children; d._children = null; } if(d.children) d.children.forEach(window.expand); }
-        window.toggleGhost = function() { ghostMode = !ghostMode; update(activeNode); }
-        window.toggleTopAlign = function() { topAlignMode = !topAlignMode; update(activeNode); }
-        window.resetMap = function() { activeNode = root; if(root.children) root.children.forEach(window.collapse); update(root); }
-        window.fullExpand = function() { window.expand(root); update(root); }
-        window.captureTree = function() { /* Lógica captureTree original mantenida... */ }
+    window.diagonal = function(s, d) { return `M ${s.y} ${s.x} C ${(s.y+d.y)/2} ${s.x}, ${(s.y+d.y)/2} ${d.x}, ${d.y} ${d.x}`; }
+    window.collapse = function(d) { if(d.children) { d._children = d.children; d._children.forEach(window.collapse); d.children = null; } }
+    window.expand = function(d) { if(d._children) { d.children = d._children; d._children = null; } if(d.children) d.children.forEach(window.expand); }
+    window.toggleGhost = function() { ghostMode = !ghostMode; update(activeNode); }
+    window.toggleTopAlign = function() { topAlignMode = !topAlignMode; update(activeNode); }
+    window.resetMap = function() { activeNode = root; if(root.children) root.children.forEach(window.collapse); update(root); }
+    window.fullExpand = function() { window.expand(root); update(root); }
+    window.runCollapseOthers = function() {
+      if (!activeNode || activeNode === root) return;
+      var ancestors = []; var curr = activeNode;
+      while (curr) { ancestors.push(curr.id); curr = curr.parent; }
+      root.descendants().forEach(d => {
+        if (ancestors.indexOf(d.id) === -1 && d.children) { d._children = d.children; d.children = null; }
+      });
+      update(activeNode);
+    }
 
-        window.runCollapseOthers = function() {
-          if (!activeNode || activeNode === root) return;
-          var ancestors = []; var curr = activeNode;
-          while (curr) { ancestors.push(curr.id); curr = curr.parent; }
-          root.descendants().forEach(d => {
-            if (ancestors.indexOf(d.id) === -1 && d.children) { d._children = d.children; d.children = null; }
-          });
-          update(activeNode);
-        }
+    // Función de captura actualizada para respetar el fondo negro
+    window.captureTree = function() {
+       const svgNode = document.querySelector('#tree-container svg');
+       const rect = svgNode.getBoundingClientRect();
+       const clonedSvg = svgNode.cloneNode(true);
+       d3.select(clonedSvg).selectAll('text').style('fill', '#ffffff').style('font-family', 'Segoe UI, sans-serif').style('text-shadow', '2px 2px 4px #000000');
+       const serializer = new XMLSerializer();
+       let source = serializer.serializeToString(clonedSvg);
+       const img = new Image();
+       const svgBlob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
+       const url = URL.createObjectURL(svgBlob);
+       img.onload = function() {
+         const canvas = document.createElement('canvas');
+         canvas.width = rect.width*2; canvas.height = rect.height*2;
+         const ctx = canvas.getContext('2d'); ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+         ctx.scale(2,2); ctx.drawImage(img,0,0);
+         const link = document.createElement('a'); link.download = 'RScience_Map.png'; link.href = canvas.toDataURL(); link.click();
+       };
+       img.src = url;
+    }
 
-        setTimeout(initTree, 300);
-        window.addEventListener('resize', () => { if(treemap && root) fitToViewport(treemap(root).descendants(), 0); });
-        "
+    setTimeout(initTree, 300);
+    window.addEventListener('resize', () => { if(treemap && root) fitToLeftAnchor(treemap(root).descendants(), 0); });
+    "
       )))
     })
 
