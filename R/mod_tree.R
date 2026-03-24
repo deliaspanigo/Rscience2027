@@ -262,6 +262,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
     }
 
     # 4. INYECTOR JS (RESTAURADO COMPLETO)
+    # 4. INYECTOR JS (IGUALACIÓN DE RENDERIZADO NARANJA = CYAN)
     output$js_injector <- renderUI({
       req(data_full)
       df_tree <- data_full %>% select(starts_with("nivel"))
@@ -281,6 +282,8 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       const rect = container.node().getBoundingClientRect();
 
       svg = container.append('svg').attr('width', '100%').attr('height', '100%');
+
+      // Mantenemos el defs por si los nodos lo usan, pero los links serán sólidos
       const defs = svg.append('defs');
       const filter = defs.append('filter').attr('id', 'glow');
       filter.append('feGaussianBlur').attr('stdDeviation', '4').attr('result', 'coloredBlur');
@@ -313,9 +316,20 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       g.selectAll('g.node text').style('font-size', fontSize + 'px');
     }
 
+    window.isPathActive = function(d) {
+      if (!activeNode) return false;
+      let curr = activeNode;
+      while (curr) {
+        if (curr.id === d.id) return true;
+        curr = curr.parent;
+      }
+      return false;
+    };
+
     function update(source, customDuration) {
       const currentDuration = (customDuration !== undefined) ? customDuration : duration;
       if (activeNode) reorderPathToTop(activeNode, !topAlignMode);
+
       const nodes = treemap(root).descendants();
       const links = nodes.slice(1);
       nodes.forEach(d => d.y = d.depth * 950);
@@ -352,26 +366,41 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       else { nodeUpdate.transition().duration(currentDuration).attr('transform', d => `translate(${d.y},${d.x})`); }
 
       nodeUpdate.select('circle')
-        .style('fill', d => (d === activeNode || window.isAncestor(d)) ? '#ff9100' : (d.children || d._children ? '#00FFFF' : '#00FF00'))
-        .style('stroke', d => (d === activeNode) ? '#00FF00' : '#fff')
-        .style('stroke-width', d => (d === activeNode) ? '8px' : '6px')
-        .style('filter', d => (d === activeNode || window.isAncestor(d)) ? 'url(#glow)' : 'none')
-        .style('opacity', d => (ghostMode && d !== activeNode && !window.isAncestor(d)) ? 0.15 : 1);
+        .style('fill', d => window.isPathActive(d) ? '#ff9100' : (d.children || d._children ? '#00FFFF' : '#00FF00'))
+        .style('stroke', d => (d.id === (activeNode ? activeNode.id : null)) ? '#00FF00' : '#fff')
+        .style('stroke-width', d => (d.id === (activeNode ? activeNode.id : null)) ? '8px' : '6px')
+        .style('filter', d => window.isPathActive(d) ? 'url(#glow)' : 'none')
+        .style('opacity', d => (ghostMode && !window.isPathActive(d)) ? 0.15 : 1);
 
       node.exit().remove();
+
       const link = g.selectAll('path.link').data(links, d => d.id);
       const linkEnter = link.enter().insert('path', 'g').attr('class', 'link')
         .attr('d', d => { const o = {y: source.y0 || 0, x: source.x0 || 0}; return window.diagonal(o, o); });
 
       const linkUpdate = linkEnter.merge(link);
-      linkUpdate.transition().duration(currentDuration).attr('d', d => window.diagonal(d, d.parent))
-        .style('stroke', d => (d === activeNode || window.isAncestor(d)) ? '#ff9100' : '#00FFFF')
-        .style('stroke-width', d => (d === activeNode || window.isAncestor(d)) ? '22px' : '10px')
-        .style('filter', d => (d === activeNode || window.isAncestor(d)) ? 'url(#glow)' : 'none')
-        .style('opacity', d => (d === activeNode || window.isAncestor(d)) ? 1 : (ghostMode ? 0.08 : 0.4));
+
+      // ELIMINAMOS FILTROS COMPLEJOS: Solo color y grosor sólido como el cyan
+      linkUpdate
+        .attr('fill', 'none')
+        .attr('stroke', d => window.isPathActive(d) ? '#ff9100' : '#00FFFF')
+        .attr('stroke-width', d => window.isPathActive(d) ? 22 : 10)
+        .style('filter', 'none') // <--- Quitamos el glow de los links
+        .style('opacity', d => window.isPathActive(d) ? 1 : (ghostMode ? 0.08 : 0.4));
+
+      linkUpdate.transition().duration(currentDuration)
+        .attr('d', d => window.diagonal(d, d.parent));
 
       link.exit().remove();
       nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+    }
+
+    window.diagonal = function(s, d) {
+      if (!s || !d) return '';
+      let sy = s.y, sx = s.x, dy = d.y, dx = d.x;
+      // Offset de 1 píxel para asegurar que el navegador renderice la línea
+      if (Math.abs(sx - dx) < 1) { sx += 1; }
+      return `M ${sy} ${sx} C ${(sy+dy)/2} ${sx}, ${(sy+dy)/2} ${dx}, ${dy} ${dx}`;
     }
 
     function fitToLeftAnchor(targetNodes, customDuration) {
@@ -404,13 +433,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       }
     }
 
-    window.isAncestor = function(d) {
-      let curr = activeNode ? activeNode.parent : null;
-      while(curr) { if(curr === d) return true; curr = curr.parent; }
-      return false;
-    }
-
-    window.diagonal = function(s, d) { return `M ${s.y} ${s.x} C ${(s.y+d.y)/2} ${s.x}, ${(s.y+d.y)/2} ${d.x}, ${d.y} ${d.x}`; }
     window.collapse = function(d) { if(d.children) { d._children = d.children; d._children.forEach(window.collapse); d.children = null; } }
     window.toggleGhost = function() { ghostMode = !ghostMode; update(activeNode); }
     window.toggleTopAlign = function() { topAlignMode = !topAlignMode; update(activeNode); }
