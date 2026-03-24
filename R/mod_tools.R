@@ -162,23 +162,23 @@ mod_tools_server <- function(id, show_debug = FALSE) {
     })
 
     output$tools_header <- renderUI({
-      data <- arbol_res()
+      data <- rlist_tree()
       color <- if(is_locked()) "#28a745" else "#ffc107"
       tags$h2(paste("Herramienta:", data$node_name),
               style = paste0("color:", color, "; font-weight:900;"))
     })
 
     output$path_chips_ui <- renderUI({
-      req(arbol_res()$path)
-      partes <- unlist(strsplit(arbol_res()$path, " / "))
+      req(rlist_tree()$path)
+      partes <- unlist(strsplit(rlist_tree()$path, " / "))
       lapply(partes, function(p) {
         span(class = "path-chip", p)
       })
     })
 
     output$scripts_info_banner <- renderUI({
-      req(arbol_res()$scripts)
-      n_scripts <- length(arbol_res()$scripts)
+      req(rlist_tree()$scripts)
+      n_scripts <- length(rlist_tree()$scripts)
       div(class = "info-banner-blue",
           icon("info-circle"),
           span(sprintf(" Se han detectado %d scripts disponibles en esta rama del árbol.", n_scripts))
@@ -186,7 +186,7 @@ mod_tools_server <- function(id, show_debug = FALSE) {
     })
 
     return(reactive({
-      list(confirmado = is_locked(), datos = arbol_res())
+      list(confirmado = is_locked(), datos = rlist_tree())
     }))
   })
 }

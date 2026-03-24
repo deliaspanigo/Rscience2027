@@ -8,7 +8,7 @@ path_tool <- system.file("shiny", "fn03_tool_script", "tool_0001_script_001", "f
                          package = "Rscience2027")
 
 # Para cargar el pack_module.R específicamente:
-source(file.path(path_tool, "pack_module.R"))
+source(file.path(path_tool, "mod_PACK_settings.R"))
 
 path_tool02 <- system.file("shiny", "fn03_tool_script", "tool_0001_script_001", "f01_settings", "sub_module",
                            package = "Rscience2027")
@@ -75,40 +75,21 @@ mod_rscience_ui <- function(id) {
         .selectize-dropdown { z-index: 10000 !important; }
 
         /* 7. TABLA PREVIEW: ZEBRA CYAN (Específica del ID de importación) */
-        #", ns("my_ns_import-preview"), " table.dataTable thead th {
+        #", ns("my_ns_dataset-preview"), " table.dataTable thead th {
           background-color: #00d4ff !important;
           color: white !important;
         }
 
-        #", ns("my_ns_import-preview"), " table.dataTable tbody tr.odd {
+        #", ns("my_ns_dataset-preview"), " table.dataTable tbody tr.odd {
           background-color: #e6faff !important;
         }
 
-        #", ns("my_ns_import-preview"), " table.dataTable tbody tr.even {
+        #", ns("my_ns_dataset-preview"), " table.dataTable tbody tr.even {
           background-color: #ffffff !important;
         }
 
-        #", ns("my_ns_import-preview"), " table.dataTable tbody tr:hover {
+        #", ns("my_ns_dataset-preview"), " table.dataTable tbody tr:hover {
           background-color: #ccf5ff !important;
-        }
-
-        /* Color del Switch cuando está ENCENDIDO */
-        #", wrapper_id, " .form-check-input:checked {
-            background-color: #00d4ff !important;
-            border-color: #00d4ff !important;
-        }
-
-        /* Color de la sombra/foco al hacer clic */
-        #", wrapper_id, " .form-check-input:focus {
-            border-color: #00d4ff;
-            box-shadow: 0 0 0 0.25rem rgba(0, 212, 255, 0.25);
-        }
-
-        /* Estilo del Switch cuando está APAGADO */
-        #", wrapper_id, " .form-check-input {
-            background-color: #dee2e6;
-            border-color: #ced4da;
-            background-image: url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='black'/%3e%3c/svg%3e\") !important;
         }
       ")))
     ),
@@ -132,8 +113,8 @@ mod_rscience_ui <- function(id) {
               div(style = "padding: 0 1.5rem; flex-grow: 1; overflow-y: visible;",
                   hr(),
                   div(class = "section-title", "1. Setup Phase"),
-                  input_switch(ns("sw_dataset"), "Dataset Selection", value = TRUE),
-                  input_switch(ns("sw_tool"), "Tool Engine", value = FALSE),
+                  input_switch(ns("sw_dataset"), label = tags$span(id = ns("label_dataset"), "Dataset Selection"), value = TRUE),
+                  input_switch(ns("sw_tool"),    label = tags$span(id = ns("label_tools"),    "Tool Engine")     , value = FALSE),
                   input_switch(ns("sw_script"), "Script Engine", value = FALSE),
                   hr(),
                   #######################################################################################
@@ -171,7 +152,7 @@ mod_rscience_ui <- function(id) {
             type = "hidden",
             tabPanelBody("tab_welcome", div(class="vh-100 d-flex align-items-center justify-content-center", h4("Select a module", class="text-muted"))),
             #######################################################################################
-            tabPanelBody("tab_dataset", div(class="p-3", mod_import_ui(ns("my_ns_import")))),
+            tabPanelBody("tab_dataset", div(class="p-3", mod_dataset_ui(ns("my_ns_dataset")))),
             tabPanelBody("tab_tool", div(mod_tools_ui(ns("my_ns_tool")))),
             tabPanelBody("tab_script", "Waiting for script..."),
             #######################################################################################
@@ -179,7 +160,7 @@ mod_rscience_ui <- function(id) {
             tabPanelBody("tab_bibliography", "Waiting for bibliography..."),
             tabPanelBody("tab_cite", "Waiting for Cite..."),
             #######################################################################################
-            tabPanelBody("tab_settings", div(class="p-4", PACK_mod_main_ui(ns("mi_app")))),
+            tabPanelBody("tab_settings", div(class="p-4", mod_PACK_settings_ui(ns("my_ns_PACK_settings")))),
             tabPanelBody("tab_shiny", "Waiting for Shiny..."),
             tabPanelBody("tab_asesor", "Waiting for Asesor..."),
             #######################################################################################
@@ -204,13 +185,8 @@ mod_rscience_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+
     ############################################################################
-
-
-
-
-
-
     # 3. Exclusividad de Switches
     all_sw <- c("sw_dataset", "sw_tool", "sw_script",
                 ##################################################
@@ -221,7 +197,7 @@ mod_rscience_server <- function(id) {
                 "sw_script_comments", "sw_script_basic",
                 ##################################################
                 "sw_reporting"
-                )
+    )
 
     active_sw_id <- reactiveVal(NULL)
 
@@ -242,7 +218,7 @@ mod_rscience_server <- function(id) {
 
     observe({
       target <- "tab_welcome"
-        ######################################
+      ######################################
       if (isTRUE(input$sw_dataset)) {
         target <- "tab_dataset"
       } else if (isTRUE(input$sw_tool)) {
@@ -277,84 +253,166 @@ mod_rscience_server <- function(id) {
       updateTabsetPanel(session, "engine_switcher", selected = target)
     })
 
+    ############################################################################
+
+
 
 
     ############################################################################
-
     # 1. Módulos Internos
-    rlist_import <- mod_import_server(id = "my_ns_import")
-    rlist_tool   <- mod_tools_server(id = "my_ns_tool")
+    res_dataset <- mod_dataset_server(id="my_ns_dataset")
+    res_tool    <- mod_tools_server(id="my_ns_tool")
 
-    resultados <- PACK_mod_main_server(
-      id = "mi_app",
+    resultados <- mod_PACK_settings_server(
+      id = "my_ns_PACK_settings",
       df_input = reactive(mtcars),
       show_debug = TRUE
     )
 
     ############################################################################
 
+    # 1. Disable all
+    # 2. Enable only selected
+    mini_list <- list("is_ready" = NULL,
+                      "is_done" = NULL
+                      )
 
-    # ==========================================================================
-    # LÓGICA DE CONTROL POR ETAPAS (CHECK POINTS)
-    # ==========================================================================
-
-    # El Big Bang es la semilla inicial (siempre TRUE)
-    bigbang <- TRUE
-
-    # --- STAGE 01: DATASET, TOOLS, SCRIPT ---
-
-    ## 1.1. Dataset Check
-    # Verifica si el módulo de importación tiene datos listos
-    check_dataset <- reactive({
-      isTruthy(rlist_import()) && isTRUE(rlist_import()$is_locked)
-    })
-
-    ## 1.2. Tool Check
-    # Verifica si se ha seleccionado una herramienta válida
-    check_tool <- reactive({
-      isTruthy(rlist_tool()) && !is.null(rlist_tool()$selected_tool)
-    })
-
-    ## 1.3 Script Check
-    # Aquí podrías verificar si el script se ha generado o cargado
-    # Por ahora lo dejamos como TRUE o una condición lógica de tus reactivos
-    check_script <- reactive({
-      # Ejemplo: isTruthy(res_script()$ready)
-      TRUE
-    })
-
-    ## 1.4 Check Point Stage 01
-    # Consolidación del estado de la Etapa 1
-    stage01_status <- reactive({
-      previous <- bigbang
-
-      # Vector de validaciones individuales de esta etapa
-      vector_each_check <- c(
-        dataset = check_dataset(),
-        tool    = check_tool(),
-        script  = check_script()
+    list_default_steps <- list(
+      "step01" = c("details" = "Close all sw.", mini_list),
+      "step02" = c("details" = "Open sw dataset.", mini_list),
+      "step03" = c("details" = "Open sw tools.", mini_list),
+      "step04" = c("details" = "Open sw script.", mini_list),
+      "step05" = c("details" = "Check dataset and tools.", mini_list),
+      "step06" = c("details" = "Open sw theory.", mini_list),
+      "step07" = c("details" = "Open sw bibliography.", mini_list),
+      "step08" = c("details" = "Open sw cite.", mini_list),
+      "step09" = c("details" = "Control dataset, tool, and script.", mini_list),
+      "step10" = c("details" = "Open sw settings.", mini_list),
+      "step11" = c("details" = "Control dataset, tool, script and settings.", mini_list),
+      "step12" = c("details" = "Open sw shiny.", mini_list),
+      "step13" = c("details" = "Open sw asesor.", mini_list),
+      "step14" = c("details" = "Open sw script_comments.", mini_list),
+      "step15" = c("details" = "Open sw script_basic.", mini_list),
+      "step16" = c("details" = "Open sw script_reporting.", mini_list)
       )
 
-      # Combinamos con el estado previo (Big Bang)
-      all_done <- c(previous = previous, vector_each_check)
-
-      # La etapa está terminada solo si TODOS los checks son TRUE
-      is_done <- all(all_done)
-
-      list(
-        checks = vector_each_check,
-        all_done = all_done,
-        is_done = is_done
-      )
-    })
-
-    # Ejemplo de uso: Mostrar en consola cuando Stage 01 esté completo
-    observe({
-      if (stage01_status()$is_done) {
-        message("--- [STAGE 01 COMPLETE] ---")
+    rlist_stone_steps <- do.call(reactiveValues, list_default_steps)
+    # --- FUNCIONES DE SOPORTE ---
+    reset_the_stone01 <- function() {
+      for (name in names(list_default_steps)) {
+        rlist_stone_steps[[name]] <- list_default_steps[[name]]
       }
+      message("--- [rlist_stone_steps] Reset completo ---")
+    }
+
+
+
+    observe({rlist_stone_steps$"step01"$"is_ready" <- TRUE})
+
+    # Step01 - Close all.
+    observeEvent(rlist_stone_steps$"step01"$"is_ready", {
+      lapply(all_sw, shinyjs::disable)
+      rlist_stone_steps$"step02"$"is_ready" <- TRUE
     })
 
+    # Step02 - Open dataset
+    observeEvent(rlist_stone_steps$"step02"$"is_ready", {
+      lapply(c("sw_dataset"), shinyjs::enable)
+      rlist_stone_steps$"step03"$"is_ready" <- TRUE
+    })
+
+    # Step03 - Open tools
+    observeEvent(rlist_stone_steps$"step03"$"is_ready", {
+      lapply(c("sw_tool"), shinyjs::enable)
+      rlist_stone_steps$"step04"$"is_ready" <- TRUE
+    })
+
+    # Step04 - Open script
+    observeEvent(rlist_stone_steps$"step04"$"is_ready", {
+      lapply(c("sw_script"), shinyjs::enable)
+      rlist_stone_steps$"step05"$"is_ready" <- TRUE
+    })
+
+
+    # Step05 - Open script
+    observeEvent(rlist_stone_steps$"step05"$"is_ready", {
+      lapply(c("sw_script"), shinyjs::enable)
+      rlist_stone_steps$"step06"$"is_ready" <- TRUE
+    })
+
+
+    # Step05 - "Check dataset and tools."
+    observeEvent(rlist_stone_steps$"step05"$"is_ready", {
+      #lapply(c("sw_script"), shinyjs::enable) ########### <---------------------------
+      rlist_stone_steps$"step06"$"is_ready" <- TRUE
+    })
+
+
+    # Step06 - "Open theory."
+    observeEvent(rlist_stone_steps$"step06"$"is_ready", {
+      lapply(c("sw_theory"), shinyjs::enable) ########### <---------------------------
+      rlist_stone_steps$"step07"$"is_ready" <- TRUE
+    })
+
+    # Step 07 - Open bibliography
+    observeEvent(rlist_stone_steps$step07$is_ready, {
+      lapply(c("sw_bibliography"), shinyjs::enable)
+      rlist_stone_steps$step08$is_ready <- TRUE
+    })
+
+    # Step 08 - Open cite
+    observeEvent(rlist_stone_steps$step08$is_ready, {
+      lapply(c("sw_cite"), shinyjs::enable)
+      rlist_stone_steps$step09$is_ready <- TRUE
+    })
+
+    # Step 09 - Control dataset, tool, and script
+    observeEvent(rlist_stone_steps$step09$is_ready, {
+      # Aquí iría la lógica de control, procedemos al siguiente paso
+      rlist_stone_steps$step10$is_ready <- TRUE
+    })
+
+    # Step 10 - Open sw settings
+    observeEvent(rlist_stone_steps$step10$is_ready, {
+      lapply(c("sw_settings"), shinyjs::enable)
+      rlist_stone_steps$step11$is_ready <- TRUE
+    })
+
+    # Step 11 - Control dataset, tool, script and settings
+    observeEvent(rlist_stone_steps$step11$is_ready, {
+      # Punto de control de integridad antes de resultados
+      rlist_stone_steps$step12$is_ready <- TRUE
+    })
+
+    # Step 12 - Open sw shiny
+    observeEvent(rlist_stone_steps$step12$is_ready, {
+      lapply(c("sw_shiny"), shinyjs::enable)
+      rlist_stone_steps$step13$is_ready <- TRUE
+    })
+
+    # Step 13 - Open sw asesor
+    observeEvent(rlist_stone_steps$step13$is_ready, {
+      lapply(c("sw_asesor"), shinyjs::enable)
+      rlist_stone_steps$step14$is_ready <- TRUE
+    })
+
+    # Step 14 - Open sw script_comments
+    observeEvent(rlist_stone_steps$step14$is_ready, {
+      lapply(c("sw_script_comments"), shinyjs::enable)
+      rlist_stone_steps$step15$is_ready <- TRUE
+    })
+
+    # Step 15 - Open sw script_basic
+    observeEvent(rlist_stone_steps$step15$is_ready, {
+      lapply(c("sw_script_basic"), shinyjs::enable)
+      rlist_stone_steps$step16$is_ready <- TRUE
+    })
+
+    # Step 16 - Open sw script_reporting
+    observeEvent(rlist_stone_steps$step16$is_ready, {
+      lapply(c("sw_reporting"), shinyjs::enable)
+      message("--- [FLOW COMPLETE] - All steps activated ---")
+    })
 
 
   })

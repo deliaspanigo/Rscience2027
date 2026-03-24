@@ -9,7 +9,7 @@ library("vroom")
 library("readxl")
 library("bslib")
 
-mod_import_ui <- function(id) {
+mod_dataset_ui <- function(id) {
   ns <- NS(id)
   root_sel <- paste0(".", ns("import-container"))
 
@@ -168,7 +168,7 @@ mod_import_ui <- function(id) {
 # ==============================================================================
 # IMPORT MODULE SERVER - v.0.1.0 (CORRECTED)
 # ==============================================================================
-mod_import_server <- function(id, show_debug = FALSE) {
+mod_dataset_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -383,12 +383,14 @@ mod_import_server <- function(id, show_debug = FALSE) {
           data_store$"success_msg" <- str_message
           showNotification(str_message, type = "message")
           toggle_import_controls(TRUE)
+          data_store$is_done <- TRUE
           })
         }
 
         if(is_locked() == TRUE) {
           isolate({
           #print("B")
+            data_store$is_locked <- TRUE
 
           str_message <- paste("Success: Import session locked.")
           data_store$"success_msg" <- str_message

@@ -26,13 +26,4 @@ server <- function(input, output, session) {
 
 }
 
-# Función para lanzar la app desde cualquier lugar
-#' Lanzar demo del módulo de importación
-#'
-#' @export
-run_importar_demo <- function() {
-  shinyApp(ui = ui, server = server)
-}
-
-
-run_importar_demo()
+shinyApp(ui, server)

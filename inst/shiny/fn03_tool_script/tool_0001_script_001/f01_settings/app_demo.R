@@ -9,7 +9,7 @@ library(colourpicker)
 # Cargamos los componentes
 source("sub_module/sm01_var_selection.R")
 source("sub_module/sm02_levels.R")
-source("pack_module.R")
+source("mod_PACK_settings.R")
 
 # Usamos page_fillable para que el contenido use todo el espacio sin headers
 ui <- page_fillable(
@@ -20,7 +20,7 @@ ui <- page_fillable(
 
   # Contenedor principal con un poco de margen para que no toque los bordes
   div(style = "padding: 15px;",
-      PACK_mod_main_ui("mi_app")
+      mod_PACK_settings_ui("mi_app")
   )
 )
 
@@ -28,7 +28,7 @@ server <- function(input, output, session) {
 
   # Ejecutamos el pack
   # show_debug = TRUE activará la pestaña de inspección dentro del card del pack
-  resultados <- PACK_mod_main_server(
+  resultados <- mod_PACK_settings_server(
     id = "mi_app",
     df_input = reactive(mtcars),
     show_debug = TRUE

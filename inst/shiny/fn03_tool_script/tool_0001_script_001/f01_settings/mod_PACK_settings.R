@@ -2,7 +2,7 @@
 # PACK: COORDINADOR CON DEBUG MULTI-TAB (SIN ERRORES)
 # ==============================================================================
 
-PACK_mod_main_ui <- function(id) {
+mod_PACK_settings_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
@@ -28,7 +28,7 @@ PACK_mod_main_ui <- function(id) {
   )
 }
 
-PACK_mod_main_server <- function(id, df_input, show_debug = FALSE) {
+mod_PACK_settings_server <- function(id, df_input, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
