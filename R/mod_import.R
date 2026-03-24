@@ -1,11 +1,4 @@
-# ==============================================================================
-# IMPORT MODULE UI - v.0.0.9 (FULL STRUCTURE & DYNAMIC COLORS)
-# ==============================================================================
-library("shinyjs")
-library("DT")
-library("vroom")
-library("readxl")
-library("bslib")
+
 
 # ==============================================================================
 # IMPORT MODULE UI - v.0.1.0 (CLEAN LOCK & DYNAMIC COLORS)

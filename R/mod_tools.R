@@ -79,7 +79,7 @@ mod_tools_ui <- function(id) {
         ),
 
         uiOutput(ns("scripts_info_banner")),
-
+        #mod_tree_ui(ns("inner_tree"))
         div(class = "map-section",
             div(id = ns("tree_wrapper"), class = "map-wrapper",
                 mod_tree_ui(ns("inner_tree"))
@@ -89,16 +89,60 @@ mod_tools_ui <- function(id) {
   )
 }
 
-mod_tools_server <- function(id) {
+mod_tools_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    arbol_res <- mod_tree_server("inner_tree")
+    list_default <- list(
+      "details" = "*** Rscience - Tools selection ***",
+      "is_done" = NULL,
+      "is_locked" = NULL,
+      "error_msg" = NULL,
+      "success_msg" = NULL,
+      "metadata_tree" = list(
+      )
+    )
+
+    data_store <- do.call(reactiveValues, list_default)
+    is_done   <- reactiveVal(FALSE)
     is_locked <- reactiveVal(FALSE)
 
+    # --- FUNCIONES DE SOPORTE ---
+    reset_data_store <- function() {
+      for (name in names(list_default)) {
+        data_store[[name]] <- list_default[[name]]
+      }
+      message("--- [DATA_STORE] Reset completo ---")
+    }
+
+
+    toggle_import_controls <- function(lock_it) {
+      closed_suffix <- HTML("<span class='status-closed' style='font-size: 0.8rem;'>(Locked) <i class='fa fa-lock'></i></span>")
+
+      is_locked(lock_it)
+
+      if (lock_it) {
+        shinyjs::disable("btn_import")
+        shinyjs::html("label_source", paste0("Source Type", closed_suffix))
+        shinyjs::html("label_selection", paste0("Data Selection", closed_suffix))
+        shinyjs::addClass(id = "main_input_col", class = "locked-disabled")
+      } else {
+        shinyjs::enable("btn_import")
+        shinyjs::html("label_source", "Source Type")
+        shinyjs::html("label_selection", "Data Selection")
+        shinyjs::removeClass(id = "main_input_col", class = "locked-disabled")
+      }
+
+    }
+
+
+
+
+    rlist_tree <- mod_tree_server("inner_tree")
+
     observeEvent(input$btn_confirm, {
-      req(arbol_res()$node_name)
-      if(arbol_res()$node_name != "Rscience") {
+      req(rlist_tree()$node_name)
+      if(rlist_tree()$node_name != "Rscience") {
         shinyjs::addClass(id = "tree_wrapper", class = "locked-tree")
         shinyjs::disable("btn_confirm")
         is_locked(TRUE)

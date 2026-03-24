@@ -75,20 +75,20 @@ mod_rscience_ui <- function(id) {
         .selectize-dropdown { z-index: 10000 !important; }
 
         /* 7. TABLA PREVIEW: ZEBRA CYAN (Específica del ID de importación) */
-        #", ns("demo_import-preview"), " table.dataTable thead th {
+        #", ns("my_ns_import-preview"), " table.dataTable thead th {
           background-color: #00d4ff !important;
           color: white !important;
         }
 
-        #", ns("demo_import-preview"), " table.dataTable tbody tr.odd {
+        #", ns("my_ns_import-preview"), " table.dataTable tbody tr.odd {
           background-color: #e6faff !important;
         }
 
-        #", ns("demo_import-preview"), " table.dataTable tbody tr.even {
+        #", ns("my_ns_import-preview"), " table.dataTable tbody tr.even {
           background-color: #ffffff !important;
         }
 
-        #", ns("demo_import-preview"), " table.dataTable tbody tr:hover {
+        #", ns("my_ns_import-preview"), " table.dataTable tbody tr:hover {
           background-color: #ccf5ff !important;
         }
 
@@ -142,7 +142,8 @@ mod_rscience_ui <- function(id) {
                   input_switch(ns("sw_bibliography"), "Bibliography", value = FALSE),
                   input_switch(ns("sw_cite"), "Cite Rscience!", value = FALSE),
                   hr(),
-                  #######################################################################################                  div(class = "section-title", "3. Execution Phase"),
+                  #######################################################################################
+                  div(class = "section-title", "3. Data Analysis Phase"),
                   input_switch(ns("sw_settings"), "Settings", value = FALSE),
                   input_switch(ns("sw_shiny"), "Shiny Outputs", value = FALSE),
                   input_switch(ns("sw_asesor"), "Automatic Statistic Asesor (ASA)", value = FALSE),
@@ -170,8 +171,8 @@ mod_rscience_ui <- function(id) {
             type = "hidden",
             tabPanelBody("tab_welcome", div(class="vh-100 d-flex align-items-center justify-content-center", h4("Select a module", class="text-muted"))),
             #######################################################################################
-            tabPanelBody("tab_dataset", div(class="p-3", mod_import_ui(ns("demo_import")))),
-            tabPanelBody("tab_tool", div(mod_tools_ui(ns("my_tool")))),
+            tabPanelBody("tab_dataset", div(class="p-3", mod_import_ui(ns("my_ns_import")))),
+            tabPanelBody("tab_tool", div(mod_tools_ui(ns("my_ns_tool")))),
             tabPanelBody("tab_script", "Waiting for script..."),
             #######################################################################################
             tabPanelBody("tab_theory", "Waiting for Theory..."),
@@ -206,18 +207,9 @@ mod_rscience_server <- function(id) {
     ############################################################################
 
 
-    resultados <- PACK_mod_main_server(
-      id = "mi_app",
-      df_input = reactive(mtcars),
-      show_debug = TRUE
-    )
-
-    ############################################################################
 
 
-    # 1. Módulos Internos
-    res_import <- mod_import_server("demo_import")
-    res_tool   <- mod_tools_server("my_tool") # Descomentar cuando esté listo
+
 
     # 3. Exclusividad de Switches
     all_sw <- c("sw_dataset", "sw_tool", "sw_script",
@@ -231,6 +223,7 @@ mod_rscience_server <- function(id) {
                 "sw_reporting"
                 )
 
+    active_sw_id <- reactiveVal(NULL)
 
     lapply(all_sw, function(id_sw) {
       observeEvent(input[[id_sw]], {
@@ -239,11 +232,14 @@ mod_rscience_server <- function(id) {
           for (other in others) {
             updateCheckboxInput(session, other, value = FALSE)
           }
+          active_sw_id(id_sw)
         }
       }, ignoreInit = TRUE)
     })
 
     # 2. Lógica de Navegación (Switches -> Tabs)
+    active_tab_id <- reactiveVal(NULL)
+
     observe({
       target <- "tab_welcome"
         ######################################
@@ -276,7 +272,7 @@ mod_rscience_server <- function(id) {
       } else if (isTRUE(input$sw_reporting)) {
         target <- "tab_reporting"
       }
-
+      active_tab_id(target)
 
       updateTabsetPanel(session, "engine_switcher", selected = target)
     })
@@ -284,6 +280,19 @@ mod_rscience_server <- function(id) {
 
 
     ############################################################################
+
+    # 1. Módulos Internos
+    rlist_import <- mod_import_server(id = "my_ns_import")
+    rlist_tool   <- mod_tools_server(id = "my_ns_tool")
+
+    resultados <- PACK_mod_main_server(
+      id = "mi_app",
+      df_input = reactive(mtcars),
+      show_debug = TRUE
+    )
+
+    ############################################################################
+
 
     # ==========================================================================
     # LÓGICA DE CONTROL POR ETAPAS (CHECK POINTS)
@@ -297,13 +306,13 @@ mod_rscience_server <- function(id) {
     ## 1.1. Dataset Check
     # Verifica si el módulo de importación tiene datos listos
     check_dataset <- reactive({
-      isTruthy(res_import()) && isTRUE(res_import()$is_ready)
+      isTruthy(rlist_import()) && isTRUE(rlist_import()$is_locked)
     })
 
     ## 1.2. Tool Check
     # Verifica si se ha seleccionado una herramienta válida
     check_tool <- reactive({
-      isTruthy(res_tool()) && !is.null(res_tool()$selected_tool)
+      isTruthy(rlist_tool()) && !is.null(rlist_tool()$selected_tool)
     })
 
     ## 1.3 Script Check

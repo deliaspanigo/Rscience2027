@@ -4,6 +4,7 @@
 library(shiny)
 library(dplyr)
 library(jsonlite)
+library(listviewer)
 
 # ==========================================
 # MÓDULO: EXPLORADOR DE ÁRBOL RScience (UI)
@@ -97,6 +98,9 @@ mod_tree_ui <- function(id) {
       ")))
     ),
 
+    div(style = "max-height: 500px; overflow-y: auto;",
+        listviewer::jsoneditOutput(ns("debug_json"), height = "auto")
+    ),
     div(id = module_id,
         tags$button("☰ MENU", class = "toggle-sidebar-btn", onclick = "toggleSidebar()"),
 
@@ -136,36 +140,70 @@ mod_tree_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # 1. CARGA DE DATOS (Fiel a tu original)
+    cleaning_jumps <- function(text) {
+      # gsub busca todas las ocurrencias de /n y las reemplaza por nada
+      str_clean <- gsub("/n", "", text)
+      return(str_clean)
+    }
+
+    # 1. CARGA DE DATOS
     data_full <- tryCatch({
       Rscience2027::tree_data
     }, error = function(e) {
-      data.frame(nivel1 = "Error", nivel2 = "No Data", script_id = 0)
+      data.frame(nivel1 = "Error", nivel2 = "No Data", script_id = "0")
     })
 
-    # 2. OBJETO REACTIVO (Fiel a tu original)
+    # 2. OBJETO REACTIVO: MÉTRICAS (v.0.1.1)
     info_nodo <- reactive({
-      node_name <- if (is.null(input$selected_node) ||
-                       input$selected_node == "" ||
-                       input$selected_node == "Rscience") {
+      selected_node_name <- if (is.null(input$selected_node) ||
+                                input$selected_node == "" ||
+                                input$selected_node == "Rscience") {
         "Rscience"
       } else {
         input$selected_node
       }
 
-      if (node_name == "Rscience") {
+      # Totales Globales
+      real_total_tools <- data_full %>% select(starts_with("nivel")) %>% distinct() %>% nrow()
+      real_total_scripts <- length(unique(data_full$script_id))
+
+      if (selected_node_name == "Rscience") {
         path_final <- "Rscience (Root)"
-        scripts <- unique(data_full$script_id)
+        scripts_ids <- unique(data_full$script_id)
+        n_tools <- real_total_tools
+        n_script <- real_total_scripts
+        is_last_node <- FALSE # El root nunca es el último
       } else {
-        row_match <- data_full %>% filter(if_any(starts_with("nivel"), ~ .x == node_name))
+        row_match <- data_full %>% filter(if_any(starts_with("nivel"), ~ .x == selected_node_name))
+
         if (nrow(row_match) > 0) {
           sample_row <- row_match %>% slice(1)
           niveles_all <- sample_row %>% select(starts_with("nivel")) %>% as.character()
           niveles_clean <- niveles_all[!is.na(niveles_all) & niveles_all != "" & niveles_all != "NA"]
-          idx_actual <- which(niveles_clean == node_name)
+
+          idx_actual <- which(niveles_clean == selected_node_name)
           path_parts <- niveles_clean[1:idx_actual]
           path_final <- paste(c("Rscience", path_parts), collapse = " / ")
 
+          # --- LÓGICA DE ÚLTIMO NODO ---
+          # Un nodo es el último si en ninguna fila de row_match hay algo en el nivel inmediatamente superior
+          # col_siguiente <- paste0("nivel", idx_actual + 1)
+          #
+          # if (col_siguiente %in% names(data_full)) {
+          #   # Verificamos si hay hijos en la columna siguiente
+          #   hijos <- row_match %>%
+          #     pull(!!sym(col_siguiente)) %>%
+          #     unique()
+          #
+          #   # Es último si todos los hijos son NA o vacíos
+          #   is_last_node <- all(is.na(hijos) | hijos == "" | hijos == "NA")
+          # } else {
+          #   # Si ni siquiera existe la columna siguiente en el DF, es el último nivel posible
+          #   is_last_node <- TRUE
+          # }
+          # ----------------------------
+
+          # Filtrado para métricas de la rama seleccionada
           query_data <- data_full
           for (i in seq_along(path_parts)) {
             col_name <- paste0("nivel", i)
@@ -173,16 +211,40 @@ mod_tree_server <- function(id, show_debug = FALSE) {
               query_data <- query_data %>% filter(!!sym(col_name) == path_parts[i])
             }
           }
-          scripts <- query_data %>% pull(script_id) %>% unique()
+
+          scripts_ids <- query_data %>% pull(script_id) %>% unique()
+          n_tools <- query_data %>% select(starts_with("nivel")) %>% distinct() %>% nrow()
+          n_script <- length(scripts_ids)
+          is_last_node <- n_tools == 1
+
         } else {
           path_final <- "Rscience (Root)"
-          scripts <- unique(data_full$script_id)
+          scripts_ids <- unique(data_full$script_id)
+          n_tools <- real_total_tools
+          n_script <- real_total_scripts
+          is_last_node <- FALSE
         }
       }
-      list(node_name = node_name, path = path_final, scripts = scripts, time = format(Sys.time(), "%H:%M:%S"))
+
+      list(
+        description = "*** Rscience - Tree - Tool Selector ***",
+        selected_node_name = selected_node_name,
+        selected_node_name_mod = cleaning_jumps(text = selected_node_name),
+        path = path_final,
+        path_mod = cleaning_jumps(text = path_final),
+        is_last_node = is_last_node, # <--- Ahora dinámico
+        script_id = scripts_ids,
+        script_id_folder_path = NA,
+        check_script_id_folder = rep(TRUE, length(scripts_ids)),
+        n_tools = n_tools,
+        n_script = n_script,
+        real_total_tools = real_total_tools,
+        real_total_scripts = real_total_scripts,
+        time = format(Sys.time(), "%H:%M:%S")
+      )
     })
 
-    # 3. HELPER JERARQUÍA (Original)
+    # 3. HELPER JERARQUÍA
     df_a_jerarquia <- function(data, name = "Rscience") {
       node <- list(name = as.character(name))
       if (ncol(data) > 0) {
@@ -199,9 +261,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       node
     }
 
-    # 4. INYECTOR JS (Base estable + Mejoras estéticas solicitadas)
-    # 4. INYECTOR JS (Base estable + Mejoras estéticas solicitadas)
-    # 4. INYECTOR JS (Versión Neon Completa)
+    # 4. INYECTOR JS (RESTAURADO COMPLETO)
     output$js_injector <- renderUI({
       req(data_full)
       df_tree <- data_full %>% select(starts_with("nivel"))
@@ -221,18 +281,14 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       const rect = container.node().getBoundingClientRect();
 
       svg = container.append('svg').attr('width', '100%').attr('height', '100%');
-
-      // --- DEFINICIÓN DE FILTRO GLOW (NEÓN) ---
       const defs = svg.append('defs');
       const filter = defs.append('filter').attr('id', 'glow');
       filter.append('feGaussianBlur').attr('stdDeviation', '4').attr('result', 'coloredBlur');
       const feMerge = filter.append('feMerge');
       feMerge.append('feMergeNode').attr('in', 'coloredBlur');
       feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
-      // ----------------------------------------
 
       g = svg.append('g');
-
       zoomHandler = d3.zoom().scaleExtent([0.01, 8])
         .on('zoom', (event) => {
            currentScale = event.transform.k;
@@ -244,9 +300,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       treemap = d3.tree().nodeSize([180, 950]);
       root = d3.hierarchy(treeData, d => d.children);
       root.descendants().forEach(d => { d.id = ++i; });
-
-      root.x0 = rect.height / 2;
-      root.y0 = 0;
+      root.x0 = rect.height / 2; root.y0 = 0;
       activeNode = root;
 
       Shiny.setInputValue('", ns("selected_node"), "', 'Rscience');
@@ -262,15 +316,12 @@ mod_tree_server <- function(id, show_debug = FALSE) {
     function update(source, customDuration) {
       const currentDuration = (customDuration !== undefined) ? customDuration : duration;
       if (activeNode) reorderPathToTop(activeNode, !topAlignMode);
-
       const nodes = treemap(root).descendants();
       const links = nodes.slice(1);
-
       nodes.forEach(d => d.y = d.depth * 950);
       fitToLeftAnchor(nodes, currentDuration);
 
       const node = g.selectAll('g.node').data(nodes, d => d.id);
-
       const nodeEnter = node.enter().append('g').attr('class', 'node')
         .attr('transform', d => (currentDuration === 0) ? `translate(${d.y},${d.x})` : `translate(${source.y0 || 0},${source.x0 || 0})`)
         .on('click', (event, d) => {
@@ -282,23 +333,17 @@ mod_tree_server <- function(id, show_debug = FALSE) {
         });
 
       nodeEnter.append('circle').attr('r', 28);
-
-      // --- SOPORTE PARA /n ---
       const textElement = nodeEnter.append('text')
         .attr('x', d => d.children || d._children ? -50 : 50)
         .attr('text-anchor', d => d.children || d._children ? 'end' : 'start');
 
       textElement.each(function(d) {
-        const name = d.data.name || '';
-        const lines = name.split('/n');
+        const lines = (d.data.name || '').split('/n');
         const el = d3.select(this);
         const vOffset = (lines.length - 1) * 0.5;
-
         lines.forEach((line, index) => {
-          el.append('tspan')
-            .attr('x', d.children || d._children ? -50 : 50)
-            .attr('dy', index === 0 ? `-${vOffset}em` : '1.1em')
-            .text(line.trim());
+          el.append('tspan').attr('x', d.children || d._children ? -50 : 50)
+            .attr('dy', index === 0 ? `-${vOffset}em` : '1.1em').text(line.trim());
         });
       });
 
@@ -307,76 +352,44 @@ mod_tree_server <- function(id, show_debug = FALSE) {
       else { nodeUpdate.transition().duration(currentDuration).attr('transform', d => `translate(${d.y},${d.x})`); }
 
       nodeUpdate.select('circle')
-        .style('fill', d => {
-          if (d === activeNode) return '#ff9100';
-          if (!d.children && !d._children) return '#00FF00';
-          if (window.isAncestor(d)) return '#ff9100';
-          return '#00FFFF';
-        })
+        .style('fill', d => (d === activeNode || window.isAncestor(d)) ? '#ff9100' : (d.children || d._children ? '#00FFFF' : '#00FF00'))
         .style('stroke', d => (d === activeNode) ? '#00FF00' : '#fff')
         .style('stroke-width', d => (d === activeNode) ? '8px' : '6px')
-        // Aplicar brillo también a los nodos activos
         .style('filter', d => (d === activeNode || window.isAncestor(d)) ? 'url(#glow)' : 'none')
         .style('opacity', d => (ghostMode && d !== activeNode && !window.isAncestor(d)) ? 0.15 : 1);
 
-      if (currentDuration === 0) { node.exit().remove(); }
-      else { node.exit().transition().duration(currentDuration).attr('transform', d => `translate(${source.y},${source.x})`).remove(); }
-
+      node.exit().remove();
       const link = g.selectAll('path.link').data(links, d => d.id);
       const linkEnter = link.enter().insert('path', 'g').attr('class', 'link')
-        .attr('d', d => {
-           if (currentDuration === 0) return diagonal(d, d.parent);
-           const o = {y: source.y0 || 0, x: source.x0 || 0};
-           return diagonal(o, o);
-        });
+        .attr('d', d => { const o = {y: source.y0 || 0, x: source.x0 || 0}; return window.diagonal(o, o); });
 
       const linkUpdate = linkEnter.merge(link);
-      if (currentDuration === 0) { linkUpdate.attr('d', d => diagonal(d, d.parent)); }
-      else { linkUpdate.transition().duration(currentDuration).attr('d', d => diagonal(d, d.parent)); }
-
-      // --- CONFIGURACIÓN DE CONECTORES (OPACIDAD Y BRILLO) ---
-      linkUpdate
+      linkUpdate.transition().duration(currentDuration).attr('d', d => window.diagonal(d, d.parent))
         .style('stroke', d => (d === activeNode || window.isAncestor(d)) ? '#ff9100' : '#00FFFF')
         .style('stroke-width', d => (d === activeNode || window.isAncestor(d)) ? '22px' : '10px')
         .style('filter', d => (d === activeNode || window.isAncestor(d)) ? 'url(#glow)' : 'none')
-        .style('opacity', d => {
-            if (d === activeNode || window.isAncestor(d)) return 1; // Máximo brillo para la rama activa
-            return ghostMode ? 0.08 : 0.4; // Desvanecido para el resto
-        });
+        .style('opacity', d => (d === activeNode || window.isAncestor(d)) ? 1 : (ghostMode ? 0.08 : 0.4));
 
-      if (currentDuration === 0) { link.exit().remove(); }
-      else { link.exit().transition().duration(currentDuration).attr('d', d => { const o = {y: source.y, x: source.x}; return diagonal(o, o); }).remove(); }
-
+      link.exit().remove();
       nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
-      updateTextSizes();
     }
 
     function fitToLeftAnchor(targetNodes, customDuration) {
       const container = document.getElementById('tree-container');
       if (!container || !targetNodes || targetNodes.length === 0) return;
       const rect = container.getBoundingClientRect();
-      const minX = d3.min(targetNodes, d => d.x);
-      const maxX = d3.max(targetNodes, d => d.x);
-      const minY = d3.min(targetNodes, d => d.y);
-      const maxY = d3.max(targetNodes, d => d.y);
-      const contentHeight = (maxX - minX) || 1;
-      const contentWidth = (maxY - minY) + 950;
-      let scale = Math.min(rect.width / contentWidth, rect.height / (contentHeight + 200));
+      const minX = d3.min(targetNodes, d => d.x); const maxX = d3.max(targetNodes, d => d.x);
+      const minY = d3.min(targetNodes, d => d.y); const maxY = d3.max(targetNodes, d => d.y);
+      let scale = Math.min(rect.width / (maxY - minY + 950), rect.height / (maxX - minX + 200));
       scale = Math.min(Math.max(scale, 0.05), 0.7);
       const transform = d3.zoomIdentity.translate(150 * scale, rect.height / 2).scale(scale).translate(0, -(minX + maxX) / 2);
-      if (customDuration === 0) { svg.call(zoomHandler.transform, transform); }
-      else { svg.transition().duration(customDuration).ease(d3.easeCubicInOut).call(zoomHandler.transform, transform); }
+      svg.transition().duration(customDuration).call(zoomHandler.transform, transform);
     }
 
     window.toggleSidebar = function() {
       const sidebar = document.getElementById('sidebar');
-      // Ahora usamos 'active' para mostrarlo u ocultarlo
       if(sidebar) sidebar.classList.toggle('active');
-
-      // Reajustar el mapa después de que termine la animación (450ms)
-      setTimeout(() => {
-        if(treemap && root) fitToLeftAnchor(treemap(root).descendants(), 600);
-      }, 450);
+      setTimeout(() => { if(treemap && root) fitToLeftAnchor(treemap(root).descendants(), 600); }, 450);
     }
 
     function reorderPathToTop(d, revert = false) {
@@ -385,10 +398,7 @@ mod_tree_server <- function(id, show_debug = FALSE) {
         let p = curr.parent; let children = p.children || p._children;
         if (children) {
           if (revert) children.sort((a, b) => a.id - b.id);
-          else {
-            let idx = children.findIndex(c => c.id === curr.id);
-            if (idx > -1) children.unshift(children.splice(idx, 1)[0]);
-          }
+          else { let idx = children.findIndex(c => c.id === curr.id); if (idx > -1) children.unshift(children.splice(idx, 1)[0]); }
         }
         curr = p;
       }
@@ -402,18 +412,14 @@ mod_tree_server <- function(id, show_debug = FALSE) {
 
     window.diagonal = function(s, d) { return `M ${s.y} ${s.x} C ${(s.y+d.y)/2} ${s.x}, ${(s.y+d.y)/2} ${d.x}, ${d.y} ${d.x}`; }
     window.collapse = function(d) { if(d.children) { d._children = d.children; d._children.forEach(window.collapse); d.children = null; } }
-    window.expand = function(d) { if(d._children) { d.children = d._children; d._children = null; } if(d.children) d.children.forEach(window.expand); }
     window.toggleGhost = function() { ghostMode = !ghostMode; update(activeNode); }
     window.toggleTopAlign = function() { topAlignMode = !topAlignMode; update(activeNode); }
     window.resetMap = function() { activeNode = root; if(root.children) root.children.forEach(window.collapse); update(root); }
-    window.fullExpand = function() { window.expand(root); update(root); }
+    window.fullExpand = function() { (function ex(d){ if(d._children){d.children=d._children; d._children=null;} if(d.children)d.children.forEach(ex); })(root); update(root); }
     window.runCollapseOthers = function() {
       if (!activeNode || activeNode === root) return;
-      var ancestors = []; var curr = activeNode;
-      while (curr) { ancestors.push(curr.id); curr = curr.parent; }
-      root.descendants().forEach(d => {
-        if (ancestors.indexOf(d.id) === -1 && d.children) { d._children = d.children; d.children = null; }
-      });
+      var ancestors = []; var curr = activeNode; while (curr) { ancestors.push(curr.id); curr = curr.parent; }
+      root.descendants().forEach(d => { if (ancestors.indexOf(d.id) === -1 && d.children) { d._children = d.children; d.children = null; } });
       update(activeNode);
     }
 
@@ -421,7 +427,6 @@ mod_tree_server <- function(id, show_debug = FALSE) {
        const svgNode = document.querySelector('#tree-container svg');
        const rect = svgNode.getBoundingClientRect();
        const clonedSvg = svgNode.cloneNode(true);
-       d3.select(clonedSvg).selectAll('text').style('fill', '#ffffff').style('font-family', 'Segoe UI, sans-serif').style('text-shadow', '2px 2px 4px #000000');
        const serializer = new XMLSerializer();
        let source = serializer.serializeToString(clonedSvg);
        const img = new Image();
@@ -441,6 +446,11 @@ mod_tree_server <- function(id, show_debug = FALSE) {
     window.addEventListener('resize', () => { if(treemap && root) fitToLeftAnchor(treemap(root).descendants(), 0); });
     "
       )))
+    })
+
+    output$debug_json <- listviewer::renderJsonedit({
+      req(show_debug)
+      listviewer::jsonedit(listdata = info_nodo(), mode = "text")
     })
 
     return(info_nodo)
