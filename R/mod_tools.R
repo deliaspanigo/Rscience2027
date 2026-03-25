@@ -248,14 +248,9 @@ mod_tools_server <- function(id, show_debug = FALSE) {
       )
     })
 
-    # Render del Debug JSON para verificar la estructura en vivo
-    output$debug_json <- listviewer::renderJsonedit({
-      req(show_debug)
-      listviewer::jsonedit(listdata = the_output(), mode = "view")
-    })
 
-    # Retornamos el reactivo
-    return(the_output)
+
+
 
     # Debug JSON
     output$debug_json <- listviewer::renderJsonedit({
