@@ -1,9 +1,17 @@
+# ==============================================================================
+# MÓDULO: EXPLORADOR DE HERRAMIENTAS RScience - v.0.0.1
+# ==============================================================================
+library(jsonlite)
+library(listviewer)
+library(shiny)
+library(shinyjs)
+
 mod_tools_ui <- function(id) {
   ns <- NS(id)
   root_sel <- paste0(".", ns("tools-container"))
 
   tagList(
-    shinyjs::useShinyjs(),
+    # CSS Específico del Módulo
     tags$head(
       tags$style(HTML(paste0("
         ", root_sel, " {
@@ -23,12 +31,12 @@ mod_tools_ui <- function(id) {
             transition: all 0.3s ease;
         }
 
-        /* --- CAMBIOS SOLICITADOS: BLOQUEO VERDE A LA IZQUIERDA --- */
+        /* Bloqueo Visual Verde */
         .locked-tree {
             pointer-events: none !important;
             opacity: 0.85;
             position: relative;
-            border: 4px solid #28a745 !important; /* Borde verde al confirmar */
+            border: 4px solid #28a745 !important;
             box-shadow: 0 0 20px rgba(40, 167, 69, 0.3);
         }
 
@@ -36,9 +44,8 @@ mod_tools_ui <- function(id) {
             content: '🔒 SELECCIÓN CONFIRMADA';
             position: absolute;
             top: 20px;
-            left: 20px;   /* Movido a la IZQUIERDA */
-            right: auto;  /* Reseteamos el right por si acaso */
-            background: #28a745; /* Fondo Verde */
+            left: 20px;
+            background: #28a745;
             color: #ffffff;
             padding: 10px 18px;
             border-radius: 8px;
@@ -47,7 +54,6 @@ mod_tools_ui <- function(id) {
             z-index: 2000;
             box-shadow: 0 0 15px rgba(40, 167, 69, 0.5);
         }
-        /* ------------------------------------------------------- */
 
         .path-display-area {
             background: #1a202c; border-radius: 12px; padding: 10px;
@@ -65,25 +71,34 @@ mod_tools_ui <- function(id) {
     ),
 
     div(class = paste("container-fluid", ns("tools-container")),
+        # 1. Cabecera Dinámica
         div(class = "flex-shrink-0", uiOutput(ns("tools_header"))),
 
+        # 2. Barra de Control y Path
         div(class = "row g-3 align-items-center flex-shrink-0", style="margin-top:5px;",
             div(class = "col-md-7",
                 div(class = "path-display-area", uiOutput(ns("path_chips_ui")))
             ),
             div(class = "col-md-5 text-end",
-                actionButton(ns("btn_confirm"), "Confirm", class = "btn btn-success"),
-                actionButton(ns("btn_edit"), "Edit", class = "btn btn-warning"),
-                actionButton(ns("btn_reset"), "Reset", class = "btn btn-primary")
+                actionButton(ns("btn_confirm"), "Confirm", class = "btn btn-success", icon = icon("check")),
+                actionButton(ns("btn_edit"), "Edit", class = "btn btn-warning", icon = icon("edit")),
+                actionButton(ns("btn_reset"), "Reset", class = "btn btn-primary", icon = icon("sync"))
             )
         ),
 
+        # 3. Banner de Información
         uiOutput(ns("scripts_info_banner")),
-        #mod_tree_ui(ns("inner_tree"))
+
+        # 4. El Árbol (Motor de Selección)
         div(class = "map-section",
             div(id = ns("tree_wrapper"), class = "map-wrapper",
                 mod_tree_ui(ns("inner_tree"))
             )
+        ),
+
+        # 5. Debug Panel (Opcional)
+        div(style = "margin-top: 10px; max-height: 200px; overflow-y: auto;",
+            listviewer::jsoneditOutput(ns("debug_json"), height = "auto")
         )
     )
   )
@@ -93,100 +108,161 @@ mod_tools_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    list_default <- list(
-      "details" = "*** Rscience - Tools selection ***",
-      "is_done" = NULL,
-      "is_locked" = NULL,
-      "error_msg" = NULL,
-      "success_msg" = NULL,
-      "metadata_tree" = list(
-      )
-    )
-
-    data_store <- do.call(reactiveValues, list_default)
+    # --- ESTADOS REACTIVOS ---
     is_done   <- reactiveVal(FALSE)
     is_locked <- reactiveVal(FALSE)
 
-    # --- FUNCIONES DE SOPORTE ---
-    reset_data_store <- function() {
-      for (name in names(list_default)) {
-        data_store[[name]] <- list_default[[name]]
-      }
-      message("--- [DATA_STORE] Reset completo ---")
-    }
-
-
-    toggle_import_controls <- function(lock_it) {
-      closed_suffix <- HTML("<span class='status-closed' style='font-size: 0.8rem;'>(Locked) <i class='fa fa-lock'></i></span>")
-
-      is_locked(lock_it)
-
-      if (lock_it) {
-        shinyjs::disable("btn_import")
-        shinyjs::html("label_source", paste0("Source Type", closed_suffix))
-        shinyjs::html("label_selection", paste0("Data Selection", closed_suffix))
-        shinyjs::addClass(id = "main_input_col", class = "locked-disabled")
-      } else {
-        shinyjs::enable("btn_import")
-        shinyjs::html("label_source", "Source Type")
-        shinyjs::html("label_selection", "Data Selection")
-        shinyjs::removeClass(id = "main_input_col", class = "locked-disabled")
-      }
-
-    }
-
-
-
-
+    # Importamos el servidor del árbol
+    # rlist_tree ahora contiene la lista de info_nodo() del árbol
     rlist_tree <- mod_tree_server("inner_tree")
 
+    # --- LÓGICA: BOTÓN CONFIRMAR ---
     observeEvent(input$btn_confirm, {
-      req(rlist_tree()$node_name)
-      if(rlist_tree()$node_name != "Rscience") {
+      # Accedemos a la data actual del árbol
+      tree_data <- rlist_tree()
+
+      # FIX CRÍTICO: El árbol usa 'selected_node_name', no 'node_name'
+      current_node <- tree_data$selected_node_name
+
+      # Debug para verificar en consola qué está llegando
+      message("--- [TOOLS] Intentando confirmar nodo: ", current_node, " ---")
+
+      req(current_node)
+
+      # Si el nodo es válido y no es la raíz vacía
+      if(current_node != "Rscience") {
+
+        # 1. Bloqueo Visual (Borde Verde y Cartel)
         shinyjs::addClass(id = "tree_wrapper", class = "locked-tree")
+
+        # 2. Deshabilitar botones (Usando ns() por seguridad)
         shinyjs::disable("btn_confirm")
+
+        # 3. Actualizar estados para el Sidebar y lógica interna
         is_locked(TRUE)
+        is_done(TRUE)
+
+        message("--- [TOOLS] SELECCIÓN BLOQUEADA ---")
+
+      } else {
+        # Feedback si intentan confirmar sin elegir una herramienta real
+        shinyjs::runjs("alert('Por favor, navega en el árbol y selecciona una herramienta específica antes de confirmar.');")
       }
     })
 
+    # --- LÓGICA: BOTÓN EDITAR (DESBLOQUEAR) ---
     observeEvent(input$btn_edit, {
       shinyjs::removeClass(id = "tree_wrapper", class = "locked-tree")
       shinyjs::enable("btn_confirm")
+
       is_locked(FALSE)
+      is_done(FALSE) # Esto hará que el candado vuelva a NARANJA TITILANTE
+      message("--- [TOOLS] Edición habilitada ---")
     })
 
-    observeEvent(input$btn_reset, {
-      shinyjs::removeClass(id = "tree_wrapper", class = "locked-tree")
-      shinyjs::enable("btn_confirm")
-      is_locked(FALSE)
-    })
-
+    # --- RENDERIZADO DE CABECERA ---
     output$tools_header <- renderUI({
-      data <- rlist_tree()
-      color <- if(is_locked()) "#28a745" else "#ffc107"
-      tags$h2(paste("Herramienta:", data$node_name),
-              style = paste0("color:", color, "; font-weight:900;"))
+      tree_data <- rlist_tree()
+      # Usamos el color Naranja o Verde según el estado de is_done
+      color_header <- if(is_done()) "#28a745" else "#ff9100"
+
+      tags$h2(paste("Herramienta:", tree_data$selected_node_name_mod),
+              style = paste0("color:", color_header, "; font-weight:900; transition: color 0.4s;"))
     })
 
+    # --- RENDERIZADO DE PATH (CHIPS) ---
     output$path_chips_ui <- renderUI({
-      req(rlist_tree()$path)
-      partes <- unlist(strsplit(rlist_tree()$path, " / "))
+      req(rlist_tree()$path_mod)
+      # Limpiamos el path y lo separamos para crear los chips Cyan
+      partes <- unlist(strsplit(rlist_tree()$path_mod, " / "))
       lapply(partes, function(p) {
         span(class = "path-chip", p)
       })
     })
 
+    # --- BANNER DE SCRIPTS ---
+    # --- METRICS BANNER (THREE LINES) ---
+    # --- METRICS BANNER (UNIFIED STYLE) ---
+    # --- METRICS BANNER (GRAMMAR & LOGIC CORRECTED) ---
     output$scripts_info_banner <- renderUI({
-      req(rlist_tree()$scripts)
-      n_scripts <- length(rlist_tree()$scripts)
+      tree_data <- rlist_tree()
+      req(tree_data$real_total_tools > 0)
+
+      # 1. Logic for Tools (Line 1)
+      is_are_tools <- if(tree_data$n_tools == 1) "is" else "are"
+      label_tools  <- if(tree_data$n_tools == 1) "tool" else "tools"
+
+      # 2. Logic for Global Scripts (Line 2)
+      is_are_scripts_total <- if(tree_data$n_script == 1) "is" else "are"
+      label_scripts_total  <- if(tree_data$n_script == 1) "script" else "scripts"
+
+      # 3. Logic for Current Selection (Line 3)
+      # We use n_script here because it's the scripts associated with the chosen node
+      is_are_current <- if(tree_data$n_script == 1) "is" else "are"
+      label_scripts_current <- if(tree_data$n_script == 1) "script" else "scripts"
+
+      status_color <- if(is_done()) "#28a745" else "#ff9100"
+
       div(class = "info-banner-blue",
-          icon("info-circle"),
-          span(sprintf(" Se han detectado %d scripts disponibles en esta rama del árbol.", n_scripts))
+          style = "line-height: 1.8; padding: 15px; border-radius: 8px; font-size: 0.95rem;",
+
+          # Line 1: RScience System Coverage
+          div(
+            icon("sitemap", style = "color: #1890ff; width: 25px;"),
+            span("RScience System: ", style = "font-weight: 800; color: #1a202c;"),
+            span(sprintf("There %s %d %s available in this branch out of %d in the entire system.",
+                         is_are_tools, tree_data$n_tools, label_tools, tree_data$real_total_tools))
+          ),
+
+          # Line 2: Global Repository (X selected out of Y possible)
+          div(
+            icon("database", style = "color: #1890ff; width: 25px;"),
+            span("Global Repository: ", style = "font-weight: 800; color: #1a202c;"),
+            span(sprintf("There %s %d %s selected out of %d possible in the database.",
+                         is_are_scripts_total, tree_data$n_script, label_scripts_total, tree_data$real_total_scripts))
+          ),
+
+          # Line 3: Selected Tool Specifics
+          div(style = paste0("margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(24, 144, 255, 0.2); color:", status_color, ";"),
+              icon("microchip", style = paste0("color:", status_color, "; width: 25px;")),
+              span("Current Selection: ", style = "font-weight: 800;"),
+              span(sprintf("There %s %d %s associated with the selected tool: '%s'.",
+                           is_are_current, tree_data$n_script, label_scripts_current, tree_data$selected_node_name_mod),
+                   style = "font-weight: 600;")
+          )
       )
     })
 
-    return(reactive({
-      list(confirmado = is_locked(), datos = rlist_tree())
-    }))
+    # --- OBJETO DE SALIDA (Reactivo) ---
+    # Este es el objeto que el mod_rscience_server recibirá
+    the_output <- reactive({
+      # Capturamos la info actual del árbol
+      tree_info <- rlist_tree()
+
+      # Construimos la lista final solicitada
+      list(
+        "description" = "*** Rscience - Tool selector ***",
+        "is_done"     = is_done(),   # TRUE/FALSE para el candado del sidebar
+        "is_locked"   = is_locked(), # TRUE/FALSE para el estado de la UI
+        "tree"        = tree_info    # Aquí va TODO: selected_node_name, path, script_id, etc.
+      )
+    })
+
+    # Render del Debug JSON para verificar la estructura en vivo
+    output$debug_json <- listviewer::renderJsonedit({
+      req(show_debug)
+      listviewer::jsonedit(listdata = the_output(), mode = "view")
+    })
+
+    # Retornamos el reactivo
+    return(the_output)
+
+    # Debug JSON
+    output$debug_json <- listviewer::renderJsonedit({
+      req(show_debug)
+      listviewer::jsonedit(listdata = the_output(), mode = "view")
+    })
+
+    return(the_output)
   })
 }

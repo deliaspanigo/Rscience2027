@@ -14,7 +14,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   # Resultado final de todo el flujo
-  resultado_final <- mod_tools_server("my_tool")
+  resultado_final <- mod_tools_server(id = "my_tool", show_debug = T)
 
   observe({
     req(resultado_final()$confirmado)

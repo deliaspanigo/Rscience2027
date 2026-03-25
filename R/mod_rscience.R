@@ -91,6 +91,13 @@ mod_rscience_ui <- function(id) {
         #", ns("my_ns_dataset-preview"), " table.dataTable tbody tr:hover {
           background-color: #ccf5ff !important;
         }
+
+
+        @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.4; }
+        100% { opacity: 1; }
+}
       ")))
     ),
 
@@ -114,8 +121,8 @@ mod_rscience_ui <- function(id) {
                   hr(),
                   div(class = "section-title", "1. Setup Phase"),
                   input_switch(ns("sw_dataset"), label = tags$span(id = ns("label_dataset"), "Dataset Selection"), value = TRUE),
-                  input_switch(ns("sw_tool"),    label = tags$span(id = ns("label_tools"),    "Tool Engine")     , value = FALSE),
-                  input_switch(ns("sw_script"), "Script Engine", value = FALSE),
+                  input_switch(ns("sw_tool"),    label = tags$span(id = ns("label_tool"),    "Tool Engine")     , value = FALSE),
+                  input_switch(ns("sw_script"),    label = tags$span(id = ns("label_script"),    "Script Engine")     , value = FALSE),
                   hr(),
                   #######################################################################################
                   div(class = "section-title", "2. Information Phase"),
@@ -125,7 +132,7 @@ mod_rscience_ui <- function(id) {
                   hr(),
                   #######################################################################################
                   div(class = "section-title", "3. Data Analysis Phase"),
-                  input_switch(ns("sw_settings"), "Settings", value = FALSE),
+                  input_switch(ns("sw_settings"),    label = tags$span(id = ns("label_settings"),    "Settings")     , value = FALSE),
                   input_switch(ns("sw_shiny"), "Shiny Outputs", value = FALSE),
                   input_switch(ns("sw_asesor"), "Automatic Statistic Asesor (ASA)", value = FALSE),
                   #######################################################################################
@@ -260,160 +267,372 @@ mod_rscience_server <- function(id) {
 
     ############################################################################
     # 1. Módulos Internos
-    res_dataset <- mod_dataset_server(id="my_ns_dataset")
-    res_tool    <- mod_tools_server(id="my_ns_tool")
 
+    # 1.1 Dataset
+    res_dataset <- mod_dataset_server(id="my_ns_dataset")
+    dataset_is_locked <- reactive({
+      # 1. Capturamos el estado del módulo
+      data_mod <- res_dataset()
+
+      # 2. Si el módulo no ha devuelto nada (NULL), asumimos que NO está bloqueado
+      if (is.null(data_mod)) {
+        return(FALSE)
+      }
+
+      # 3. Verificamos el valor de is_locked de forma segura
+      # isTRUE() garantiza que si el valor es NA o NULL, devuelva FALSE
+      isTRUE(data_mod$is_locked)
+    })
+
+    # 1.2. Tool
+    res_tool    <- mod_tools_server(id="my_ns_tool")
+    tool_is_locked <- reactive({
+      # 1. Capturamos el estado del módulo
+      data_mod <- res_tool()
+
+      # 2. Si el módulo no ha devuelto nada (NULL), asumimos que NO está bloqueado
+      if (is.null(data_mod)) {
+        return(FALSE)
+      }
+
+      # 3. Verificamos el valor de is_locked de forma segura
+      # isTRUE() garantiza que si el valor es NA o NULL, devuelva FALSE
+      isTRUE(data_mod$is_locked)
+    })
+
+    # 1.3. Script
+    script_is_locked <- reactive({
+      T
+    })
+
+    # 1.4.
     resultados <- mod_PACK_settings_server(
       id = "my_ns_PACK_settings",
       df_input = reactive(mtcars),
       show_debug = TRUE
     )
+    settings_is_locked <- reactive({
+      T
+    })
 
-    ############################################################################
+    # Combined status for both Dataset and Tool
+    dataset_tool_are_locked <- reactive({
+      # Since both underlying reactives are already sanitized (TRUE/FALSE),
+      # we just need to verify that BOTH are TRUE.
 
-    # 1. Disable all
-    # 2. Enable only selected
-    mini_list <- list("is_ready" = NULL,
-                      "is_done" = NULL
-                      )
+      dataset_ok <-  isTRUE(dataset_is_locked()) # Returns TRUE/FALSE
+      tool_ok    <-  isTRUE(tool_is_locked())    # Returns TRUE/FALSE
 
-    list_default_steps <- list(
-      "step01" = c("details" = "Close all sw.", mini_list),
-      "step02" = c("details" = "Open sw dataset.", mini_list),
-      "step03" = c("details" = "Open sw tools.", mini_list),
-      "step04" = c("details" = "Open sw script.", mini_list),
-      "step05" = c("details" = "Check dataset and tools.", mini_list),
-      "step06" = c("details" = "Open sw theory.", mini_list),
-      "step07" = c("details" = "Open sw bibliography.", mini_list),
-      "step08" = c("details" = "Open sw cite.", mini_list),
-      "step09" = c("details" = "Control dataset, tool, and script.", mini_list),
-      "step10" = c("details" = "Open sw settings.", mini_list),
-      "step11" = c("details" = "Control dataset, tool, script and settings.", mini_list),
-      "step12" = c("details" = "Open sw shiny.", mini_list),
-      "step13" = c("details" = "Open sw asesor.", mini_list),
-      "step14" = c("details" = "Open sw script_comments.", mini_list),
-      "step15" = c("details" = "Open sw script_basic.", mini_list),
-      "step16" = c("details" = "Open sw script_reporting.", mini_list)
-      )
+      # Logical AND
+      return(dataset_ok && tool_ok)
+    })
 
-    rlist_stone_steps <- do.call(reactiveValues, list_default_steps)
-    # --- FUNCIONES DE SOPORTE ---
-    reset_the_stone01 <- function() {
-      for (name in names(list_default_steps)) {
-        rlist_stone_steps[[name]] <- list_default_steps[[name]]
-      }
-      message("--- [rlist_stone_steps] Reset completo ---")
+    dataset_tool_script_are_locked <- reactive({
+      # Usamos isTRUE para que si alguno es NULL/NA, el resultado sea FALSE y no un error
+      dataset_ok <- isTRUE(dataset_is_locked())
+      tool_ok    <- isTRUE(tool_is_locked())
+      script_ok  <- isTRUE(script_is_locked())
+
+      # Retorna TRUE solo si los tres están bloqueados (verdes)
+      return(dataset_ok && tool_ok && script_ok)
+    })
+
+    dataset_tool_script_settings_are_locked  <- reactive({
+      # Usamos isTRUE para que si alguno es NULL/NA, el resultado sea FALSE y no un error
+      dataset_ok <- isTRUE(dataset_is_locked())
+      tool_ok    <- isTRUE(tool_is_locked())
+      script_ok  <- isTRUE(script_is_locked())
+      settings_ok <- isTRUE(settings_is_locked())
+
+      # Retorna TRUE solo si los tres están bloqueados (verdes)
+      return(dataset_ok && tool_ok && script_ok && settings_ok)
+    })
+
+    # 1. Definición Plana de Estados (Evita colisiones de invalidación)
+    # Creamos un vector de nombres para automatizar la creación de reactiveValues
+    step_names <- sprintf("step%02d", 1:16)
+    initial_values <- list()
+    for(s in step_names) {
+      initial_values[[paste0(s, "_ready")]] <- FALSE
+      initial_values[[paste0(s, "_done")]]  <- FALSE
     }
 
+    rlist_stone_steps <- do.call(reactiveValues, initial_values)
 
+    # --- INICIO DEL FLUJO ---
+    observe({
+      rlist_stone_steps$step01_ready <- TRUE
+    })
 
-    observe({rlist_stone_steps$"step01"$"is_ready" <- TRUE})
+    # Step 01: Lockdown inicial
+    observeEvent(rlist_stone_steps$step01_ready, {
+      req(rlist_stone_steps$step01_ready, !rlist_stone_steps$step01_done)
 
-    # Step01 - Close all.
-    observeEvent(rlist_stone_steps$"step01"$"is_ready", {
       lapply(all_sw, shinyjs::disable)
-      rlist_stone_steps$"step02"$"is_ready" <- TRUE
+
+      rlist_stone_steps$step01_done  <- TRUE
+      rlist_stone_steps$step02_ready <- TRUE
     })
 
-    # Step02 - Open dataset
-    observeEvent(rlist_stone_steps$"step02"$"is_ready", {
-      lapply(c("sw_dataset"), shinyjs::enable)
-      rlist_stone_steps$"step03"$"is_ready" <- TRUE
+    # Step 02: Dataset Engine
+    observeEvent(rlist_stone_steps$step02_ready, {
+      req(rlist_stone_steps$step02_ready, !rlist_stone_steps$step02_done)
+
+      shinyjs::enable("sw_dataset")
+
+      rlist_stone_steps$step02_done  <- TRUE
+      rlist_stone_steps$step03_ready <- TRUE
     })
 
-    # Step03 - Open tools
-    observeEvent(rlist_stone_steps$"step03"$"is_ready", {
-      lapply(c("sw_tool"), shinyjs::enable)
-      rlist_stone_steps$"step04"$"is_ready" <- TRUE
+    # Step 03: Tool Engine
+    observeEvent(rlist_stone_steps$step03_ready, {
+      req(rlist_stone_steps$step03_ready, !rlist_stone_steps$step03_done)
+
+      shinyjs::enable("sw_tool")
+
+      rlist_stone_steps$step03_done  <- TRUE
+      # Aquí el flujo espera a que tool_is_locked() sea TRUE para el Step 04
     })
 
-    # Step04 - Open script
-    observeEvent(rlist_stone_steps$"step04"$"is_ready", {
-      lapply(c("sw_script"), shinyjs::enable)
-      rlist_stone_steps$"step05"$"is_ready" <- TRUE
+    # Step 04: Script Engine (Depende del Candado de Tool)
+    observe({
+      # Esta lógica debe ser reactiva al candado
+      status_tool <- isTRUE(tool_is_locked())
+
+      if(status_tool && rlist_stone_steps$step03_done) {
+        rlist_stone_steps$step04_ready <- TRUE
+      } else {
+        rlist_stone_steps$step04_ready <- FALSE
+        rlist_stone_steps$step04_done  <- FALSE
+        shinyjs::disable("sw_script")
+        updateCheckboxInput(session, "sw_script", value = FALSE)
+      }
     })
 
+    observeEvent(rlist_stone_steps$step04_ready, {
+      req(rlist_stone_steps$step04_ready, !rlist_stone_steps$step04_done)
 
-    # Step05 - Open script
-    observeEvent(rlist_stone_steps$"step05"$"is_ready", {
-      lapply(c("sw_script"), shinyjs::enable)
-      rlist_stone_steps$"step06"$"is_ready" <- TRUE
-    })
+      shinyjs::enable("sw_script")
 
-
-    # Step05 - "Check dataset and tools."
-    observeEvent(rlist_stone_steps$"step05"$"is_ready", {
-      #lapply(c("sw_script"), shinyjs::enable) ########### <---------------------------
-      rlist_stone_steps$"step06"$"is_ready" <- TRUE
-    })
-
-
-    # Step06 - "Open theory."
-    observeEvent(rlist_stone_steps$"step06"$"is_ready", {
-      lapply(c("sw_theory"), shinyjs::enable) ########### <---------------------------
-      rlist_stone_steps$"step07"$"is_ready" <- TRUE
-    })
-
-    # Step 07 - Open bibliography
-    observeEvent(rlist_stone_steps$step07$is_ready, {
-      lapply(c("sw_bibliography"), shinyjs::enable)
-      rlist_stone_steps$step08$is_ready <- TRUE
-    })
-
-    # Step 08 - Open cite
-    observeEvent(rlist_stone_steps$step08$is_ready, {
-      lapply(c("sw_cite"), shinyjs::enable)
-      rlist_stone_steps$step09$is_ready <- TRUE
-    })
-
-    # Step 09 - Control dataset, tool, and script
-    observeEvent(rlist_stone_steps$step09$is_ready, {
-      # Aquí iría la lógica de control, procedemos al siguiente paso
-      rlist_stone_steps$step10$is_ready <- TRUE
-    })
-
-    # Step 10 - Open sw settings
-    observeEvent(rlist_stone_steps$step10$is_ready, {
-      lapply(c("sw_settings"), shinyjs::enable)
-      rlist_stone_steps$step11$is_ready <- TRUE
-    })
-
-    # Step 11 - Control dataset, tool, script and settings
-    observeEvent(rlist_stone_steps$step11$is_ready, {
-      # Punto de control de integridad antes de resultados
-      rlist_stone_steps$step12$is_ready <- TRUE
-    })
-
-    # Step 12 - Open sw shiny
-    observeEvent(rlist_stone_steps$step12$is_ready, {
-      lapply(c("sw_shiny"), shinyjs::enable)
-      rlist_stone_steps$step13$is_ready <- TRUE
-    })
-
-    # Step 13 - Open sw asesor
-    observeEvent(rlist_stone_steps$step13$is_ready, {
-      lapply(c("sw_asesor"), shinyjs::enable)
-      rlist_stone_steps$step14$is_ready <- TRUE
-    })
-
-    # Step 14 - Open sw script_comments
-    observeEvent(rlist_stone_steps$step14$is_ready, {
-      lapply(c("sw_script_comments"), shinyjs::enable)
-      rlist_stone_steps$step15$is_ready <- TRUE
-    })
-
-    # Step 15 - Open sw script_basic
-    observeEvent(rlist_stone_steps$step15$is_ready, {
-      lapply(c("sw_script_basic"), shinyjs::enable)
-      rlist_stone_steps$step16$is_ready <- TRUE
-    })
-
-    # Step 16 - Open sw script_reporting
-    observeEvent(rlist_stone_steps$step16$is_ready, {
-      lapply(c("sw_reporting"), shinyjs::enable)
-      message("--- [FLOW COMPLETE] - All steps activated ---")
+      rlist_stone_steps$step04_done  <- TRUE
+      rlist_stone_steps$step05_ready <- TRUE # Habilita la fase de validación
     })
 
 
+    # Step 05: Check Dataset Tool y script (Filtro de seguridad)
+    observe({
+      # Esta lógica debe ser reactiva al candado
+      status_tool <- isTRUE(dataset_tool_script_are_locked())
+      is_ready <- isTRUE(rlist_stone_steps$step05_ready)
+
+      if(status_tool && is_ready) {
+        rlist_stone_steps$step05_done <- TRUE
+      } else {
+        rlist_stone_steps$step05_ready <- FALSE
+        rlist_stone_steps$step05_done  <- FALSE
+        #shinyjs::disable("sw_script")
+        #updateCheckboxInput(session, "sw_script", value = FALSE)
+      }
+    })
+    observeEvent(rlist_stone_steps$step05_ready, {
+      req(rlist_stone_steps$step05_ready, !rlist_stone_steps$step05_done)
+
+      # Si llegamos aquí, la infraestructura base está lista
+      rlist_stone_steps$step05_done  <- TRUE
+      rlist_stone_steps$step06_ready <- TRUE
+    })
+
+    # --- FASE DE INFORMACIÓN: DESGLOSE SECUENCIAL ---
+
+    # Step 06: Theory Engine
+    observeEvent(rlist_stone_steps$step06_ready, {
+      req(rlist_stone_steps$step06_ready, !rlist_stone_steps$step06_done)
+
+      shinyjs::enable("sw_theory")
+
+      # Marcamos como hecho y preparamos el siguiente
+      rlist_stone_steps$step06_done  <- TRUE
+      rlist_stone_steps$step07_ready <- TRUE
+    })
+
+    # Step 07: Bibliography Engine
+    observeEvent(rlist_stone_steps$step07_ready, {
+      req(rlist_stone_steps$step07_ready, !rlist_stone_steps$step07_done)
+
+      shinyjs::enable("sw_bibliography")
+
+      # Marcamos como hecho y preparamos el siguiente
+      rlist_stone_steps$step07_done  <- TRUE
+      rlist_stone_steps$step08_ready <- TRUE
+    })
+
+    # Step 08: Cite Engine
+    observeEvent(rlist_stone_steps$step08_ready, {
+      req(rlist_stone_steps$step08_ready, !rlist_stone_steps$step08_done)
+
+      shinyjs::enable("sw_cite")
+
+      # Marcamos como hecho y saltamos al control de la Fase de Análisis
+      rlist_stone_steps$step08_done  <- TRUE
+      rlist_stone_steps$step09_ready <- TRUE
+    })
+
+    # Step 09: Control de Paso a Settings
+    observeEvent(rlist_stone_steps$step09_ready, {
+      req(rlist_stone_steps$step09_ready)
+
+      # Aquí habilitamos Settings una vez que la Fase de Info está desplegada
+      shinyjs::enable("sw_settings")
+
+      rlist_stone_steps$step09_done  <- TRUE
+      # El Step 10 se activará solo cuando settings_is_locked() sea TRUE
+    })
+
+    observe({
+      # Esta lógica debe ser reactiva al candado
+      status_tool <- isTRUE(dataset_tool_script_are_locked())
+      is_ready <- isTRUE(rlist_stone_steps$step09_ready)
+
+      if(status_tool && is_ready) {
+        rlist_stone_steps$step05_done <- TRUE
+      } else {
+        rlist_stone_steps$step05_ready <- FALSE
+        rlist_stone_steps$step05_done  <- FALSE
+        #shinyjs::disable("sw_script")
+        #updateCheckboxInput(session, "sw_script", value = FALSE)
+      }
+    })
+    observeEvent(rlist_stone_steps$step05_ready, {
+      req(rlist_stone_steps$step05_ready, !rlist_stone_steps$step05_done)
+
+      # Si llegamos aquí, la infraestructura base está lista
+      rlist_stone_steps$step05_done  <- TRUE
+      rlist_stone_steps$step06_ready <- TRUE
+    })
+
+    # --- FASE DE ANÁLISIS (Steps 10-16) ---
+    observeEvent(rlist_stone_steps$step10_ready, {
+      req(rlist_stone_steps$step10_ready)
+
+      # Activación en cascada de herramientas de salida
+      lapply(c("sw_settings", "sw_shiny", "sw_asesor",
+               "sw_script_comments", "sw_script_basic", "sw_reporting"), shinyjs::enable)
+
+      message("--- [RScience] Analysis Phase Fully Enabled ---")
+    })
+
+
+    ##########################################
+
+    # Modificadores de sw (Feedback visual de progreso)
+    # Modificadores de sw (Feedback visual de seguridad)
+    observeEvent(dataset_is_locked(), {
+      # 1. Extraemos el contenido del reactivo del módulo
+      the_status <- dataset_is_locked()
+
+      # 2. Lógica de Iconos y Estados
+      if (the_status) {
+
+        # ESTADO: COMPLETADO (Candado Cerrado Verde)
+        shinyjs::runjs(sprintf(
+          "$('#%s').html('Dataset Selection <i class=\"fa fa-lock\" style=\"color:#28a745; margin-left:5px;\"></i>');",
+          ns("label_dataset")
+        ))
+
+        # Marcamos la lógica interna como terminada
+        rlist_stone_steps$step02$is_done <- TRUE
+
+      } else {
+
+        shinyjs::runjs(sprintf(
+          "$('#%s').html('Dataset Selection <i class=\"fa fa-lock-open\" style=\"color:#ff9100; margin-left:5px; animation: pulse 1.5s infinite;\"></i>');",
+          ns("label_dataset")
+        ))
+
+        #rlist_stone_steps$step02$is_done <- FALSE
+      }
+    })
+
+
+    observeEvent(tool_is_locked(), {
+      # 1. Extraemos el contenido del reactivo del módulo
+      the_status <- tool_is_locked()
+
+      # 2. Lógica de Iconos y Estados
+      if (the_status) {
+
+        # ESTADO: COMPLETADO (Candado Cerrado Verde)
+        shinyjs::runjs(sprintf(
+          "$('#%s').html('Tool Engine <i class=\"fa fa-lock\" style=\"color:#28a745; margin-left:5px;\"></i>');",
+          ns("label_tool")
+        ))
+
+        # Marcamos la lógica interna como terminada
+        rlist_stone_steps$step02$is_done <- TRUE
+
+      } else {
+
+        shinyjs::runjs(sprintf(
+          "$('#%s').html('Tool Engine <i class=\"fa fa-lock-open\" style=\"color:#ff9100; margin-left:5px; animation: pulse 1.5s infinite;\"></i>');",
+          ns("label_tool")
+        ))
+
+        #rlist_stone_steps$step02$is_done <- FALSE
+      }
+    })
+
+    observeEvent(script_is_locked(), {
+      # 1. Extraemos el contenido del reactivo del módulo
+      the_status <- script_is_locked()
+
+      # 2. Lógica de Iconos y Estados
+      if (the_status) {
+
+        # ESTADO: COMPLETADO (Candado Cerrado Verde)
+        shinyjs::runjs(sprintf(
+          "$('#%s').html('Script Engine <i class=\"fa fa-lock\" style=\"color:#28a745; margin-left:5px;\"></i>');",
+          ns("label_script")
+        ))
+
+        # Marcamos la lógica interna como terminada
+        rlist_stone_steps$step02$is_done <- TRUE
+
+      } else {
+
+        shinyjs::runjs(sprintf(
+          "$('#%s').html('Script Engine <i class=\"fa fa-lock-open\" style=\"color:#ff9100; margin-left:5px; animation: pulse 1.5s infinite;\"></i>');",
+          ns("label_script")
+        ))
+
+        #rlist_stone_steps$step02$is_done <- FALSE
+      }
+    })
+
+    observeEvent(settings_is_locked(), {
+      # 1. Extraemos el contenido del reactivo del módulo
+      the_status <- settings_is_locked()
+
+      # 2. Lógica de Iconos y Estados
+      if (the_status) {
+
+        # ESTADO: COMPLETADO (Candado Cerrado Verde)
+        shinyjs::runjs(sprintf(
+          "$('#%s').html('Settings <i class=\"fa fa-lock\" style=\"color:#28a745; margin-left:5px;\"></i>');",
+          ns("label_settings")
+        ))
+
+        # Marcamos la lógica interna como terminada
+        #rlist_stone_steps$step02$is_done <- TRUE
+
+      } else {
+
+        shinyjs::runjs(sprintf(
+          "$('#%s').html('Setting <i class=\"fa fa-lock-open\" style=\"color:#ff9100; margin-left:5px; animation: pulse 1.5s infinite;\"></i>');",
+          ns("label_settings")
+        ))
+
+        #rlist_stone_steps$step02$is_done <- FALSE
+      }
+    })
   })
 }
