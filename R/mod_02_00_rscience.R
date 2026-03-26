@@ -18,7 +18,7 @@ source(file.path(path_tool02, "sm01_var_selection.R"))
 source(file.path(path_tool02, "sm02_levels.R"))
 
 
-mod_rscience_ui <- function(id) {
+mod_02_00_rscience_ui <- function(id) {
   ns <- NS(id)
 
   # ID único para el contenedor raíz del motor
@@ -159,8 +159,8 @@ mod_rscience_ui <- function(id) {
             type = "hidden",
             tabPanelBody("tab_welcome", div(class="vh-100 d-flex align-items-center justify-content-center", h4("Select a module", class="text-muted"))),
             #######################################################################################
-            tabPanelBody("tab_dataset", div(class="p-3", mod_dataset_ui(ns("my_ns_dataset")))),
-            tabPanelBody("tab_tool", div(mod_tools_ui(ns("my_ns_tool")))),
+            tabPanelBody("tab_dataset", div(class="p-3", mod_02_01_dataset_ui(ns("my_ns_dataset")))),
+            tabPanelBody("tab_tool", div(mod_02_02_00_tool_ui(ns("my_ns_tool")))),
             tabPanelBody("tab_script", "Waiting for script..."),
             #######################################################################################
             tabPanelBody("tab_theory", "Waiting for Theory..."),
@@ -188,7 +188,7 @@ mod_rscience_ui <- function(id) {
 # ==============================================================================
 # MÓDULO RSCIENCE (SERVER)
 # ==============================================================================
-mod_rscience_server <- function(id) {
+mod_02_00_rscience_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -269,7 +269,7 @@ mod_rscience_server <- function(id) {
     # 1. Módulos Internos
 
     # 1.1 Dataset
-    res_dataset <- mod_dataset_server(id="my_ns_dataset")
+    res_dataset <- mod_02_01_dataset_server(id="my_ns_dataset")
     dataset_is_locked <- reactive({
       # 1. Capturamos el estado del módulo
       data_mod <- res_dataset()
@@ -285,7 +285,7 @@ mod_rscience_server <- function(id) {
     })
 
     # 1.2. Tool
-    res_tool    <- mod_tools_server(id="my_ns_tool")
+    res_tool    <- mod_02_02_00_tool_server(id="my_ns_tool")
     tool_is_locked <- reactive({
       # 1. Capturamos el estado del módulo
       data_mod <- res_tool()

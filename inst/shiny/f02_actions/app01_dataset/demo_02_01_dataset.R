@@ -13,7 +13,7 @@ ui <- fluidPage(
 
   titlePanel("Demo: Módulo de Importación de Datos"),
 
-  mod_import_ui("demo_import"),
+  mod_02_01_dataset_ui("demo_dataset"),
 
 
 )
@@ -21,7 +21,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
 
   # Llamamos al módulo
-  seleccion <- mod_import_server(id = "demo_import", show_debug = T)
+  seleccion <- mod_02_01_dataset_server(id = "demo_dataset", show_debug = T)
 
 
 }

@@ -9,12 +9,12 @@ devtools::load_all()
 # 3. APP PRINCIPAL
 # ==========================================
 ui <- fluidPage(
-  mod_tools_ui("my_tool")
+  mod_02_02_00_tool_ui("my_tool")
 )
 
 server <- function(input, output, session) {
   # Resultado final de todo el flujo
-  resultado_final <- mod_tools_server(id = "my_tool", show_debug = T)
+  resultado_final <- mod_02_02_00_tool_server(id = "my_tool", show_debug = T)
 
   observe({
     req(resultado_final()$confirmado)

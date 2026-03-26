@@ -6,7 +6,7 @@ library(listviewer)
 library(shiny)
 library(shinyjs)
 
-mod_tools_ui <- function(id) {
+mod_02_02_00_tool_ui <- function(id) {
   ns <- NS(id)
   root_sel <- paste0(".", ns("tools-container"))
 
@@ -92,7 +92,7 @@ mod_tools_ui <- function(id) {
         # 4. El Árbol (Motor de Selección)
         div(class = "map-section",
             div(id = ns("tree_wrapper"), class = "map-wrapper",
-                mod_tree_ui(ns("inner_tree"))
+                mod_02_02_01_tree_ui(ns("inner_tree"))
             )
         ),
 
@@ -104,7 +104,7 @@ mod_tools_ui <- function(id) {
   )
 }
 
-mod_tools_server <- function(id, show_debug = FALSE) {
+mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -114,7 +114,7 @@ mod_tools_server <- function(id, show_debug = FALSE) {
 
     # Importamos el servidor del árbol
     # rlist_tree ahora contiene la lista de info_nodo() del árbol
-    rlist_tree <- mod_tree_server("inner_tree")
+    rlist_tree <- mod_02_02_01_tree_server("inner_tree")
 
     # --- LÓGICA: BOTÓN CONFIRMAR ---
     observeEvent(input$btn_confirm, {
@@ -255,7 +255,7 @@ mod_tools_server <- function(id, show_debug = FALSE) {
     # Debug JSON
     output$debug_json <- listviewer::renderJsonedit({
       req(show_debug)
-      listviewer::jsonedit(listdata = the_output(), mode = "view")
+      listviewer::jsonedit(listdata = the_output(), mode = "text")
     })
 
     return(the_output)

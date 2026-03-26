@@ -12,14 +12,14 @@ ui <- fluidPage(
   # 1. Módulo LAUNCHPAD
   conditionalPanel(
     condition = "output.current_page == 'launchpad'",
-    mod_launchpad_ui("launchpad_v1")
+    mod_01_00_launchpad_ui("launchpad_v1")
   ),
 
   # 2. Módulo ENGINE
   conditionalPanel(
     condition = "output.current_page == 'engine'",
     div(style = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; background: white;",
-        mod_rscience_ui("engine_v1")
+        mod_02_00_rscience_ui("engine_v1")
     )
   )
 )
@@ -31,8 +31,8 @@ server <- function(input, output, session) {
 
   # --- INICIALIZACIÓN DE MÓDULOS ---
   # launchpad_res ahora es UNA sola función reactiva que devuelve la lista
-  launchpad_res <- mod_launchpad_server("launchpad_v1", show_debug = TRUE)
-  mod_rscience_server("engine_v1")
+  launchpad_res <- mod_01_00_launchpad_server("launchpad_v1", show_debug = FALSE)
+  mod_02_00_rscience_server("engine_v1")
 
   # --- LÓGICA DE NAVEGACIÓN: Launchpad -> Engine ---
   observeEvent(launchpad_res(), {

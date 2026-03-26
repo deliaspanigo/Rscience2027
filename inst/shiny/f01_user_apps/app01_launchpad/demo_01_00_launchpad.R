@@ -3,7 +3,7 @@ devtools::load_all()
 ui <- fluidPage(
   theme = bs_theme(version = 5, bootswatch = "flatly", primary = "#00d4ff"),
 
-  mod_launchpad_ui("launchpad_instancia_1")
+  mod_01_00_launchpad_ui("launchpad_instancia_1")
 
 
 
@@ -12,7 +12,7 @@ ui <- fluidPage(
 
 
 server <- function(input, output, session) {
-  mod_launchpad_server(id = "launchpad_instancia_1", show_debug = T)
+  mod_01_00_launchpad_server(id = "launchpad_instancia_1", show_debug = T)
 
 
 

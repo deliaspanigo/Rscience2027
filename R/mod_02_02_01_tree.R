@@ -10,7 +10,7 @@ library(listviewer)
 # MÓDULO: EXPLORADOR DE ÁRBOL RScience (UI)
 # ==========================================
 
-mod_tree_ui <- function(id) {
+mod_02_02_01_tree_ui <- function(id) {
   ns <- NS(id)
   module_id <- ns("module-wrapper")
 
@@ -136,7 +136,7 @@ mod_tree_ui <- function(id) {
   )
 }
 
-mod_tree_server <- function(id, show_debug = FALSE) {
+mod_02_02_01_tree_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 

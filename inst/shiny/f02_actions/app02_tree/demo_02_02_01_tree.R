@@ -14,13 +14,13 @@ ui <- fluidPage(
   ),
 
   # El módulo absorberá el 100% del espacio restante
-  mod_tree_ui("tree_module"),
+  mod_02_02_01_tree_ui("tree_module"),
 
   "AVERR"
 )
 
 server <- function(input, output, session) {
-  seleccion <- mod_tree_server("tree_module", show_debug = T)
+  seleccion <- mod_02_02_01_tree_server("tree_module", show_debug = T)
 }
 
 shinyApp(ui, server)

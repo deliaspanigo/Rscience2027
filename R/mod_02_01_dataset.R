@@ -9,7 +9,7 @@ library("vroom")
 library("readxl")
 library("bslib")
 
-mod_dataset_ui <- function(id) {
+mod_02_01_dataset_ui <- function(id) {
   ns <- NS(id)
   root_sel <- paste0(".", ns("import-container"))
 
@@ -168,7 +168,7 @@ mod_dataset_ui <- function(id) {
 # ==============================================================================
 # IMPORT MODULE SERVER - v.0.1.0 (CORRECTED)
 # ==============================================================================
-mod_dataset_server <- function(id, show_debug = FALSE) {
+mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 

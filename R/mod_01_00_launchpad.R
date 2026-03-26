@@ -4,7 +4,7 @@
 library("bslib")
 library("shiny")
 
-mod_launchpad_ui <- function(id) {
+mod_01_00_launchpad_ui <- function(id) {
   ns <- NS(id)
   wrapper_id <- ns("launch_wrapper")
 
@@ -125,7 +125,7 @@ mod_launchpad_ui <- function(id) {
   )
 }
 
-mod_launchpad_server <- function(id, show_debug = FALSE) {
+mod_01_00_launchpad_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
