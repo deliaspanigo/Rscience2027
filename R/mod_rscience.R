@@ -305,6 +305,9 @@ mod_rscience_server <- function(id) {
     script_is_locked <- reactive({
       T
     })
+    selected_script_tool_subfolder <- reactive({
+        "tool_0001_script_001"
+    })
 
     # 1.4.
     # --- En mod_rscience_server ---
