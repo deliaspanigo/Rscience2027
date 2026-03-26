@@ -8,6 +8,20 @@ mod_01_00_launchpad_ui <- function(id) {
   ns <- NS(id)
   wrapper_id <- ns("launch_wrapper")
 
+  ##############################################################################
+  # 1. REFERENCIA A RECURSOS EXTERNOS (Imágenes en la lib)
+  # Buscamos la carpeta www del paquete instalado
+  lib_www_path <- system.file("www", package = "Rscience2027")
+
+  # Si no está instalado (dev), buscamos en el repo
+  if (lib_www_path == "") lib_www_path <- "www"
+
+  # Creamos el túnel para Shiny
+  addResourcePath("lib_www", lib_www_path)
+
+  ##############################################################################
+
+
   tagList(
     tags$head(
       tags$style(HTML(paste0("
@@ -83,7 +97,7 @@ mod_01_00_launchpad_ui <- function(id) {
     div(id = wrapper_id,
         div(class = "main-body",
             div(class = "left-panel",
-                img(src = "Rscience_logo_sticker.png", class = "floating-logo"),
+                img(src = "lib_www/Rscience_logo_sticker.png", class = "floating-logo"),
                 div(class = "text-center", style = "margin-top: -15px; margin-bottom: 25px;",
                     span("v.0.0.1", class = "badge bg-dark", style = "font-family: monospace;")),
 
@@ -129,7 +143,10 @@ mod_01_00_launchpad_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    base_path <- system.file("shiny/f01_user_apps/app01_launchpad/www", package = "Rscience2027")
+    base_path <- system.file("www", package = "Rscience2027")
+
+    #base_path <- system.file("shiny/f01_user_apps/app01_launchpad/www", package = "Rscience2027")
+    #base_path <-  lib_www
 
     # --- ESTADOS REACTIVOS ---
     nav_trigger     <- reactiveVal(0)
@@ -184,15 +201,34 @@ mod_01_00_launchpad_server <- function(id, show_debug = FALSE) {
 
     # --- LOGOS ---
     output$ui_institutions <- renderUI({
-      files <- list.files(file.path(base_path, "f01_institutions"))
+      # 1. R BUSCA EN EL DISCO (Ruta física)
+      # Usamos 'base_path' que definiste con system.file() al inicio del server
+      physical_path <- file.path(base_path, "f01_institutions")
+      files <- list.files(physical_path)
+
       if(length(files) == 0) return(NULL)
-      div(class = "marquee-content scroll-slow", lapply(c(files, files), function(f) img(src = paste0("f01_institutions/", f))))
+
+      # 2. EL NAVEGADOR BUSCA EN LA WEB (Alias)
+      div(class = "marquee-content scroll-slow",
+          lapply(c(files, files), function(f) {
+            img(src = paste0("lib_www/f01_institutions/", f))
+          })
+      )
     })
 
     output$ui_universities <- renderUI({
-      files <- list.files(file.path(base_path, "f02_universities"))
+      # 1. R BUSCA EN EL DISCO
+      physical_path <- file.path(base_path, "f02_universities")
+      files <- list.files(physical_path)
+
       if(length(files) == 0) return(NULL)
-      div(class = "marquee-content scroll-fast", lapply(c(files, files), function(f) img(src = paste0("f02_universities/", f))))
+
+      # 2. EL NAVEGADOR BUSCA EN LA WEB
+      div(class = "marquee-content scroll-fast",
+          lapply(c(files, files), function(f) {
+            img(src = paste0("lib_www/f02_universities/", f))
+          })
+      )
     })
 
     # --- MODALES ---

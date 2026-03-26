@@ -4,13 +4,13 @@
 library("bslib")
 library("shiny")
 
-path_tool <- system.file("shiny", "fn03_tool_script", "tool_0001_script_001", "f01_settings",
+path_tool <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts", "f04_settings",
                          package = "Rscience2027")
 
 # Para cargar el pack_module.R específicamente:
 source(file.path(path_tool, "mod_PACK_settings.R"))
 
-path_tool02 <- system.file("shiny", "fn03_tool_script", "tool_0001_script_001", "f01_settings", "sub_module",
+path_tool02 <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts", "f04_settings", "sub_module",
                            package = "Rscience2027")
 
 # Para cargar el pack_module.R específicamente:
@@ -23,6 +23,19 @@ mod_02_00_rscience_ui <- function(id) {
 
   # ID único para el contenedor raíz del motor
   wrapper_id <- ns("engine_wrapper")
+
+  ##############################################################################
+  # 1. REFERENCIA A RECURSOS EXTERNOS (Imágenes en la lib)
+  # Buscamos la carpeta www del paquete instalado
+  lib_www_path <- system.file("www", package = "Rscience2027")
+
+  # Si no está instalado (dev), buscamos en el repo
+  if (lib_www_path == "") lib_www_path <- "www"
+
+  # Creamos el túnel para Shiny
+  addResourcePath("lib_www", lib_www_path)
+
+  ##############################################################################
 
   tagList(
     tags$head(
@@ -113,7 +126,7 @@ mod_02_00_rscience_ui <- function(id) {
               style = "height: 100vh; background: linear-gradient(180deg, #ffffff 0%, #e6faff 100%); border-right: 3px solid #00d4ff; display: flex; flex-direction: column; overflow: visible;",
 
               div(class = "text-center", style = "padding: 20px 0 5px 0;",
-                  img(src = "Rscience_logo_sticker.png", style = "width: 180px;")
+                  img(src = "lib_www/Rscience_logo_sticker.png", style = "width: 180px;")
               ),
 
               # Área de Switches
@@ -161,7 +174,7 @@ mod_02_00_rscience_ui <- function(id) {
             #######################################################################################
             tabPanelBody("tab_dataset", div(class="p-3", mod_02_01_dataset_ui(ns("my_ns_dataset")))),
             tabPanelBody("tab_tool", div(mod_02_02_00_tool_ui(ns("my_ns_tool")))),
-            tabPanelBody("tab_script", "Waiting for script..."),
+            tabPanelBody("tab_script", div(mod_02_03_00_script_ui(id=ns("my_ns_script")))),
             #######################################################################################
             tabPanelBody("tab_theory", "Waiting for Theory..."),
             tabPanelBody("tab_bibliography", "Waiting for bibliography..."),
@@ -302,6 +315,8 @@ mod_02_00_rscience_server <- function(id) {
     })
 
     # 1.3. Script
+    res_script <-   mod_02_03_00_script_server(id="my_ns_script") # Llamamos a la UI
+
     script_is_locked <- reactive({
       T
     })
