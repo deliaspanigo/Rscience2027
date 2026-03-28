@@ -1,0 +1,1405 @@
+---
+title: "Rscience - Anova - script06 - ASA"
+format: 
+  html:
+    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+
+    
+---
+
+
+```{r eval=TRUE, echo=TRUE} 
+library(plotly)
+library(tidyverse)
+load("R_obj_env_script01_anova_import_and_control.RData")
+load("R_obj_env_script02_anova_full_test.RData")
+load("R_obj_env_script03_anova_model.RData")
+load("R_obj_env_script04_anova_descriptive_rv.RData")
+load("R_obj_env_script05_anova_descriptive_residuals.RData")
+
+vector_all_obj_init <- ls(envir = .GlobalEnv)
+```
+
+
+## Section 14 - Data Analysis - Part 01 of 03
+We will take the p-values from the Shapiro-Wilk normality test for the residuals, the p-value from Bartlett's variance homogeneity test for the residuals, the p-value from the ANOVA test, and the number of statistical groups detected by the Tukey test.
+
+Using this information and the alpha value, we will assemble a general summary table of what has occurred in the data analysis. This table does not represent the final interpretation of the test but is a good start.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-z99"
+  const panel = document.getElementById('mi-z99');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[1].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-z99}
+### R Code
+
+```{r eval=TRUE, echo=TRUE}
+
+  # From Shapiro test ----------------------------------------------------------
+  p_value_normality_internal <- list_test_residuals_normality$"p.value"
+  
+  check_normality_ho_rejected  <- p_value_normality_internal < alpha_value
+  status_normality_ho   <- ifelse(test = check_normality_ho_rejected, 
+                                   yes = "Ho Rejected", 
+                                    no = "Ho no rejected")
+  
+  AQ_normality_rejected_ho <- ifelse(test = check_normality_ho_rejected, 
+                                      yes = "Yes", 
+                                       no = "No")
+    
+  AQ_normality_is_valid <- "Yes, it is."
+
+  p_value_normality_external <- ifelse(test = p_value_normality_internal < 0.01, 
+                                        yes = "<<0.01", 
+                                         no = as.character(p_value_normality_internal))
+  # From bartlett test ---------------------------------------------------------
+  p_value_homogeneity_internal  <- list_test_residuals_homogeneity$"p.value"
+  check_homogeneity_ho_rejected  <- p_value_homogeneity_internal < alpha_value
+  status_homogeneity_ho <- ifelse(test = check_homogeneity_ho_rejected, 
+                                   yes = "Ho Rejected", 
+                                    no = "Ho no rejected")
+  
+  AQ_homogeneity_rejected_ho <- ifelse(test = check_homogeneity_ho_rejected, 
+                                        yes = "Yes", 
+                                         no = "No")
+    
+  AQ_homogeneity_is_valid <- "Yes, it is."
+
+  p_value_homogeneity_external <- ifelse(test = p_value_normality_external < 0.01, 
+                                          yes = "<<0.01", 
+                                           no = as.character(p_value_normality_external))
+  
+  # Check for all requeriments -------------------------------------------------
+  check_ok_all_requeriments     <- sum(check_normality_ho_rejected, check_homogeneity_ho_rejected) == 0
+  AQ_all_requeriments_ok <- ifelse(test = check_ok_all_requeriments, 
+                                    yes = "Yes", 
+                                     no = "No")
+
+  # Anova ----------------------------------------------------------------------
+  p_value_anova_internal <- df_table_anova$"Pr(>F)"[1]
+  check_anova_ho_rejected <-   p_value_anova_internal < alpha_value
+  status_anova_ho <- ifelse(test = check_anova_ho_rejected, 
+                             yes = "Ho Rejected", 
+                              no = "Ho no rejected")
+  
+  AQ_anova_rejected_ho <- ifelse(test = check_anova_ho_rejected, 
+                                  yes = "Yes", 
+                                   no = "No")
+    
+  AQ_anova_is_valid <- ifelse(test = check_ok_all_requeriments, 
+                               yes = "Yes, it is.", 
+                                no = "No, is not!!!")
+  
+  p_value_anova_external <- ifelse(test = p_value_anova_internal < 0.01, 
+                                    yes = "<<0.01", 
+                                     no = as.character(p_value_anova_internal))
+  
+  # Tukey ----------------------------------------------------------------------
+  amount_groups_tukey <- length(unique(tukey01_full_groups$groups))
+  check_tukey_groups      <- amount_groups_tukey >= 2
+  status_tukey <- ifelse(test = check_tukey_groups, 
+                          yes = "At least two groups of means.", 
+                           no = "Only one group.")
+  
+  AQ_tukey_groups <- ifelse(test = check_tukey_groups, 
+                             yes = "Yes", 
+                              no = "No")
+    
+  AQ_tukey_is_valid <- ifelse(test = check_ok_all_requeriments && check_anova_ho_rejected, 
+                               yes = "Yes, it is.", 
+                                no = "No, is not!!!")
+
+  # Anova and Tukey ----------------------------------------------------------------------
+  check_anova_tukey_coherence      <- check_anova_ho_rejected == check_tukey_groups
+  check_anova_yes_tukey_no <- check_anova_ho_rejected  & (!check_tukey_groups)
+  check_anova_no_tukey_yes <- !check_anova_yes_tukey_no
+
+  # DF summary ----------------------------------------------------------------------
+  vector_p_value_internal <- c(p_value_normality_internal, p_value_homogeneity_internal, p_value_anova_internal)
+  vector_p_value_external <- c(p_value_normality_external, p_value_homogeneity_external, p_value_anova_external)
+  vector_logic_rejected <- vector_p_value_internal < alpha_value
+  vector_ho_decision <- ifelse(test = vector_logic_rejected, yes = "Ho Rejected", "Ho no rejected")
+  vector_ho_rejected <- ifelse(test = vector_logic_rejected, yes = "Yes", "No")
+  
+  df_summary_anova <- data.frame(
+    "name"        = c("Shapiro-Wilk test"       , "Bartlett test"             , "Anova 1 way"         , "Tukey"),
+    "test"        = c("Normality"               , "Homogeneity"               , "Analysis of Variance", "Mean groups"),
+    "variable"    = c("residuals"               , "residuals"                 , var_name_rv           , var_name_rv),
+    "p_value"     = c(p_value_normality_internal, p_value_homogeneity_internal, p_value_anova_internal, NA),
+    "alpha_value" = c(alpha_value               , alpha_value                 , alpha_value           , alpha_value),
+    "Decision"    = c(status_normality_ho       , status_homogeneity_ho       , status_anova_ho       , status_tukey),
+    "Valid"       = c(AQ_normality_is_valid     , AQ_homogeneity_is_valid     , AQ_anova_is_valid     , AQ_tukey_is_valid)
+  )
+  
+  df_summary_anova
+```
+
+### Table
+As this is a particularly important table, we will indulge ourselves by detailing it in a beautiful manner as well.
+```{r eval=TRUE, echo=FALSE}
+
+knitr::kable(df_summary_anova, 
+             align = c('l', 'l', 'c', 'r', 'r', 'c', 'c'))
+```
+:::
+
+
+## Section 15 - Data Analysis - Part 02 of 03
+So far, we have a summary table, organized with general information for the test interpretation. We will now generate the first batch of automatic explanatory phrases for each separate test.
+
+
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-z02"
+  const panel = document.getElementById('mi-z02');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[1].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-z02}
+####  R Code
+
+##### Normality test for residuals
+We will assemble a minimal phrase with two possible cases.
+```{r eval=TRUE, echo=TRUE}
+  phrase01_normality_yes_rejected <- "
+The null hypothesis of normal distribution of residuals is rejected.
+"
+
+  phrase01_normality_no_rejected  <- "
+The null hypothesis of normal distribution of residuals is not rejected.
+"
+  phrase01_normality_selected     <- ifelse(test = check_normality_ho_rejected, 
+                                           yes = phrase01_normality_yes_rejected, 
+                                            no = phrase01_normality_no_rejected)
+  
+  cat(phrase01_normality_selected)
+```
+  
+We will assemble a second phrase with a more detailed explanation.
+```{r eval=TRUE, echo=TRUE}
+phrase02_normality_yes_rejected <- "
+The p value about normality distibution is _p_value_.  
+Alpha value is _alpha_value_.  
+The p value is less than alpha value.  
+The null hypothesis of normal distribution of residuals is rejected.  
+Los residuos no poseen distribución normal.
+"
+
+phrase02_normality_no_rejected  <- "
+The p value about normality distibution is _p_value_.  
+Alpha value is _alpha_value_.  
+The p value is equal or mayor than alpha value.  
+The null hypothesis of normal distribution of residuals is not rejected.  
+Los residuos poseen distribución normal.
+"
+
+phrase02_normality_selected     <- ifelse(test = check_normality_ho_rejected, 
+                                        yes = phrase02_normality_yes_rejected, 
+                                        no = phrase02_normality_no_rejected)
+
+replacements_normality <- c(
+  "_p_value_" = as.character(p_value_normality_internal),
+  "_alpha_value_" = as.character(alpha_value)
+)
+
+# 2. Realizar el reemplazo múltiple
+phrase02_normality_selected <- str_replace_all(
+  string = phrase02_normality_selected,
+  pattern = replacements_normality
+)
+
+cat(phrase02_normality_selected)
+
+```
+
+##### Homogeneity test for residuals
+
+```{r eval=TRUE, echo=TRUE}
+  phrase01_homogeneity_yes_rejected <- "
+The hypothesis of homogeneity of variances (homoscedasticity) is rejected.
+"
+  phrase01_homogeneity_no_rejected  <- "
+  The hypothesis of homogeneity of variances (homoscedasticity) is not rejected.
+"
+  
+  phrase01_homogeneity_selected     <- ifelse(test = check_homogeneity_ho_rejected, 
+                                         yes = phrase01_homogeneity_yes_rejected, 
+                                         no = phrase01_homogeneity_no_rejected)
+  
+  cat(phrase01_homogeneity_selected)
+```
+
+We define a second phrase with a more detailed explanation.
+```{r eval=TRUE, echo=TRUE}
+  phrase02_homogeneity_yes_rejected <- "
+The p value about homogeneity variances from residuals is _p_value_.  
+Alpha value is _alpha_value_.  
+The p value is less than alpha value.  
+The null hypothesis of homogeneity of variances from residuals is rejected.  
+Los residuos son homogeneos.
+"
+
+  phrase02_homogeneity_no_rejected  <- "
+The p value about normality distibution is _p_value_.  
+Alpha value is _alpha_value_.  
+The p value is equal or mayor than alpha value.  
+The null hypothesis of normal distribution of residuals is not rejected.  
+Los residuos son homogeneos."
+
+  phrase02_homogeneity_selected     <- ifelse(test = check_homogeneity_ho_rejected, 
+                                         yes = phrase02_homogeneity_yes_rejected, 
+                                         no = phrase02_homogeneity_no_rejected)
+
+
+replacements_homogeneity <- c(
+  "_p_value_" = as.character(p_value_homogeneity_internal),
+  "_alpha_value_" = as.character(alpha_value)
+)
+
+# 2. Realizar el reemplazo múltiple
+phrase02_homogeneity_selected <- str_replace_all(
+  string = phrase02_homogeneity_selected,
+  pattern = replacements_homogeneity
+)
+
+  cat(phrase02_homogeneity_selected)
+```
+
+##### All requeriments
+We determine a short phrase to explain what occurs with the model requirements.
+```{r eval=TRUE, echo=TRUE} 
+  phrase01A_requeriments_yes_valid <- "
+All requirements for the model are met.
+"
+  phrase01A_requeriments_no_valid  <- "
+Not all requirements for the model are met.
+"
+  
+  phrase01A_requeriments_selected  <- ifelse(test = check_ok_all_requeriments, 
+                                          yes = phrase01A_requeriments_yes_valid, 
+                                          no = phrase01A_requeriments_no_valid)
+  
+  cat(phrase01A_requeriments_selected)  
+```  
+
+```{r eval=TRUE, echo=TRUE} 
+  phrase01B_requeriments_yes_valid <- "
+It is valid to draw conclusions from the ANOVA test.
+"
+  phrase01B_requeriments_no_valid  <- "
+It is NOT valid to draw conclusions from the ANOVA test.
+"
+  
+  phrase01B_requeriments_selected  <- ifelse(test = check_ok_all_requeriments, 
+                                          yes = phrase01B_requeriments_yes_valid, 
+                                          no = phrase01B_requeriments_no_valid)
+  
+  cat(phrase01B_requeriments_selected)  
+```  
+
+```{r eval=TRUE, echo=TRUE} 
+  phrase01C_requeriments_yes_valid <- "
+The analysis proceeds.
+"
+  phrase01C_requeriments_no_valid  <- "
+As the model requirements are not met, the ANOVA and Tukey analyses must be discarded, irrespective of the statistical values obtained. The literal and decontextualized interpretation of the ANOVA test and the Tukey test is detailed below for demonstrative purposes only, but holds no validity for drawing conclusions from them.
+"
+  
+  phrase01C_requeriments_selected  <- ifelse(test = check_ok_all_requeriments, 
+                                          yes = phrase01C_requeriments_yes_valid, 
+                                          no = phrase01C_requeriments_no_valid)
+  
+  cat(phrase01C_requeriments_selected)  
+```  
+
+We add a long phrase, which also details other topics for each case.
+```{r eval=TRUE, echo=TRUE} 
+  phrase02A_requeriments_yes_valid <- phrase01A_requeriments_yes_valid
+
+  phrase02A_requeriments_no_valid  <- phrase01A_requeriments_no_valid
+  
+  
+  phrase02A_requeriments_selected  <- ifelse(test = check_ok_all_requeriments, 
+                                          yes = phrase02A_requeriments_yes_valid, 
+                                          no = phrase02A_requeriments_no_valid)
+  
+  
+  cat(phrase02A_requeriments_selected)  
+```  
+
+We add a long phrase, which also details other topics for each case.
+```{r eval=TRUE, echo=TRUE} 
+  phrase02B_requeriments_yes_valid <- "
+All requirements for the model are met.
+"
+  phrase02B_requeriments_no_valid  <- "
+It is NOT valid to draw conclusions from the ANOVA test. This dataset must be analyzed with another statistical tool such as the Kruskal-Wallis test. If a more sophisticated tool is desired, the possibility of utilizing generalized linear mixed models, generalized linear models, generalized linear models, exact distribution linear models, etc., could be evaluated.
+"
+  phrase02B_requeriments_selected  <- ifelse(test = check_ok_all_requeriments, 
+                                          yes = phrase02B_requeriments_yes_valid, 
+                                          no = phrase02B_requeriments_no_valid)
+  
+  
+  cat(phrase02B_requeriments_selected)  
+```  
+
+We assemble one more phrase that will serve as a warning to the user that if the requirements are not met, the result of ANOVA and Tukey must not be interpreted.
+```{r eval=TRUE, echo=TRUE} 
+  phrase02C_requeriments_yes_valid <- "
+It is valid to draw conclusions from the ANOVA test
+"
+  phrase02C_requeriments_no_valid  <- "
+It is NOT valid to draw conclusions from the ANOVA test. As the model requirements are not met, the ANOVA and Tukey analyses must be discarded, irrespective of the statistical values obtained. The literal and decontextualized interpretation of the ANOVA test and the Tukey test is detailed below for demonstrative purposes only, but holds no validity for drawing conclusions from them.
+"
+  
+  phrase02C_requeriments_selected  <- ifelse(test = check_ok_all_requeriments, 
+                                          yes = phrase02C_requeriments_yes_valid, 
+                                          no = phrase02C_requeriments_no_valid)
+  
+  cat(phrase02C_requeriments_selected)  
+```  
+
+##### Anova test
+We define whether or not H0 for the ANOVA test is rejected.  
+We define a minimal phrase with two possible cases.
+```{r eval=TRUE, echo=TRUE} 
+
+  phrase01_anova_yes_rejected <- "
+The null hypothesis of the ANOVA test is rejected. 
+There are statistically significant differences in at least one level of the factor.
+"
+
+  phrase01_anova_no_rejected  <- "
+The null hypothesis of the ANOVA test is not rejected.
+All levels of the factor are statistically equal.
+"
+  
+  phrase01_anova_selected     <- ifelse(test = check_anova_ho_rejected, 
+                                      yes = phrase01_anova_yes_rejected, 
+                                      no = phrase01_anova_no_rejected)
+  
+
+ cat(phrase01_anova_selected)
+
+```
+
+Definimos una segunda frase con una explicación más detallada.
+```{r eval=TRUE, echo=TRUE} 
+
+  phrase02_anova_yes_rejected <- "
+The p-value for the ANOVA test is _p_value_. The alpha value is _alpha_value_. 
+The p-value is less than the alpha value. 
+The null hypothesis of equal means for the ANOVA test is rejected. 
+There are statistically significant differences in at least one level of the factor. 
+By rejecting the null hypothesis, the ANOVA test guarantees statistically significant differences in at least one level of the factor with the lowest mean and the level of the factor with the highest mean.
+"
+
+  phrase02_anova_no_rejected  <- "
+The p-value for the ANOVA test is _p_value_. 
+The alpha value is _alpha_value_. 
+The p-value is greater than or equal to the alpha value. 
+The null hypothesis of equal means for the ANOVA test is not rejected. 
+There are not statistically significant differences between the factor levels. 
+The observed differences between the factor levels occurred by chance. All factor levels are statistically equal.
+"
+
+  phrase02_anova_selected     <- ifelse(test = check_anova_ho_rejected, 
+                                      yes = phrase02_anova_yes_rejected, 
+                                      no = phrase02_anova_no_rejected)
+  
+replacements_anova <- c(
+  "_p_value_" = as.character(p_value_anova_internal),
+  "_alpha_value_" = as.character(alpha_value)
+)
+
+# 2. Realizar el reemplazo múltiple
+phrase02_anova_selected <- str_replace_all(
+  string = phrase02_anova_selected,
+  pattern = replacements_anova
+)
+
+  cat(phrase02_anova_selected)
+
+```
+
+
+##### Tukey test
+Definimos una frase mínima con dos casos posibles.
+```{r eval=TRUE, echo=TRUE} 
+
+  phrase01A_tukey_yes_groups <- "
+Since the ANOVA null hypothesis is rejected, the use of a multiple comparison test to accompany the ANOVA test is valid.
+"
+  phrase01A_tukey_no_groups  <- "
+Since the ANOVA null hypothesis is not rejected, the use of a multiple comparison test is not valid.
+"
+  phrase01A_tukey_selected     <- ifelse(test = check_anova_ho_rejected, 
+                                      yes = phrase01A_tukey_yes_groups, 
+                                      no = phrase01A_tukey_no_groups)
+  
+
+  cat(phrase01A_tukey_selected)
+
+```
+
+```{r eval=TRUE, echo=TRUE} 
+
+  phrase01B_tukey_yes_groups <- "
+The Tukey test is selected as the multiple comparison test for this script.
+"
+  phrase01B_tukey_no_groups  <- "
+The literal and decontextualized interpretation of the Tukey test is detailed below for demonstrative purposes only, but holds no validity for drawing conclusions from them.
+"
+  phrase01B_tukey_selected     <- ifelse(test = check_anova_ho_rejected, 
+                                      yes = phrase01B_tukey_yes_groups, 
+                                      no = phrase01B_tukey_no_groups)
+  
+
+  cat(phrase01B_tukey_selected)
+
+```
+
+```{r eval=TRUE, echo=TRUE} 
+
+  phrase01C_tukey_yes_groups <- "
+The Tukey test indicates that there are at least 2 groups among the factor levels. 
+The number of groups and their structure must be analyzed in detail using the Tukey table.
+"
+  phrase01C_tukey_no_groups  <- "
+The Tukey test indicates that there is only one statistical group among the factor levels.
+"
+  phrase01C_tukey_selected     <- ifelse(test = check_tukey_groups, 
+                                      yes = phrase01C_tukey_yes_groups, 
+                                      no = phrase01C_tukey_no_groups)
+  
+
+  cat(phrase01C_tukey_selected)
+
+```
+
+
+Definimos una segunda frase con una explicación más detallada.
+```{r eval=TRUE, echo=TRUE} 
+
+  phrase02A_tukey_yes_groups <- phrase01A_tukey_yes_groups
+
+  phrase02A_tukey_no_groups  <- phrase01A_tukey_no_groups
+  
+  phrase02A_tukey_selected     <- ifelse(test = check_anova_ho_rejected, 
+                                      yes = phrase02A_tukey_yes_groups, 
+                                      no = phrase02A_tukey_no_groups)
+  
+
+  cat(phrase02A_tukey_selected)
+
+```
+
+```{r eval=TRUE, echo=TRUE} 
+
+  phrase02B_tukey_yes_groups <- phrase01B_tukey_yes_groups
+
+  phrase02B_tukey_no_groups  <- phrase01B_tukey_no_groups
+  
+  phrase02B_tukey_selected     <- ifelse(test = check_anova_ho_rejected, 
+                                      yes = phrase02B_tukey_yes_groups, 
+                                      no = phrase02B_tukey_no_groups)
+  
+
+  cat(phrase02B_tukey_selected)
+
+```
+
+```{r eval=TRUE, echo=TRUE} 
+
+  phrase02C_tukey_yes_groups <- "
+The Tukey test details at least 2 statistically different groups. 
+The group structure detailed by the Tukey test must now be considered in order to provide a recommendation in your area of work.
+"
+
+  phrase02C_tukey_no_groups  <- "
+The Tukey test details that all factor levels form a single group. 
+From the Tukey perspective, all factor levels are statistically equal.
+"
+
+  phrase02C_tukey_selected     <- ifelse(test = check_tukey_groups, 
+                                      yes = phrase02C_tukey_yes_groups, 
+                                      no = phrase02C_tukey_no_groups)
+  
+  
+  cat(phrase02C_tukey_selected)
+
+```
+
+##### Anova and Tukey relation
+It might occur that both analyses are not coherent with each other, in the sense that one detects differences between the factor levels and the other does not, or vice versa. 
+ANOVA is a more powerful test than any multiple comparison test; therefore, ANOVA always has the final word regarding the factor levels. That is why we generate a particular phrase to account for this point.
+```{r eval=TRUE, echo=TRUE} 
+
+  phrase01_anova_yes_tukey_no <- "
+ANOVA indicates that there are at least two groups, while Tukey indicates there is only one statistical group. 
+Irrespective of Tukey's failure to find groups, since the ANOVA null hypothesis was rejected, it can still be stated that there are statistically significant differences between the factor level with the highest mean and the factor level with the lowest mean.
+"
+
+  phrase01_anova_no_tukey_yes  <- "
+ANOVA indicates that all factor levels are equal, while Tukey has found at least 2 groups. 
+Tukey is subject to the rejection of the ANOVA hypothesis. Since the ANOVA null hypothesis is not rejected, the Tukey test must not be taken into account for decision-making. All factor levels are equal.
+"
+
+
+phrase01_anova_tukey_selected     <- ifelse(test = check_anova_yes_tukey_no,                                                                 yes = phrase01_anova_yes_tukey_no, 
+                                              no = phrase01_anova_no_tukey_yes)
+  
+
+  cat(phrase01_anova_tukey_selected)
+
+```
+
+```{r eval=TRUE, echo=TRUE} 
+
+  phrase02_anova_yes_tukey_no <- "
+Irrespective of Tukey's failure to find groups, since the ANOVA null hypothesis was rejected, it can at least be affirmed that there are statistically significant differences between the factor level with the highest mean and the factor level with the lowest mean.
+"
+
+  phrase02_anova_no_tukey_yes  <- "
+Irrespective of Tukey's finding groups, since the ANOVA null hypothesis was not rejected, all factor levels are equal.
+"
+
+
+phrase02_anova_tukey_selected     <- ifelse(test = check_anova_yes_tukey_no,                                                                 yes = phrase02_anova_yes_tukey_no, 
+                                              no = phrase02_anova_no_tukey_yes)
+  
+
+  cat(phrase01_anova_tukey_selected)
+
+```
+
+We now have an entire set of outputs with short phrases that can be used in different parts of the report.
+```{r eval=TRUE, echo=TRUE}
+cat(phrase01_normality_selected, 
+    phrase01_homogeneity_selected,
+    phrase01A_requeriments_selected,
+    phrase01B_requeriments_selected,
+    phrase01C_requeriments_selected,
+    phrase01_anova_selected,
+    phrase01A_tukey_selected,
+    phrase01B_tukey_selected,
+    phrase01C_tukey_selected,
+    phrase01_anova_tukey_selected)
+
+```
+
+And a second set comprised of longer phrases that serve to accompany statistical results or to properly assemble a paragraph or a page of the report.
+
+```{r eval=TRUE, echo=TRUE}
+cat(phrase02_normality_selected, 
+    phrase02_homogeneity_selected,
+    phrase02A_requeriments_selected,
+    phrase02B_requeriments_selected,
+    phrase02C_requeriments_selected,
+    phrase02_anova_selected,
+    phrase02A_tukey_selected,
+    phrase02B_tukey_selected,
+    phrase02C_tukey_selected,
+    phrase02_anova_tukey_selected)
+
+```
+
+####  Phrases
+The first phrase is short, and serves to summarize. Without details.
+```{r eval=TRUE, echo=FALSE}
+cat(phrase01_normality_selected, 
+    phrase01_homogeneity_selected,
+    phrase01A_requeriments_selected,
+    phrase01B_requeriments_selected,
+    phrase01C_requeriments_selected,
+    phrase01_anova_selected,
+    phrase01A_tukey_selected,
+    phrase01B_tukey_selected,
+    phrase01C_tukey_selected,
+    phrase01_anova_tukey_selected)
+
+```
+
+The second phrase is longer and serves to help the operator (you) appropriately interpret the p-value obtained for the Shapiro-Wilk normality test applied to the residuals.
+```{r eval=TRUE, echo=FALSE}
+cat(phrase02_normality_selected, 
+    phrase02_homogeneity_selected,
+    phrase02A_requeriments_selected,
+    phrase02B_requeriments_selected,
+    phrase02C_requeriments_selected,
+    phrase02_anova_selected,
+    phrase02A_tukey_selected,
+    phrase02B_tukey_selected,
+    phrase02C_tukey_selected,
+    phrase02_anova_tukey_selected)
+
+```
+:::
+
+
+
+
+
+
+## Section 16 - Data Analysis - Part 03 of 03
+In the previous sections, we assembled a simple table that successfully summarizes all the information from ANOVA in a broad sense.
+
+In part 02, we explicitly stated all decisions, and from that, we obtained a set of explanatory phrases that, separately, can accompany tables and graphs, and when put together, already form a good paragraph regarding our data.
+
+In this 3rd part, we will go further and structure the way a human statistical advisor thinks when facing an ANOVA test, and we will create an automated statistical advisor. The idea will be to obtain even more phrases and explanations of the statistical values obtained, but with some extra theoretical explanation when necessary and appropriate.
+
+The following section is called 'Order and Progress', and it deserves a few introductory words. The central, direct, and explicit purpose of the 'Order and Progress' section is to remove all the fog, magic, mystery, and fear surrounding data analysis for ANOVA. It will also be made evident that the order and progress achieved are not due to using R or any other software, but rather that the order and progress will be due to the clear and explicit manifestation of the purely statistical criteria, which are conspicuously absent in both statistics courses and modern scientific publications, while work scripts abound.
+
+The criteria could well be applied in any other software or even when calculating results by hand. At the end of the section, we hope that you acquire a much more insightful vision of how a human statistical advisor approaches decision-making, and that it helps you navigate waters that seem uncertain with complete confidence in what you should do.
+
+Having said that, let's begin.
+
+### Order and progress
+For decision-making, we must consider 3 aspects:  
+- Whether or not all the model requirements are met.  
+- Whether or not the ANOVA H0 is rejected.  
+- Whether or not at least 2 groups are found in the Tukey test.  
+
+Each aspect has 2 possibilities, and there are 3 aspects in total. Combinatorial theory thus indicates that we have 23=8 possible combinations. Any set of ANOVA statistical results obtained by any means falls into one case, and only one case, with no exceptions. Because all combinations where the model requirements are not met lead to the same outcome, these 8 cases can be directly summarized into 5 statistical cases.
+
+What we have done is move from having no idea what we might face when analyzing an ANOVA test, to knowing that only 5 possible cases exist and that each one of these cases can be perfectly typified. It is completely feasible to detail 5 cases with all their specifics, and then verify which case our data falls into.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-z33"
+  const panel = document.getElementById('mi-z33');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[1].click();
+  }
+});
+</script>
+```
+
+#### General Table of Cases
+::: {.panel-tabset #mi-z33}
+##### R Code
+
+```{r eval=TRUE, echo=TRUE}
+
+
+df_decision_cases_init <- data.frame(
+  "Statistic Case" =          c("Case 1"         , "Case 2"         , "Case 3"         , "Case 4"    , "Case 5"    ),
+  "All requeriments OK" =     c(  "No"           ,   "Yes"          ,  "Yes"           , "Yes"       ,  "Yes"      ),
+  "Anova rejected" =          c("No/Yes"         ,   "No"           ,  "No"            , "Yes"       ,  "Yes"      ), 
+  "Tukey at least 2 groups" = c("No/Yes"         ,   "No"           ,  "Yes"           , "No"        ,  "Yes"      ),
+  "Decision" =                c("Decision Case 1", "Decision Case 2", "Decision Case 3", "Decision Case 4", "Decision Case 5")
+)
+
+df_decision_cases_init
+```
+
+#####  Table
+As this is a particularly important table, we will indulge ourselves by detailing it in a beautiful manner as well.
+```{r eval=TRUE, echo=FALSE}
+
+knitr::kable(x = df_decision_cases_init, 
+             caption = "", 
+             align = rep("c", ncol(df_decision_cases_init)))
+
+
+
+```
+:::
+
+
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-z55"
+  const panel = document.getElementById('mi-z55');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[2].click();
+  }
+});
+</script>
+```
+
+We will have this case structure for 4 specific themes:  
+Theme 1) General Overview and statistical theory.  
+Theme 2) Decision-making, specifications, and statistical theory of the Requirements.  
+Theme 3) Decision-making, specifications, and statistical theory of the ANOVA test.  
+Theme 4) Decision-making, specifications, and statistical theory of the Tukey test.  
+
+These 4 themes will be detailed for the 5 statistical cases. The 4 themes will be detailed for the 5 statistical cases as text within dataframe objects. There will be a total of 4×5=20 explanatory phrases that will be selected according to the case to which our data corresponds.
+
+
+#### The case of our data
+We already have the general framework of cases. We already have enough information to determine which case we are in, although we don't yet know what the consequences of that are. We will determine the case of our data, and then we will look at the consequences.
+
+
+::: {.panel-tabset #mi-z55}
+#####  R Code
+
+The following statements detect which case our results correspond to. First, we order the information from our analysis in the same order as the table.
+```{r eval=TRUE, echo = TRUE}
+vector_observed_details <- c(AQ_all_requeriments_ok, AQ_anova_rejected_ho,  AQ_tukey_groups)
+names(vector_observed_details) <- c("All_requeriments_ok", "anova_rejected_ho", "tukey_groups")
+vector_observed_details
+```
+
+Now we search for those characteristics in the table, and we detail the row:
+```{r eval=TRUE, echo = TRUE}
+selected_col <- 1:length(vector_observed_details) + 1
+
+# 2. Realizar la comparación elemento por elemento
+# Comparamos las columnas seleccionadas de df_decision_cases 
+# con los elementos de vector_observed_details
+match_matrix <- mapply(
+  function(pattern, text) {
+    grepl(pattern, text, fixed = TRUE)
+  }, 
+  pattern = vector_observed_details, 
+  text = df_decision_cases_init[, selected_col]
+)
+
+# 3. Identificar la fila donde *todos* los elementos coinciden
+# La coincidencia total se da cuando la suma de 'TRUE' (1) en una fila
+# es igual al número total de características (length(selected_col)).
+row_match_index <- which(rowSums(match_matrix) == length(selected_col))
+row_match_index
+
+```
+
+#####  Full table cases
+```{r eval=TRUE, echo=FALSE}
+
+knitr::kable(df_decision_cases_init)%>%
+    kableExtra::row_spec(
+    row = row_match_index, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+```
+
+#####  Selected Case
+```{r eval=TRUE, echo=FALSE}
+df_decision_cases_selected <- df_decision_cases_init[row_match_index, ]
+knitr::kable(df_decision_cases_selected)%>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+```
+:::
+Within the possible cases, our obtained results fall into <strong style="font-size: 1.2em;">case `r row_match_index`</strong>. 
+What we will do next is complete all the casuistry associated with each part of the analysis so that we can then simply visualize the interpretation of our particular case.
+
+### Automated Statistical Advisor - Theme 1) General Overview
+We begin by detailing the general overview and the aspects that a human statistical advisor commonly keeps in mind when analyzing the ANOVA test. What is provided is a global, summarized vision with theoretical details.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-tabset"
+  const panel = document.getElementById('mi-tabset');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[3].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-tabset}
+#####  R Code
+We form a dataframe in the R code that contains the set of statistical criteria to be considered when interpreting the ANOVA test in Theme 1) General Overview.
+```{r eval=TRUE, echo=TRUE}
+
+df_decision_cases_01_human <- df_decision_cases_init
+
+df_decision_cases_01_human$"Decision"[1] <- "When not all model requirements (Normality and/or Homogeneity) are met, the ANOVA analysis is immediately discarded. 
+This invalidation occurs irrespective of whether the failure is due to non-normality of the residuals, non-homogeneity, or both requirements. 
+Indistinctly of the statistical values obtained in the ANOVA test and the Tukey test, it is NOT valid to draw conclusions of any type; the entire analysis is completely discarded. 
+An alternative statistical tool or path must be sought to analyze the data, with the quickest recommended tool being the Kruskal-Wallis test, although a better analysis may allow for the use of more robust tools such as Generalized Linear Mixed Models or Exact Statistics; the alternative statistical path is to perform a transformation on the response variable and attempt the 1-Factor ANOVA test again. 
+The statistical options suggested must be verified and justified for their feasibility of use. Continuing with statistical interpretations without fulfilling the model's requirements is a serious error common among those new to statistics, and a common practice among those lacking the sufficient statistical knowledge to correctly analyze the reality they intend to study. If, despite all these warnings, you continue with the analysis, you expose your work to severe criticism from colleagues, evaluation committees, and publication reviewers."
+
+df_decision_cases_01_human$"Decision"[2] <- "As the model requirements are met, it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. The null hypothesis of ANOVA is not rejected. According to ANOVA, all means are statistically equal. The use of any multiple comparison test is subject to the rejection of the ANOVA null hypothesis; therefore, the use of any multiple comparison test to analyze this dataset, whether it be the Tukey test or any other, is immediately discarded. Statistical theory indicates that the ANOVA test is a more powerful test than any multiple comparison test. Although in this case the Tukey output coincides with the ANOVA view, the Tukey test is not valid in this context. Nothing should be said regarding the Tukey test or any multiple comparison test that one might wish to use. In this case, asserting that there are no differences because Tukey did not detect groups or asserting that the interpretation is stronger because ANOVA and Tukey coincide is an error, since it is not valid to draw conclusions from any multiple comparison test in this context. If the operator needs to make a recommendation, they should recommend any factor level equally. The fact of not rejecting the null hypothesis indicates that the mathematical differences between the means are due only to chance. Another way of saying this is that if the experiment were repeated a second time, there is a high probability that the mean values might even switch positions between factor levels with the same mean difference as occurred in the first experiment. It is a common and serious error to insist that there are differences somewhere within the factor levels when the model requirements are met and the ANOVA H0 is not rejected. The action by the operator (you) of insisting on differences when the null hypothesis was not rejected demonstrates a total lack of statistical knowledge for interpreting the obtained results. In summary, statistical theory indicates that if the model requirements are met, the ANOVA criterion is a superior decision-making criterion to any criterion the operator might determine. In this case, the statistical criterion is the correct one in any context."
+
+
+df_decision_cases_01_human$"Decision"[3] <- "As the model requirements are met, it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. The null hypothesis of ANOVA is not rejected. According to ANOVA, all means are statistically equal. The use of any multiple comparison test is subject to the rejection of the ANOVA null hypothesis; therefore, the use of any multiple comparison test to analyze this dataset, whether it be the Tukey test or any other, is immediately discarded. Statistical theory indicates that the ANOVA test is a more powerful test than any multiple comparison test. Although in this case you have a Tukey output that indicates groups, the Tukey test is not valid. Nothing should be said regarding the Tukey test or any multiple comparison test that one might wish to use. In this case, asserting that there are differences because Tukey detected groups or asserting that the interpretation of the Tukey test is stronger than ANOVA is a very serious error, since it is not valid to draw conclusions from any multiple comparison test in this context. If the operator needs to make a recommendation, they should recommend any factor level equally. The fact of not rejecting the null hypothesis indicates that the mathematical differences between the means are due only to chance. Another way of saying this is that if the experiment were repeated a second time, there is a high probability that the mean values might even switch positions between factor levels with the same mean difference as occurred in the first experiment. It is a common and serious error to insist that there are differences somewhere within the factor levels when the model requirements are met and the ANOVA H0​ is not rejected. The action by the operator (you) of insisting on differences between factor levels when the ANOVA null hypothesis was not rejected demonstrates a ** total lack of statistical knowledge** for interpreting the obtained results. In summary, statistical theory indicates that if the model requirements are met, the ANOVA criterion is a superior decision-making criterion to any criterion the operator might determine. In this case, the statistical criterion is the correct one in any context."
+
+df_decision_cases_01_human$"Decision"[4] <- "All ANOVA requirements are met, it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. The null hypothesis of ANOVA is rejected; there is at least one different mean, and the differences between the means are not only due to chance. At this point, ANOVA provides sufficient evidence to say that there are statistically significant differences between the factor level with the highest mean and the factor level with the lowest mean. By rejecting the null hypothesis of ANOVA, it is valid to interpret any chosen multiple comparison test, in this case the Tukey test. In this specific case, the Tukey test does not distinguish statistical groups even though ANOVA rejected the null hypothesis. Since ANOVA is a more powerful test than Tukey, it is affirmed that there are differences at least between the factor level with the largest mean and the factor level with the smallest one, and nothing can be said about the rest of the levels. It is a rare case, but it happens. Consider changing the multiple comparison test to another one, if appropriate, with the hope of being able to detect differences between factor levels with a different comparison test than Tukey. Statistical theory indicates that the statistical differences between factor levels may not be real or significant differences in the area of study. The operator (you) must contextualize the statistical information and decide with good judgment if the statistical differences are significant in the context of the work. In terms of practical analysis, the operator's criterion is superior to the statistical criterion."
+
+df_decision_cases_01_human$"Decision"[5] <- "All ANOVA requirements are met. The conclusions obtained from ANOVA are valid. The null hypothesis of ANOVA is rejected; there is at least one different mean, and the differences between the means are not only due to chance. At this point, ANOVA provides sufficient evidence to say that there are statistically significant differences between the factor level with the highest mean and the factor level with the lowest mean. By rejecting the null hypothesis of ANOVA, it is valid to interpret any chosen multiple comparison test, which in this opportunity is the Tukey test. In this case, the Tukey test distinguishes at least 2 statistical groups. The operator must observe the Tukey table and interpret the groups according to the letters assigned by the Tukey test, taking into account that Tukey can assign multiple letters to each factor level. The operator must make recommendations of factor levels taking into account the statistical framework and the original work framework. It is common to recommend the highest means or the lowest means according to the context of the data. In the context of Tukey, factor levels that share at least 1 letter are statistically equal. It takes some time to get used to correctly interpreting the Tukey table. There are also other contexts where the lowest or highest means are not necessarily sought, such as specifically looking for which factor levels are statistically equal to a particular level; the Tukey test can also be applied in this context. The operator (you) must contextualize the statistical information and decide with good judgment if the statistical differences are significant in the context of the work. In terms of practical analysis, the operator's criterion is superior to the statistical criterion."
+
+
+colnames(df_decision_cases_01_human)[ncol(df_decision_cases_01_human)] <- "General_Decision"
+```
+
+
+
+We can visualize the selected case in the R output.
+```{r eval=TRUE, echo = TRUE}
+df_selected_row_01_human <- df_decision_cases_01_human[row_match_index, ]
+df_selected_row_01_human
+```
+
+#####  Full table cases
+We detail our table with the 5 cases in a more aesthetic format. The row corresponding to our case of analysis will be highlighted in color.
+```{r eval=TRUE, echo = FALSE}
+
+my_df <- df_decision_cases_01_human
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = row_match_index, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+
+#####  Selected case
+We detail in a more aesthetic format only the case of analysis that applies to our data.
+```{r eval=TRUE, echo = FALSE}
+
+# 4. Extraer la fila o el resultado deseado
+
+
+my_df <-  df_selected_row_01_human
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+#####  ASA
+<div style="background-color: #ff8c00; padding: 15px; border-radius: 5px;">
+ Temática 1) Visión General
+ 
+```{r eval=TRUE, echo = FALSE}
+text_asa_01_human <- df_selected_row_01_human[1, ncol(df_selected_row_01_human)]
+knitr::kable(df_decision_cases_init)%>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+```
+`r text_asa_01_human`
+</div>
+:::
+
+
+
+
+### Automated Statistical Advisor - Theme 2) Model Requirements
+We begin by detailing the general overview and the aspects that a human statistical advisor commonly keeps in mind when analyzing the ANOVA test. What is provided is a global, summarized vision with theoretical details.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-tabset111"
+  const panel = document.getElementById('mi-tabset111');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[3].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-tabset111}
+##### R Code
+We form a dataframe in the R code that contains the set of statistical criteria to be considered when interpreting the ANOVA test.
+```{r eval=TRUE, echo=TRUE}
+
+df_decision_cases_02_model_requeriments <- df_decision_cases_init
+
+df_decision_cases_02_model_requeriments$"Decision"[1] <- "The ANOVA statistical test is based on 3 points for decision-making: shape, dispersion, and position. The shape is the normal distribution of the residuals. The dispersion is the homogeneous variances in the residuals, and the position is the mean of the response variable for one of the factor levels. By guaranteeing that the shape and dispersion of the residuals have a certain particular structure, ANOVA manages to test the position in the response variable. This is why the fulfillment of normality and homogeneity of variances of the residuals is a requirement, and only with the simultaneous fulfillment of both requirements is it valid to make an interpretation of the means. If all requirements are not met simultaneously, the ANOVA analysis must be discarded, irrespective of the results it may have yielded. There is no escape, and you must seek another statistical tool to interpret these results."
+
+df_decision_cases_02_model_requeriments$"Decision"[2] <- "As the model requirements are met, it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. The fact that the residuals possess normal distribution and homogeneity of variances is a characteristic that is often overlooked as a minor detail. What you are observing is a special characteristic of the data. In many contexts, thinking about why the factor level residuals are normal and homogeneous leads to ideas that had not been considered and greatly enriches the work being performed. Although ANOVA is a test for means, ANOVA is an abbreviation for 'Analysis of Variance' and not 'Analysis of Means', precisely because it manages to say something about the means through the analysis of variance decomposition. Therefore, thinking about the variances of the residuals can be an interesting idea."
+
+
+df_decision_cases_02_model_requeriments$"Decision"[3] <- df_decision_cases_02_model_requeriments$"Decision"[2]
+
+df_decision_cases_02_model_requeriments$"Decision"[4] <- df_decision_cases_02_model_requeriments$"Decision"[2]
+
+df_decision_cases_02_model_requeriments$"Decision"[5] <- df_decision_cases_02_model_requeriments$"Decision"[2]
+
+colnames(df_decision_cases_02_model_requeriments)[ncol(df_decision_cases_02_model_requeriments)] <- "Requeriments_Decision"
+```
+
+
+
+We can visualize the selected case in the R output.
+```{r eval=TRUE, echo = TRUE}
+df_selected_row_02_model_requeriments <- df_decision_cases_02_model_requeriments[row_match_index, ]
+df_selected_row_02_model_requeriments
+```
+
+##### Full table cases
+We detail our table with the 5 cases in a more aesthetic format. The row corresponding to our case of analysis will be highlighted in color.
+```{r eval=TRUE, echo = FALSE}
+
+my_df <- df_decision_cases_02_model_requeriments
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = row_match_index, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+
+##### Selected case
+We detail in a more aesthetic format only the case of analysis that applies to our data.
+```{r eval=TRUE, echo = FALSE}
+
+# 4. Extraer la fila o el resultado deseado
+
+
+my_df <-  df_decision_cases_02_model_requeriments
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+##### ASA
+<div style="background-color: #ff8c00; padding: 15px; border-radius: 5px;">
+Theme 2) Model Requirements
+
+```{r eval=TRUE, echo = FALSE}
+text_asa_02_model_requeriments <- df_selected_row_02_model_requeriments[1, ncol(df_selected_row_02_model_requeriments)]
+knitr::kable(df_decision_cases_selected)%>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+```
+`r text_asa_02_model_requeriments`
+</div>
+:::
+
+
+### Automated Statistical Advisor - Theme 3) ANOVA
+We begin by detailing the general overview and the aspects that a human statistical advisor commonly keeps in mind when analyzing the ANOVA test. What is provided is a global, summarized vision with theoretical details.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-tabset222"
+  const panel = document.getElementById('mi-tabset222');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[3].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-tabset222}
+#####  R Code
+We form a dataframe in the R code that contains the set of statistical criteria to be considered when interpreting the ANOVA test.
+```{r eval=TRUE, echo=TRUE}
+
+df_decision_cases_03_anova <- df_decision_cases_init
+
+df_decision_cases_03_anova$"Decision"[1] <- "The model requirements are not met. The ANOVA statistical test has the indispensable requirement of residual normality and homogeneity of variances. Both requirements must be met jointly for it to be valid to draw conclusions about the factor levels. Continuing with the statistical interpretation without fulfilling all the requirements is a catastrophic error. The ANOVA model requirements are neither optional nor can they be assumed. The model requirements are the fundamental basis upon which the ANOVA test relies to make decisions about the means of the factor levels. In this case, you must seek another statistical tool to perform the analysis of your data."
+
+df_decision_cases_03_anova$"Decision"[2] <- "As the model requirements are met, it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. The ANOVA null hypothesis is not rejected; therefore, there are no statistically significant differences between the factor levels. All factor levels are statistically equal. If a recommendation of factor levels is needed, all factor levels must be recommended equally. In the case where the model requirements are met and the null hypothesis is not rejected, the mathematical differences observed between the factor levels are due only to chance. This means that if the experiment were repeated, one of two scenarios could occur: Scenario 1) The differences between the means would be even smaller, and the order of the means could also change if the factor levels were ordered from highest to lowest. Scenario 2) The differences and the means remain, but the means fall into different factor levels, thus changing the order of the factor levels if they are ordered from highest to lowest. Statistical theory is very clear on this and indicates that in case the null hypothesis is not rejected, then no differences exist, and if the operator perceives differences visually (by eye), the statistical criterion prevails over the operator's criterion. Actions of insisting and arguing in favor of concepts such as 'marginal differences' or 'by eye' on the part of the operator constitute a serious statistical error that demonstrates a profound lack of statistical knowledge on the part of the operator.
+"
+
+
+df_decision_cases_03_anova$"Decision"[3] <- df_decision_cases_03_anova$"Decision"[2]
+
+
+df_decision_cases_03_anova$"Decision"[4] <- "As the model requirements are met, it is valid to interpret the ANOVA p-value. The conclusions obtained from ANOVA are valid. The ANOVA null hypothesis is rejected; therefore, statistically significant differences exist between the factor levels. The differences found between the factor levels are not due only to chance. There are at least two groups within the factor levels. ANOVA guarantees that there are statistically significant differences between the factor level with the lowest mean and the factor level with the highest mean. Only that. It says nothing about the rest of the factor levels. The use of any comparison test is subject to the rejection of the ANOVA null hypothesis. In this case, then, it is valid to use any multiple comparison test to try to visualize a group structure among the factor levels. If there is a discrepancy between the ANOVA test, which indicates that there are significant differences, and the operator, who does not see significant differences with the naked eye, statistical theory is very clear on the matter. In this framework, where ANOVA indicates differences and the operator's criterion says there are no differences, the operator's criterion always prevails, provided it is argued correctly and thoroughly. Since the ANOVA test is valid, and the ANOVA null hypothesis has been rejected, it is therefore valid to perform any multiple comparison test.
+"
+
+df_decision_cases_03_anova$"Decision"[5] <- df_decision_cases_03_anova$"Decision"[4]
+
+colnames(df_decision_cases_03_anova)[ncol(df_decision_cases_03_anova)] <- "Anova_Decision"
+```
+
+
+
+We can visualize the selected case in the R output.
+```{r eval=TRUE, echo = TRUE}
+df_selected_row_03_anova <- df_decision_cases_03_anova[row_match_index, ]
+df_selected_row_03_anova
+```
+
+##### Full table cases
+We detail our table with the 5 cases in a more aesthetic format. 
+The row corresponding to our case of analysis will be highlighted in color.
+```{r eval=TRUE, echo = FALSE}
+
+my_df <- df_decision_cases_03_anova
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = row_match_index, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+
+##### Selected case
+We detail in a more aesthetic format only the case of analysis that applies to our data.
+```{r eval=TRUE, echo = FALSE}
+
+# 4. Extraer la fila o el resultado deseado
+
+
+my_df <-  df_selected_row_03_anova
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+##### ASA
+<div style="background-color: #ff8c00; padding: 15px; border-radius: 5px;">
+ Theme 3) ANOVA
+ 
+```{r eval=TRUE, echo = FALSE}
+text_asa_03_anova <- df_selected_row_03_anova[1, ncol(df_selected_row_03_anova)]
+knitr::kable(df_decision_cases_selected)%>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+```
+`r text_asa_03_anova`
+</div>
+:::
+
+### Automated Statistical Advisor - Theme 4) Tukey
+We begin by detailing the general overview and the aspects that a human statistical advisor commonly keeps in mind when analyzing the ANOVA test. What is provided is a global, summarized vision with theoretical details.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Seleccionar SOLO el panel con ID "mi-tabset333"
+  const panel = document.getElementById('mi-tabset333');
+  if (!panel) return;
+
+  let tabs = panel.querySelectorAll('.nav a, .nav-link, [role="tab"]');
+
+  // Activar SOLO la segunda pestaña de este panel
+  if (tabs && tabs.length > 1) {
+    tabs[3].click();
+  }
+});
+</script>
+```
+
+::: {.panel-tabset #mi-tabset333}
+#####  R Code
+We form a dataframe in the R code that contains the set of statistical criteria to be considered when interpreting the ANOVA test.
+```{r eval=TRUE, echo=TRUE}
+
+df_decision_cases_04_tukey <- df_decision_cases_init
+
+df_decision_cases_04_tukey$"Decision"[1] <- "The use of the Tukey test is subject to the validity of the ANOVA model and the rejection of the ANOVA hypothesis. As the model requirements are not met, the ANOVA test is not valid, and therefore the Tukey test is not valid either. The information related to the Tukey test must be discarded. As detailed before, in this context, continuing with the statistical interpretation is a serious statistical error that demonstrates a total lack of statistical criteria for decision-making."
+
+df_decision_cases_04_tukey$"Decision"[2] <- "The use of the Tukey test is subject to the validity of the ANOVA model and the rejection of the ANOVA hypothesis. As the model is valid because the requirements are met, and the ANOVA null hypothesis has not been rejected, the use of not only Tukey but any other multiple comparison test is immediately discarded. All factor levels are statistically equal. In this Case 2, ANOVA and Tukey are coherent, in the sense that both detail that only one statistical group exists. The idea of asserting that the results have more weight because ANOVA and Tukey are coherent in only detecting one group is an error, since from the outset it is not valid to draw any conclusions or make any assertions based on any multiple comparison test, as the ANOVA null hypothesis has not been rejected.
+"
+
+
+df_decision_cases_04_tukey$"Decision"[3] <- "Aquí tiene la traducción del texto, manteniendo el formato de bloque continuo sin listas ni encabezados, y preservando el tono técnico y la explicación de la discrepancia.
+
+English Translation:
+
+The use of the Tukey test is subject to the validity of the ANOVA model and the rejection of the ANOVA hypothesis. As the model is valid because the requirements are met and the ANOVA null hypothesis has indeed been rejected, the possibility of using a multiple comparison test is immediately enabled. For our case, this is the Tukey test. When using the Tukey test, remember the importance of detailing in the R command whether or not there is an imbalance in the repetitions between the factor levels. In this Case 3, ANOVA and Tukey are not coherent, in the sense that ANOVA details that differences exist but Tukey does not find them. Statistical theory indicates that ANOVA always prevails over Tukey because ANOVA is a more powerful test; therefore, statistically significant differences exist at least between the factor level with the lowest mean and the factor level with the highest mean, and nothing can be said about the rest of the factor levels. In some contexts, this situation complicates the statistical interpretation or the ability to recommend factor levels. In such a case, if appropriate, it may help to use another multiple comparison test other than Tukey, with the idea of actually finding groups among the factor levels. The discrepancy between ANOVA and Tukey is not very common, but it is possible. Most cases occur primarily when the operator insists on running the statistical test without meeting the model requirements, or when the operator fails to specify in the R command that there is an imbalance in the factor levels so that Tukey can internally apply a correction to its estimation. But even when the requirements are met and the argument is specified correctly, there is a chance that this may occur, since ANOVA and Tukey are, after all, two different tests.
+"
+
+df_decision_cases_04_tukey$"Decision"[4] <- "The use of the Tukey test is subject to the validity of the ANOVA model and the rejection of the ANOVA hypothesis. As the model is valid because the requirements are met and the ANOVA null hypothesis has not been rejected, the possibility of applying any multiple comparison test to accompany the ANOVA test is immediately invalidated. Irrespective of the statistical groups that we might obtain from Tukey, the Tukey test must not be taken into account for drawing conclusions of any kind. Statistical theory indicates that the ANOVA test is more powerful than the Tukey test and that there is a hierarchy between them when making decisions: the Tukey test is only valid if the ANOVA H0 is rejected. This incoherence between the ANOVA test and the Tukey test is usually seen when the operator is even more incoherent and analyzes ANOVA and Tukey without fulfilling the model requirements. In this Case 4, all factor levels are statistically equal. And the use of any multiple comparison test is rendered impossible.
+"
+
+
+df_decision_cases_04_tukey$"Decision"[5] <- "The use of the Tukey test is subject to the validity of the ANOVA model and the rejection of the ANOVA hypothesis. As the model is valid because the requirements are met and the ANOVA null hypothesis has effectively been rejected, the possibility of applying a multiple comparison test to accompany the ANOVA test is immediately opened. In this Case 5, there is coherence between ANOVA and Tukey, in the sense that both find at least two groups among the factor levels. ANOVA's guarantee is that statistically significant differences exist between the factor level with the lowest mean and the factor level with the highest mean. Tukey then provides us with a structure of what the groups look like within the factor levels. The Tukey test has the particularity that it generates intermediate groups. Each factor level can belong to more than one statistical group. It takes some time to get used to how to interpret the Tukey test. All factor levels that share at least one grouping letter are statistically equal to each other. It is very important to contextualize the statistical groups within the framework of the work's reference.
+"
+
+colnames(df_decision_cases_04_tukey)[ncol(df_decision_cases_04_tukey)] <- "Tukey_Decision"
+```
+
+
+
+We can visualize the selected case in the R output.
+```{r eval=TRUE, echo = TRUE}
+df_selected_row_04_tukey <- df_decision_cases_04_tukey[row_match_index, ]
+df_selected_row_04_tukey
+```
+
+#####  Full table cases
+We detail our table with the 5 cases in a more aesthetic format. The row corresponding to our case of analysis will be highlighted in color.
+```{r eval=TRUE, echo = FALSE}
+
+my_df <- df_decision_cases_04_tukey
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = row_match_index, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+
+#####  Selected case
+We detail in a more aesthetic format only the case of analysis that applies to our data.
+```{r eval=TRUE, echo = FALSE}
+
+# 4. Extraer la fila o el resultado deseado
+
+
+my_df <-  df_selected_row_04_tukey
+caption_text <- ""
+col_align <- paste(rep("c", ncol(my_df)), collapse = "")
+col_align[length(col_align)] <- "l"
+  knitr::kable(my_df, format = "html", caption = caption_text, align = col_align) %>%
+    # CAMBIO 2: Añadir position = "center" (centra la tabla completa en la página)
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                              full_width = FALSE,
+                              position = "center",
+                              font_size = 12) %>%
+    kableExtra::column_spec(1, width = "8%") %>%    # Caso
+    kableExtra::column_spec(2, width = "12%") %>%   # Homogeneidad
+    kableExtra::column_spec(3, width = "10%") %>%   # ANOVA
+    kableExtra::column_spec(4, width = "12%") %>%   # Tukey
+    kableExtra::column_spec(5, width = "40%") %>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+ # ------------------------------------------------------------------
+     # CÓDIGO A AGREGAR AL FINAL: Resalta la fila usando el índice calculado
+    
+# ------------------------------------------------------------------
+```
+
+
+##### ASA
+<div style="background-color: #ff8c00; padding: 15px; border-radius: 5px;">
+Theme 4) Tukey
+
+```{r eval=TRUE, echo = FALSE}
+text_asa_04_tukey <- df_selected_row_04_tukey[1, ncol(df_selected_row_04_tukey)]
+knitr::kable(df_decision_cases_selected)%>%
+    kableExtra::row_spec(
+    row = 1, # Usa el índice de la fila coincidente
+    extra_css = "background-color: #FFFFCC;" # Color de fondo suave (amarillo claro)
+    # Otros colores comunes: #E6F7FF (Azul claro), #E6FFE6 (Verde claro)
+    )
+```
+`r text_asa_04_tukey`
+</div>
+:::
+
+
+
+```{r eval=TRUE, echo=TRUE} 
+
+vector_all_obj_end <- ls(envir = .GlobalEnv)
+
+# Excluir los que NO quieres guardar
+vector_exclusion <- vector_all_obj_init
+vector_save_obj <- setdiff(vector_all_obj_end, vector_exclusion)
+
+# Guardar todo excepto los excluidos
+save(list = vector_save_obj, file = "R_obj_env_script06_anova_asa.RData")
+
+```

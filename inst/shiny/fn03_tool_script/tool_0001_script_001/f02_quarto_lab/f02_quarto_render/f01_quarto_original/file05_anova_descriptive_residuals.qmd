@@ -1,0 +1,700 @@
+---
+title: "Rscience - Anova - script05 - Descriptive Residuals"
+format: 
+  html:
+    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+
+    
+---
+
+
+```{r eval=TRUE, echo=TRUE} 
+library(plotly)
+load("R_obj_env_script01_anova_import_and_control.RData")
+load("R_obj_env_script02_anova_full_test.RData")
+load("R_obj_env_script04_anova_descriptive_rv.RData")
+
+vector_all_obj_init <- ls(envir = .GlobalEnv)
+```
+
+
+Medidas de posición de los residuos para cada nivel del factor.
+```{r eval=TRUE, echo=TRUE}   
+
+  # # # # # Section 11 - Partitioned Measures (Residuals)-------------------------
+  # # # Partitioned Measures of Position (residuals)
+  df_residuals_position_levels <- data.frame(
+    "order_level"  = 1:nlevels(minidataset_mod[,var_name_factor]),
+    "level" = levels(minidataset_mod[,var_name_factor]),
+    "n"            = tapply(minidataset_mod[,var_name_rv], minidataset_mod[,var_name_factor], length),
+    "variable"     = rep("residuals", nlevels(minidataset_mod[,var_name_factor])),
+    "min"          = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], min),
+    "mean"         = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], mean),
+    "Q1"           = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], quantile, 0.25),
+    "median"       = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], median),
+    "Q3"           = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], quantile, 0.75),
+    "max"          = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], max),
+    stringsAsFactors = FALSE
+  )
+    df_residuals_position_levels[,"level"] <- factor(
+               x = df_residuals_position_levels[,"level"],       # La variable original de factor
+          levels = df_residuals_position_levels[,"level"]  # El orden de los niveles que calculamos en el Paso 2
+  )
+    
+  rownames(df_residuals_position_levels) <- NULL
+
+  df_residuals_position_levels
+```
+  
+  
+Medidas de dispersión de los residuos para cada nivel del factor.
+```{r eval=TRUE, echo=TRUE}   
+
+  # # # Partitioned Measures of Dispersion (residuals)
+  df_residual_dispersion_levels <- data.frame(
+    "order_level"  = 1:nlevels(minidataset_mod[,var_name_factor]),
+    "level" = levels(minidataset_mod[,var_name_factor]),
+    "n"            = tapply(minidataset_mod[,"residuals"], minidataset_mod[,var_name_factor], length),
+    "variable"     = rep("residuals", nlevels(minidataset[,var_name_factor])),
+    "range"        = NA,
+    "variance"     = tapply(minidataset_mod[,"residuals"], minidataset_mod[,var_name_factor], var),
+    "standard_deviation" = tapply(minidataset_mod[,"residuals"], minidataset_mod[,var_name_factor], sd),
+    "standard_error" = NA,
+    "IQR" = NA,
+    "vc" = NA,
+    "pvc" = NA,
+    stringsAsFactors = FALSE
+  )
+  df_residual_dispersion_levels$"range" <- df_residuals_position_levels$"max" - df_residuals_position_levels$"min"
+  df_residual_dispersion_levels$"standard_error" <- df_residual_dispersion_levels$"standard_deviation"/sqrt(df_residual_dispersion_levels$"n")
+  df_residual_dispersion_levels$"IQR" <- df_residuals_position_levels$"Q3" - df_residuals_position_levels$"Q1"
+  df_residual_dispersion_levels$"cv"  <- df_rv_dispersion_levels$"standard_deviation" / df_residuals_position_levels$"mean"
+  df_residual_dispersion_levels$"pcv" <- paste0(df_residual_dispersion_levels$"cv"*100, "%")
+  #   
+  df_residual_dispersion_levels[,"level"] <- factor(
+        x = df_residual_dispersion_levels[,"level"],       # La variable original de factor
+        levels = df_residual_dispersion_levels[,"level"]  # El orden de los niveles que calculamos en el Paso 2
+  )
+  rownames(df_residual_dispersion_levels) <- NULL
+  df_residual_dispersion_levels
+```  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  # # # General Measures of Position (residuals)
+  df_residuals_position_general <- data.frame(
+    "variable"  = "residuals",
+    "n"         = length(minidataset_mod$"residuals"),
+    "min" = min(minidataset_mod$"residuals"),
+    "mean" = mean(minidataset_mod$"residuals"),
+    "Q1"        = quantile(minidataset_mod$"residuals", 0.25),
+    "median" = median(minidataset_mod$"residuals"),
+    "Q3"        = quantile(minidataset_mod$"residuals", 0.75),
+    "max" = max(minidataset_mod$"residuals"),
+    stringsAsFactors = FALSE
+  )
+  df_residuals_position_general
+```
+  
+  
+```{r eval=TRUE, echo=TRUE}   
+  # # # General Measures of Dispersion (residuals)
+  df_residuals_dispersion_general <- data.frame(
+    "variable"           = var_name_rv, 
+    "n"                  = length(minidataset[,var_name_rv]),
+    "range"              = NA,
+    "variance"           = var(minidataset[,var_name_rv]),
+    "standard_deviation" = sd(minidataset[,var_name_rv]),
+    "standard_error"    = NA,
+    "IQR"               = NA,
+    "cv"                = NA,
+    "pcv"               = NA,
+    stringsAsFactors = FALSE
+  )
+
+  df_residuals_dispersion_general$"range" <- df_residuals_position_general$"max" - df_residuals_position_general$"min"
+  df_residuals_dispersion_general$"standard_error" <- df_residuals_dispersion_general$"standard_deviation"/sqrt(df_residuals_dispersion_general$"n")
+  df_residuals_dispersion_general$"IQR" <- df_residuals_position_general$"Q3" - df_residuals_position_general$"Q1"
+  df_residuals_dispersion_general$"cv"  <- df_residuals_dispersion_general$"standard_deviation" / df_residuals_position_general$"mean"
+  df_residuals_dispersion_general$"pcv" <- paste0(df_residuals_dispersion_general$"cv"*100, "%")
+
+  rownames(df_residuals_dispersion_general) <- NULL
+  
+  df_residuals_dispersion_general
+  
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+
+  
+  
+  # # # Table for plot006
+  df_table_residuals_plot001 <- data.frame(
+    "order" = 1:nlevels(minidataset_mod[,var_name_factor]),
+    "level" = levels(minidataset_mod[,var_name_factor]),
+    "n" = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], length),
+    "min" = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], min),
+    "mean" = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], mean),
+    "max" = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], max),
+    "var" = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], var),
+    "sd" = tapply(minidataset_mod$"residuals", minidataset_mod[,var_name_factor], sd),
+    "color" = df_factor_info$color
+  )
+  df_table_residuals_plot001[,"level"] <- factor(
+  x = df_table_residuals_plot001[,"level"],       # La variable original de factor
+  levels = df_table_residuals_plot001[,"level"]  # El orden de los niveles que calculamos en el Paso 2
+)
+  df_table_residuals_plot001
+  
+  # # # Table for plot006
+  df_table_residuals_plot002 <- df_table_residuals_plot001
+  
+  # # # Table for plot006
+  df_table_residuals_plot003 <- df_table_residuals_plot001
+  
+  # # # Table for plot006
+  df_table_residuals_plot004 <- data.frame(
+    "variable" = "residuals",
+    "n" = length(minidataset_mod$"residuals"),
+    "min" = min(minidataset_mod$"residuals"),
+    "mean" = mean(minidataset_mod$"residuals"),
+    "max" = max(minidataset_mod$"residuals"),
+    "var" = var(minidataset_mod$"residuals"),
+    "sd" = sd(minidataset_mod$"residuals"),
+    "model_error_var_MSE" = model_error_var_MSE,
+    "model_error_sd" = model_error_sd
+  )
+  
+  phrase_coment_errors <- "Model Error (MSE) "
+  
+  # # # Table for plot006
+  df_table_residuals_plot005  <- df_table_residuals_plot004
+  
+  # # # Table for plot006
+  df_table_residuals_plot006 <- data.frame(
+    "order" = 1:nlevels(minidataset_mod[,var_name_factor]),
+    "level" = levels(minidataset_mod[,var_name_factor]),
+    "n" = tapply(minidataset_mod$studres, minidataset_mod[,var_name_factor], length),
+    "min" = tapply(minidataset_mod$studres, minidataset_mod[,var_name_factor], min),
+    "mean" = tapply(minidataset_mod$studres, minidataset_mod[,var_name_factor], mean),
+    "max" = tapply(minidataset_mod$studres, minidataset_mod[,var_name_factor], max),
+    "var" = tapply(minidataset_mod$studres, minidataset_mod[,var_name_factor], var),
+    "sd" = tapply(minidataset_mod$studres, minidataset_mod[,var_name_factor], sd),
+    "color" = df_factor_info$color
+  )
+   df_table_residuals_plot006[,"level"] <- factor(
+  x = df_table_residuals_plot006[,"level"],       # La variable original de factor
+  levels = df_table_residuals_plot006[,"level"]  # El orden de los niveles que calculamos en el Paso 2
+)
+  
+  # # # Table for plot006
+  df_table_residuals_plot007 <- df_table_residuals_plot006
+  
+  
+  df_table_residuals_plot008 <- data.frame(
+    "variable" = "studres",
+    "n" = length(minidataset_mod$studres),
+    "min" = min(minidataset_mod$studres),
+    "mean" = mean(minidataset_mod$studres),
+    "max" = max(minidataset_mod$studres),
+    "var" = var(minidataset_mod$studres),
+    "sd" = sd(minidataset_mod$studres)
+  )
+  
+  
+  df_table_residuals_plot009 <- df_table_residuals_plot008
+  
+  df_table_residuals_plot010 <- df_table_residuals_plot008
+  
+  #############################################################
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  
+  ####### DESDE ACAAAAAAAAAAAAAAAAAAAA
+  # # # Create a new plot...
+  plot001_residuals <- plotly::plot_ly()
+  
+  # # # Plot001 - Scatter plot for VR and FACTOR on minidataset_mod *****************
+  plot001_residuals <- plotly::add_trace(p = plot001_residuals,
+                                         type = "scatter",
+                                         mode = "markers",
+                                         x = minidataset_mod$FACTOR,
+                                         y = minidataset_mod$"residuals",
+                                         color = minidataset_mod$FACTOR,
+                                         colors = df_factor_info$color,
+                                         marker = list(size = 15, opacity = 0.7))
+  
+  # # # Title and settings...
+  plot001_residuals <-   plotly::layout(p = plot001_residuals,
+                                        title = "Plot 001 - Scatterplot - Residuals",
+                                        font = list(size = 20),
+                                        margin = list(t = 100))
+  
+  
+  # # # Without zerolines
+  plot001_residuals <-   plotly::layout(p = plot001_residuals,
+                                        xaxis = list(zeroline = FALSE),
+                                        yaxis = list(zeroline = TRUE))
+  
+  
+  # # # Plot output
+  plot001_residuals
+  
+  
+  
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  
+  #library(plotly)
+  plot002_residuals <- plotly::plot_ly()
+  
+  # Add traces
+  plot002_residuals <- plotly::add_trace(p = plot002_residuals,
+                                         type = "violin",
+                                         y = minidataset_mod$"residuals",
+                                         x = minidataset_mod$FACTOR,
+                                         showlegend = TRUE,
+                                         side = "positive",
+                                         points = "all",
+                                         name = "Violinplot",
+                                         color = minidataset_mod$FACTOR,
+                                         colors = df_table_residuals_plot002$color)
+  
+  
+  
+  # # # Title and settings...
+  plot002_residuals <- plotly::layout(p = plot002_residuals,
+                                      title = "Plot 002 - Residuals - Scatterplot + Jitter +  Smoothed",
+                                      font = list(size = 20),
+                                      margin = list(t = 100))
+  
+  
+  # # # Without zerolines...
+  plot002_residuals <- plotly::layout(p = plot002_residuals,
+                                      xaxis = list(zeroline = FALSE),
+                                      yaxis = list(zeroline = FALSE))
+  
+  # # # Output plot003_anova...
+  plot002_residuals
+  
+  
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  
+  
+  
+  plot003_residuals <- plotly::plot_ly()
+  
+  # Add traces
+  plot003_residuals <- plotly::add_trace(p = plot003_residuals,
+                                         type = "violin",
+                                         x = minidataset_mod$"residuals",
+                                         showlegend = TRUE,
+                                         side = "positive",
+                                         points = FALSE,
+                                         #name = levels(minidataset_mod$FACTOR)[minidataset_mod$lvl_order_number],
+                                         color = minidataset_mod$FACTOR,
+                                         colors = df_table_residuals_plot003$color)
+  
+  
+  
+  # # # Title and settings...
+  plot003_residuals <- plotly::layout(p = plot003_residuals,
+                                      title = "Plot 003 - Residuals - Scatterplot + Jitter +  Smoothed",
+                                      font = list(size = 20),
+                                      margin = list(t = 100))
+  
+  
+  # # # Without zerolines...
+  plot003residuals <- plotly::layout(p = plot003_residuals,
+                                     xaxis = list(zeroline = FALSE),
+                                     yaxis = list(zeroline = FALSE))
+  
+  # # # Output plot003_anova...
+  plot003_residuals
+  
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  
+  
+  
+  plot004_residuals <- plotly::plot_ly()
+  
+  # Add traces
+  plot004_residuals <- plotly::add_trace(p = plot004_residuals,
+                                         type = "violin",
+                                         x = minidataset_mod$"residuals",
+                                         #x = minidataset_mod$FACTOR,
+                                         showlegend = TRUE,
+                                         side = "positive",
+                                         points = "all",
+                                         name = " ")#
+  #color = minidataset_mod$FACTOR,
+  #colors = df_table_factor_plot006$color)
+  
+  
+  
+  # # # Title and settings...
+  plot004_residuals <- plotly::layout(p = plot004_residuals,
+                                      title = "Plot 004 - Residuals",
+                                      font = list(size = 20),
+                                      margin = list(t = 100))
+  
+  
+  # # # Without zerolines...
+  plot004_residuals <- plotly::layout(p = plot004_residuals,
+                                      xaxis = list(zeroline = TRUE),
+                                      yaxis = list(zeroline = FALSE))
+  
+  # # # Output plot003_anova...
+  plot004_residuals
+  
+  
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  
+  # - el 5
+  qq_info <- EnvStats::qqPlot(x = minidataset_mod$"residuals", plot.it = F,
+                              param.list = list(mean = mean(minidataset_mod$"residuals"),
+                                                sd = sd(minidataset_mod$"residuals")))
+  
+  cuantiles_teoricos <- qq_info$x
+  cuantiles_observados <- qq_info$y
+  
+  #library(plotly)
+  plot005_residuals <- plotly::plot_ly()
+  
+  # Crear el gráfico QQ plot
+  plot005_residuals <- plotly::add_trace(p = plot005_residuals,
+                                x = cuantiles_teoricos,
+                                y = cuantiles_observados,
+                                type = 'scatter', mode = 'markers',
+                                marker = list(color = 'blue'),
+                                name = "points")
+  
+  # Agregar la línea de identidad
+  pendiente <- 1
+  intercepto <- 0
+  
+  # Calcular las coordenadas de los extremos de la línea de identidad
+  x_extremos <- range(cuantiles_teoricos)
+  y_extremos <- pendiente * x_extremos + intercepto
+  
+  # Agregar la recta de identidad
+  plot005_residuals <- plotly::add_trace(p = plot005_residuals,
+                                 x = x_extremos,
+                                 y = y_extremos,
+                                 type = 'scatter',
+                                 mode = 'lines',
+                                 line = list(color = 'red'),
+                                 name = "identity")
+  
+  
+  # Establecer etiquetas de los ejes
+  # plot007_residuals <- layout(p = plot007_residuals,
+  #                             xaxis = list(title = 'Expected quantiles'),
+  #                             yaxis = list(title = 'Observed quantiles'))
+  
+  plot005_residuals <- plotly::layout(p = plot005_residuals,
+                                      title = "Plot 005 - QQ Plot Residuals",
+                                      font = list(size = 20),
+                                      margin = list(t = 100))
+  
+  # Mostrar el gráfico
+  plot005_residuals
+  # - Fin el 5
+  
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  
+  # # # Create a new plot...
+  plot006_residuals <- plotly::plot_ly()
+  
+  # # # Plot001 - Scatter plot for VR and FACTOR on minidataset_mod *****************
+  plot006_residuals <- plotly::add_trace(p = plot006_residuals,
+                                         type = "scatter",
+                                         mode = "markers",
+                                         x = minidataset_mod$fitted.values,
+                                         y = minidataset_mod$"residuals",
+                                         color = minidataset_mod$FACTOR,
+                                         colors = df_factor_info$color,
+                                         marker = list(size = 15, opacity = 0.7))
+  
+  # # # Title and settings...
+  plot006_residuals <-   plotly::layout(p = plot006_residuals,
+                                        title = "Plot 006 - Scatterplot - Residuals vs Fitted.values",
+                                        font = list(size = 20),
+                                        margin = list(t = 100))
+  
+  
+  # # # Without zerolines
+  plot006_residuals <-   plotly::layout(p = plot006_residuals,
+                                        xaxis = list(zeroline = FALSE),
+                                        yaxis = list(zeroline = TRUE))
+  
+  
+  # # # Plot output
+  plot006_residuals
+  
+  
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  
+  # # # Create a new plot...
+  plot007_residuals <- plotly::plot_ly()
+  
+  # # # Plot001 - Scatter plot for VR and FACTOR on minidataset_mod *****************
+  plot007_residuals <- plotly::add_trace(p = plot007_residuals,
+                                         type = "scatter",
+                                         mode = "markers",
+                                         x = minidataset_mod$FACTOR,
+                                         y = minidataset_mod$studres,
+                                         color = minidataset_mod$FACTOR,
+                                         colors = df_factor_info$color,
+                                         marker = list(size = 15, opacity = 0.7))
+  
+  # # # Title and settings...
+  plot007_residuals <-   plotly::layout(p = plot007_residuals,
+                                        title = "Plot 007 - Scatterplot - Studentized Residuals",
+                                        font = list(size = 20),
+                                        margin = list(t = 100))
+  
+  
+  # # # Without zerolines
+  plot007_residuals <-   plotly::layout(p = plot007_residuals,
+                                        xaxis = list(zeroline = FALSE),
+                                        yaxis = list(zeroline = TRUE))
+  
+  
+  # # # Plot output
+  plot007_residuals
+  
+  
+  
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  
+  
+  
+  #library(plotly)
+  plot008_residuals <- plotly::plot_ly()
+  
+  # Add traces
+  plot008_residuals <- plotly::add_trace(p = plot008_residuals,
+                                         type = "violin",
+                                         x = minidataset_mod$studres,
+                                         #x = minidataset_mod$FACTOR,
+                                         showlegend = TRUE,
+                                         side = "positive",
+                                         points = "all",
+                                         name = " ")#
+  #color = minidataset_mod$FACTOR,
+  #colors = df_table_factor_plot006$color)
+  
+  
+  
+  # # # Title and settings...
+  plot008_residuals <- plotly::layout(p = plot008_residuals,
+                                      title = "Plot 008 - Studentized Residuals",
+                                      font = list(size = 20),
+                                      margin = list(t = 100))
+  
+  
+  # # # Without zerolines...
+  plot008_residuals <- plotly::layout(p = plot008_residuals,
+                                      xaxis = list(zeroline = TRUE),
+                                      yaxis = list(zeroline = FALSE))
+  
+  # # # Output plot003_anova...
+  plot008_residuals
+  
+  
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  
+  # el 9
+  
+  x <- seq(-4, 4, length.out = 100)
+  y <- dnorm(x, mean = 0, 1)
+  #  x <- x*model_error_sd
+  densidad_suavizada <- density(x, kernel = "gaussian", adjust = 0.5)
+  hist_data_studres <- hist(minidataset_mod$studres, plot = FALSE)
+  hist_data_studres$"rel_frec" <- hist_data_studres$counts/sum(hist_data_studres$counts)
+  
+  densidad_studres <-  density(x = minidataset_mod$studres, kernel = "gaussian", adjust =0.5)
+  
+  #library(plotly)
+  plot009_residuals <- plotly::plot_ly()
+  
+  
+  # plot005_residuals <- add_trace(p = plot005_residuals,
+  #                                x = densidad_studres$x,
+  #                                y = densidad_studres$y,
+  #                                type = 'scatter',
+  #                                mode = 'lines',
+  #                                name = 'densidad_studres')
+  
+  plot009_residuals <- plotly::add_trace(p = plot009_residuals,
+                                 x = x,
+                                 y = y,
+                                 type = 'scatter',
+                                 mode = 'lines',
+                                 name = 'Normal Standard')
+  
+  
+  
+  
+  
+  # # Add traces
+  # plot005_residuals <- plotly::add_trace(p = plot005_residuals,
+  #                                        type = "violin",
+  #                                        x = minidataset_mod$"residuals",
+  #                                        #x = minidataset_mod$FACTOR,
+  #                                        showlegend = TRUE,
+  #                                        side = "positive",
+  #                                        points = FALSE,
+  #                                        name = "violinplot")#
+  
+  plot009_residuals <- plotly::add_trace(p = plot009_residuals,
+                                         type = "bar",
+                                         x = hist_data_studres$"mids",
+                                         y = hist_data_studres$"density",
+                                         name = "hist - studres")
+  
+  plot009_residuals <- plotly::layout(p = plot009_residuals,
+                                      bargap = 0)
+  
+  plot009_residuals <- plotly::layout(p = plot009_residuals,
+                                      title = "Plot 009 - Studres Distribution",
+                                      font = list(size = 20),
+                                      margin = list(t = 100))
+  
+  plot009_residuals
+  # fin el 9
+  
+```  
+  
+  
+  
+  
+```{r eval=TRUE, echo=TRUE}    
+  
+  
+  qq_info <- EnvStats::qqPlot(x = minidataset_mod$studres, plot.it = F,
+                              param.list = list(mean = 0,
+                                                sd = 1))
+  
+  cuantiles_teoricos <- qq_info$x
+  cuantiles_observados <- qq_info$y
+  
+  #library(plotly)
+  plot010_residuals <- plotly::plot_ly()
+  
+  # Crear el gráfico QQ plot
+  plot010_residuals <- plotly::add_trace(p = plot010_residuals,
+                                x = cuantiles_teoricos,
+                                y = cuantiles_observados,
+                                type = 'scatter', mode = 'markers',
+                                marker = list(color = 'blue'),
+                                name = "points")
+  
+  # Agregar la línea de identidad
+  pendiente <- 1
+  intercepto <- 0
+  
+  # Calcular las coordenadas de los extremos de la línea de identidad
+  x_extremos <- range(cuantiles_teoricos)
+  y_extremos <- pendiente * x_extremos + intercepto
+  
+  # Agregar la recta de identidad
+  plot010_residuals <- plotly::add_trace(p = plot010_residuals,
+                                 x = x_extremos,
+                                 y = y_extremos,
+                                 type = 'scatter',
+                                 mode = 'lines',
+                                 line = list(color = 'red'),
+                                 name = "identity")
+  
+  
+  # Establecer etiquetas de los ejes
+  # plot007_residuals <- layout(p = plot007_residuals,
+  #                             xaxis = list(title = 'Expected quantiles'),
+  #                             yaxis = list(title = 'Observed quantiles'))
+  
+  plot010_residuals <- plotly::layout(p = plot010_residuals,
+                                      title = "Plot 010 - QQ Plot - studres",
+                                      font = list(size = 20),
+                                      margin = list(t = 100))
+  
+  # Mostrar el gráfico
+  plot010_residuals
+  
+```
+
+
+```{r eval=TRUE, echo=TRUE} 
+
+vector_all_obj_end <- ls(envir = .GlobalEnv)
+
+# Excluir los que NO quieres guardar
+vector_exclusion <- vector_all_obj_init
+vector_save_obj <- setdiff(vector_all_obj_end, vector_exclusion)
+
+# Guardar todo excepto los excluidos
+save(list = vector_save_obj, file = "R_obj_env_script05_anova_descriptive_residuals.RData")
+
+```

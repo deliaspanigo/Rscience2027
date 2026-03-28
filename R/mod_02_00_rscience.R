@@ -4,18 +4,27 @@
 library("bslib")
 library("shiny")
 
-path_tool <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts", "f04_settings",
-                         package = "Rscience2027")
+# Asegúrate de que los nombres de archivo coincidan con los que tienes en tu carpeta
+source(file =  system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts",
+                           "f04_settings", "f03_prod", "sub_module", "sm01_var_selection.R", package = "Rscience2027"))
 
-# Para cargar el pack_module.R específicamente:
-source(file.path(path_tool, "mod_PACK_settings.R"))
+source(file =  system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts",
+                           "f04_settings", "f03_prod", "sub_module", "sm02_levels.R", package = "Rscience2027"))
 
-path_tool02 <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts", "f04_settings", "sub_module",
-                           package = "Rscience2027")
-
-# Para cargar el pack_module.R específicamente:
-source(file.path(path_tool02, "sm01_var_selection.R"))
-source(file.path(path_tool02, "sm02_levels.R"))
+source(file =  system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts",
+                           "f04_settings", "f03_prod", "mod_special_settings.R", package = "Rscience2027"))
+# path_tool <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts", "f04_settings",
+#                          package = "Rscience2027")
+#
+# # Para cargar el pack_module.R específicamente:
+# source(file.path(path_tool, "mod_04_00_collector02_settings.R"))
+#
+# path_tool02 <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts", "f04_settings", "sub_module",
+#                            package = "Rscience2027")
+#
+# # Para cargar el pack_module.R específicamente:
+# source(file.path(path_tool02, "sm01_var_selection.R"))
+# source(file.path(path_tool02, "sm02_levels.R"))
 
 
 mod_02_00_rscience_ui <- function(id) {
@@ -176,11 +185,11 @@ mod_02_00_rscience_ui <- function(id) {
             tabPanelBody("tab_tool", div(mod_02_02_00_tool_ui(ns("my_ns_tool")))),
             tabPanelBody("tab_script", div(mod_02_03_00_script_ui(id=ns("my_ns_script")))),
             #######################################################################################
-            tabPanelBody("tab_theory", "Waiting for Theory..."),
-            tabPanelBody("tab_bibliography", "Waiting for bibliography..."),
-            tabPanelBody("tab_cite", "Waiting for Cite..."),
+            tabPanelBody("tab_theory",       div(class="p-3", mod_03_00_collector01_ui_01_theory(ns("txt_1")))),
+            tabPanelBody("tab_bibliography", div(class="p-3", mod_03_00_collector01_ui_02_bibliography(ns("txt_1")))),
+            tabPanelBody("tab_cite",         div(class="p-3", mod_03_00_collector01_ui_03_cite(ns("txt_1")))),
             #######################################################################################
-            tabPanelBody("tab_settings", div(class="p-4", mod_PACK_settings_ui(ns("my_ns_PACK_settings")))),
+            tabPanelBody("tab_settings", div(class="p-4", mod_04_00_collector02_settings_ui(ns("my_ns_collector02_settings")))),
             tabPanelBody("tab_shiny", "Waiting for Shiny..."),
             tabPanelBody("tab_asesor", "Waiting for Asesor..."),
             #######################################################################################
@@ -315,10 +324,23 @@ mod_02_00_rscience_server <- function(id) {
     })
 
     # 1.3. Script
-    res_script <-   mod_02_03_00_script_server(id="my_ns_script") # Llamamos a la UI
+    res_script <-   mod_02_03_00_script_server(id="my_ns_script",
+                                               vector_str_folder_tool_script = c("tool_0001_script_001", "tool_0001_script_002"),
+                                               show_debug = F) # Llamamos a la UI
 
     script_is_locked <- reactive({
-      T
+      # 1. Capturamos el estado del módulo
+      data_mod <- res_script()
+
+      #print(data_mod)
+      # 2. Si el módulo no ha devuelto nada (NULL), asumimos que NO está bloqueado
+      if (is.null(data_mod)) {
+        return(FALSE)
+      }
+
+      # 3. Verificamos el valor de is_locked de forma segura
+      # isTRUE() garantiza que si el valor es NA o NULL, devuelva FALSE
+      isTRUE(data_mod$is_locked)
     })
     selected_script_tool_subfolder <- reactive({
         "tool_0001_script_001"
@@ -327,10 +349,20 @@ mod_02_00_rscience_server <- function(id) {
     # 1.4.
     # --- En mod_rscience_server ---
 
+    folder_path_collector02 <- reactive({
+      req(res_script())
+      aver <- res_script()$folder_path_tool_script
+      print("AAA")
+      print(aver)
+      print("BBB")
+      aver
+    })
+
     # 1.4. Ejecución del módulo
-    res_settings <- mod_PACK_settings_server(
-      id = "my_ns_PACK_settings",
+    res_settings <- mod_04_00_collector02_settings_server(
+      id = "my_ns_collector02_settings",
       df_input = reactive(mtcars), # Asegúrate de que esto sea reactivo
+      folder_path_tool_script = folder_path_collector02,
       show_debug = FALSE
     )
 
@@ -848,5 +880,15 @@ mod_02_00_rscience_server <- function(id) {
         ))
       }
     })
+
+    ############################################################################
+
+    # Colector 01 - Theory - Bibliographt - Cite
+    folder_path_collector01 <- reactive({
+      res_script()$folder_path_tool_script
+    })
+    mod_03_00_collector01_server_UNIVERSAL(id = "txt_1", folder_path_tool_script = folder_path_collector01)
+
+    ############################################################################
   })
 }
