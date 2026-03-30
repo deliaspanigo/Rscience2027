@@ -1,0 +1,12 @@
+# local_resources/f02_tools/fn01_scripts/USC_000001/metadata.yml
+id: "USC_000001"
+name: "Rs001_desc_1Q_s01"
+dev_info: "Script for descriptive statistics for 1var Q quantitative with plots base on plot()."
+description_short: "The short description."
+description_long: "The long description."
+category: "Visualización"
+tags: ["descriptive", "1var", "Q", "quantitative"]
+version: "0.0.2"
+date_last_update: "2025.02.01"
+module_file_name: "RShiny_modules.R"
+

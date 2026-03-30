@@ -1,0 +1,95 @@
+---
+title: "Fundamentos y Bibliografía: ANOVA"
+subtitle: "De Ronald Fisher a la Ciencia de Datos Moderna"
+author: "RScience v.0.0.1"
+date: last-modified
+format:
+  revealjs: 
+    theme: sky
+    transition: fade
+    scrollable: true
+    slide-number: true
+    chalkboard: 
+      buttons: true
+      boardmarker-width: 4
+    # --- CAMBIOS PARA COMPATIBILIDAD ---
+    self-contained: false      # Desactivamos autocontenido
+    embed-resources: false    # Para asegurar compatibilidad con Chalkboard
+    # -----------------------------------
+    hash-type: number
+    controls: true
+    touch: true
+    pause: true
+    click-to-proceed: true
+    footer: "David Elías Panigo - Bibliografía Estadística"
+---
+
+## El Origen: Sir Ronald A. Fisher {background-color="#f8f9fa"}
+
+El Análisis de Varianza no nació en una oficina, sino en los campos de experimentación agrícola de **Rothamsted**.
+
+### La Obra Maestra (1925)
+Fisher, R. A. (1925). *Statistical Methods for Research Workers*. Oliver and Boyd.
+
+> "El análisis de varianza es poco más que un método para clasificar y tabular la variabilidad." 
+> — **R.A. Fisher**
+
+
+
+---
+
+## El Primer "Paper" Clave
+
+Antes de su libro, Fisher sentó las bases de la distribución **F** (llamada así en su honor por Snedecor) en:
+
+- **Fisher, R. A. (1918).** *The Correlation between Relatives on the Supposition of Mendelian Inheritance*. 
+  - Aquí introdujo formalmente el término **"Variance"**.
+  
+- **Fisher, R. A. (1921).** *Studies in Crop Variation*. 
+  - La primera aplicación práctica del análisis de varianza en datos de cultivos.
+
+---
+
+## Bibliografía Clásica de Referencia
+
+Para tus cursos en Trento, estos son los "imprescindibles" que todo alumno debería conocer:
+
+1. **Snedecor, G. W., & Cochran, W. G. (1989).** *Statistical Methods*. 
+   - La "biblia" que popularizó el uso de la tabla ANOVA tal como la vemos hoy en R.
+   
+2. **Box, G. E. P., Hunter, J. S., & Hunter, W. G. (2005).** *Statistics for Experimenters*.
+   - Fundamental para entender el diseño de experimentos detrás del ANOVA.
+
+---
+
+## Bibliografía Moderna con Enfoque en R
+
+Como estamos desarrollando **RScience**, estas fuentes son el motor de nuestro código:
+
+- **Wickham, H., & Grolemund, G. (2017).** *R for Data Science*.
+  - Para la manipulación de datos previa al análisis (Tidyverse).
+  
+- **Fox, J., & Weisberg, S. (2019).** *An R Companion to Applied Regression*.
+  - Los creadores del paquete `car`, que usamos para la prueba de Levene y sumas de cuadrados Tipo II/III.
+
+---
+
+## ¿Cómo citar en RScience?
+
+Si tus alumnos usan tu software para su tesis, pueden citar la base del motor estadístico:
+
+> **R Core Team (2024).** *R: A language and environment for statistical computing*. R Foundation for Statistical Computing, Vienna, Austria.
+
+::: {.fragment .fade-up}
+### Tip para el Profe:
+Puedes usar la función `citation()` en la consola de R para obtener la cita exacta de cualquier paquete que incluyas en el módulo (como `DT` o `shiny`).
+:::
+
+---
+
+## Resumen Cronológico {auto-animate=true}
+
+1. **1918:** Fisher define "Varianza".
+2. **1925:** Se formaliza el ANOVA en "Statistical Methods".
+3. **1934:** Snedecor publica la distribución F.
+4. **Actualidad:** Automatización con **RScience v.0.0.1**.

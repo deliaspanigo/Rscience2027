@@ -4,8 +4,6 @@ library(bslib)
 library(dplyr)
 library(DT)
 library(openxlsx)
-library(jsonlite)
-library(listviewer)
 library(stringr)
 
 # ==============================================================================
@@ -16,6 +14,7 @@ SUB_mod_var_selection_ui <- function(id) {
   ns <- NS(id)
   scope_id <- paste0("#", ns("var_selector_container"))
 
+  # CSS optimizado para Orquestador (Z-index y estados de bloqueo)
   css_custom <- paste0("
     ", scope_id, " .card-container { overflow: visible !important; position: relative; }
     .selectize-dropdown { z-index: 999999 !important; position: absolute !important; }
@@ -57,16 +56,24 @@ SUB_mod_var_selection_ui <- function(id) {
             div(style = "background: #ffffff; padding: 25px; border-radius: 15px; border: 1px solid #e0e0e0; box-shadow: 0 4px 15px rgba(0,0,0,0.08);",
                 fluidRow(
                   column(4,
+                         # --- Dentro de SUB_mod_var_selection_ui ---
                          selectizeInput(ns("var_rv"), "Response Variable (RV)",
                                         choices = NULL,
-                                        options = list(placeholder = 'Select RV...',
-                                                       onInitialize = I('function() { this.setValue(""); }')))
+                                        selected = NULL, # Forzamos inicio vacío
+                                        options = list(
+                                          placeholder = 'Select RV...',
+                                          dropdownParent = 'body',
+                                          onInitialize = I('function() { this.setValue(""); }')
+                                        ))
                   ),
                   column(4,
                          selectizeInput(ns("var_factor"), "Factor Variable (Factor)",
                                         choices = NULL,
-                                        options = list(placeholder = 'Select Factor...',
-                                                       onInitialize = I('function() { this.setValue(""); }')))
+                                        options = list(
+                                          placeholder = 'Select Factor...',
+                                          dropdownParent = 'body',
+                                          onInitialize = I('function() { this.setValue(""); }')
+                                        ))
                   ),
                   column(4,
                          selectizeInput(ns("alpha_value"), "Significance Alpha",
@@ -79,22 +86,10 @@ SUB_mod_var_selection_ui <- function(id) {
             )
         ),
 
-        div(style = "margin-top: 20px;",
-            listviewer::jsoneditOutput(ns("debug_json"), height = "auto")
-        )
+        if (show_debug) div(style = "margin-top: 20px;", listviewer::jsoneditOutput(ns("debug_json"), height = "auto"))
     )
   )
 }
-
-# ==============================================================================
-# SERVER: CONTROL LOGIC AND OUTPUT
-# ==============================================================================
-
-# ==============================================================================
-# SERVER: CONTROL LOGIC AND OUTPUT - RScience v.0.0.1 (FIXED)
-# ==============================================================================
-
-`%||%` <- function(a, b) if (!is.null(a)) a else b
 
 SUB_mod_var_selection_server <- function(id, df_input = mtcars, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -111,13 +106,14 @@ SUB_mod_var_selection_server <- function(id, df_input = mtcars, show_debug = FAL
 
     data_store <- do.call(reactiveValues, list_default)
     output_rv  <- reactiveValues(val = list_default)
-
     the_dataset <- reactive({ if (is.reactive(df_input)) df_input() else df_input })
 
-    # 2. INPUT UPDATES
+    # 2. INPUT UPDATES (ANTI-RESET & EMPTY START LOGIC)
     observe({
-      df <- the_dataset(); req(df)
-      cols <- names(df)
+      df <- the_dataset()
+      req(df); cols <- names(df); req(length(cols) > 0)
+
+      # Formateo de etiquetas (Posición - Letra - Nombre)
       n_digits <- nchar(length(cols))
       vector_pos_mod <- sprintf(paste0("%0", n_digits, "d"), 1:length(cols))
       vector_letter <- openxlsx::int2col(1:length(cols))
@@ -127,59 +123,69 @@ SUB_mod_var_selection_server <- function(id, df_input = mtcars, show_debug = FAL
       choices_list <- cols
       names(choices_list) <- paste0(vector_pos_mod, " - ", vector_letter_mod, " - ", cols)
 
-      updateSelectizeInput(session, "var_rv", choices = choices_list, selected = "", server = TRUE)
-      updateSelectizeInput(session, "var_factor", choices = choices_list, selected = "", server = TRUE)
-    })
+      c_rv  <- isolate(input$var_rv)
+      c_fac <- isolate(input$var_factor)
 
-    # 3. STATISTICAL VALIDATION (CON GUARDAS CONTRA NULL)
-    check_analysis_validity <- reactive({
-      # Evitamos el error de 'missing value' asegurando que no sean NULL
-      v_rv  <- input$var_rv
-      v_fac <- input$var_factor
-
-      # Si son NULL o vacíos, devolvemos estado de espera sin evaluar lógica pesada
-      if (is.null(v_rv) || is.null(v_fac) || v_rv == "" || v_fac == "") {
-        return(list(valid = TRUE, msg = "Waiting for User Selection"))
+      # Carga inicial o Reset total
+      if ((is.null(c_rv) || c_rv == "") && (is.null(c_fac) || c_fac == "")) {
+        if (!is.null(input$var_rv)) {
+          updateSelectizeInput(session, "var_rv", choices = choices_list, selected = character(0), server = TRUE)
+          updateSelectizeInput(session, "var_factor", choices = choices_list, selected = character(0), server = TRUE)
+        } else {
+          session$onFlushed(function() {
+            shinyjs::delay(100, {
+              updateSelectizeInput(session, "var_rv", choices = choices_list, selected = character(0), server = TRUE)
+              updateSelectizeInput(session, "var_factor", choices = choices_list, selected = character(0), server = TRUE)
+            })
+          }, once = TRUE)
+        }
       }
-
-      if (v_rv == v_fac) return(list(valid = FALSE, msg = "Error: Duplicate Variables Selected"))
-
-      df_raw <- the_dataset()
-      # Verificamos que las columnas realmente existan en el df actual antes de filtrar
-      if (!all(c(v_rv, v_fac) %in% names(df_raw))) return(list(valid = TRUE, msg = "Syncing..."))
-
-      mini_db <- df_raw[, c(v_rv, v_fac), drop = FALSE] %>% na.omit()
-
-      if (!is.numeric(mini_db[[v_rv]])) return(list(valid = FALSE, msg = "Error: RV must be numeric"))
-
-      fac_vec <- as.factor(mini_db[[v_fac]])
-      if (nlevels(fac_vec) < 2) return(list(valid = FALSE, msg = "Error: Factor needs >= 2 levels"))
-
-      if (nrow(mini_db) > 0 && var(mini_db[[v_rv]]) == 0) return(list(valid = FALSE, msg = "Error: RV total variance is zero"))
-
-      return(list(valid = TRUE, msg = "Ready to Accept Selection"))
     })
 
-    is_valid_ui <- reactive({
-      check <- check_analysis_validity()
-      # Valida solo si el objeto check existe y los inputs tienen contenido
+    # 3. STATISTICAL VALIDATION (JERARQUÍA DE ESTADOS)
+    check_analysis_validity <- reactive({
       v_rv  <- input$var_rv %||% ""
       v_fac <- input$var_factor %||% ""
-      return(isTRUE(check$valid) && v_rv != "" && v_fac != "")
+
+      # A. ESPERA: Si ambos están vacíos
+      if (v_rv == "" && v_fac == "") {
+        return(list(valid = FALSE, msg = "Waiting for User Selection", type = "waiting"))
+      }
+
+      # B. ERROR: Si son iguales (y no están vacíos)
+      if (v_rv != "" && v_fac != "" && v_rv == v_fac) {
+        return(list(valid = FALSE, msg = "Error: Duplicate Variables Selected", type = "error"))
+      }
+
+      # C. ESPERA PARCIAL: Si falta uno de los dos
+      if (v_rv == "" || v_fac == "") {
+        return(list(valid = FALSE, msg = "Waiting for complete selection...", type = "waiting"))
+      }
+
+      # D. VALIDACIÓN TÉCNICA: Solo si ambos están presentes y son distintos
+      df_raw <- the_dataset()
+      req(all(c(v_rv, v_fac) %in% names(df_raw)))
+
+      mini_db <- df_raw[, c(v_rv, v_fac), drop = FALSE] %>% na.omit()
+      if (nrow(mini_db) == 0) return(list(valid = FALSE, msg = "Error: Empty dataset (NAs)", type = "error"))
+      if (!is.numeric(mini_db[[v_rv]])) return(list(valid = FALSE, msg = "Error: RV must be numeric", type = "error"))
+
+      fac_vec <- as.factor(mini_db[[v_fac]])
+      if (nlevels(fac_vec) < 2) return(list(valid = FALSE, msg = "Error: Factor needs >= 2 levels", type = "error"))
+
+      return(list(valid = TRUE, msg = "Ready to Accept Selection", type = "success"))
     })
 
+    # Botón dinámico Enable/Disable
     observe({
-      # shinyjs::toggleState es más seguro para inicializaciones
-      valid <- is_valid_ui()
+      valid <- isTRUE(check_analysis_validity()$valid)
       locked <- isTRUE(data_store$is_locked)
       if (valid && !locked) shinyjs::enable("btn_import") else shinyjs::disable("btn_import")
     })
 
-    # --- CLICK ACCEPT ---
+    # 4. CLICK EVENTS
     observeEvent(input$btn_import, {
-      req(is_valid_ui())
-      check <- check_analysis_validity()
-
+      req(check_analysis_validity()$valid)
       data_store$is_locked <- TRUE
       data_store$is_done <- TRUE
       data_store$time_stamp <- Sys.time()
@@ -187,40 +193,34 @@ SUB_mod_var_selection_server <- function(id, df_input = mtcars, show_debug = FAL
         rv = input$var_rv,
         factor = input$var_factor,
         alpha = as.numeric(input$alpha_value %||% 0.05),
-        controls_passed = check$valid
+        controls_passed = TRUE
       )
-
       output_rv$val <- reactiveValuesToList(data_store)
-
       shinyjs::addClass(id = "card_inputs_wrapper", class = "is-locked")
       shinyjs::disable("var_rv"); shinyjs::disable("var_factor"); shinyjs::disable("alpha_value")
     })
 
-    # --- CLICK EDIT ---
     observeEvent(input$btn_edit, {
       data_store$is_locked <- FALSE
       data_store$is_done   <- FALSE
       data_store$time_stamp <- Sys.time()
       output_rv$val <- list_default
-
       shinyjs::removeClass(id = "card_inputs_wrapper", class = "is-locked")
       shinyjs::enable("var_rv"); shinyjs::enable("var_factor"); shinyjs::enable("alpha_value")
     })
 
-    # --- CLICK RESET ---
     observeEvent(input$btn_reset, {
       for (name in names(list_default)) { data_store[[name]] <- list_default[[name]] }
       data_store$time_stamp <- Sys.time()
       output_rv$val <- list_default
-
-      updateSelectizeInput(session, "var_rv", selected = "")
-      updateSelectizeInput(session, "var_factor", selected = "")
+      updateSelectizeInput(session, "var_rv", selected = character(0))
+      updateSelectizeInput(session, "var_factor", selected = character(0))
       updateSelectizeInput(session, "alpha_value", selected = 0.05)
       shinyjs::removeClass(id = "card_inputs_wrapper", class = "is-locked")
       shinyjs::enable("var_rv"); shinyjs::enable("var_factor"); shinyjs::enable("alpha_value")
     })
 
-    # 5. RENDERS
+    # 5. RENDERS (ESTADOS VISUALES)
     output$status_header <- renderUI({
       locked <- isTRUE(data_store$is_locked)
       check  <- check_analysis_validity()
@@ -229,11 +229,15 @@ SUB_mod_var_selection_server <- function(id, df_input = mtcars, show_debug = FAL
 
       if (locked) {
         cls <- "confirmed"; msg <- "Selection Locked"; ico <- "lock"
-      } else if (!isTRUE(check$valid)) {
+      } else if (check$type == "error") {
         cls <- "error-selection"; msg <- check$msg; ico <- "times-circle"
-      } else if (v_rv != "" && v_fac != "") {
+      } else if (check$type == "success") {
+        cls <- "active-selection"; msg <- check$msg; ico <- "hand-point-up"
+      } else if (v_rv != "" || v_fac != "") {
+        # Si hay al menos uno elegido pero aún no es "success"
         cls <- "active-selection"; msg <- check$msg; ico <- "hand-point-up"
       } else {
+        # Inicio total o reset
         cls <- "waiting"; msg <- check$msg; ico <- "hourglass-half"
       }
 
@@ -256,12 +260,10 @@ SUB_mod_var_selection_server <- function(id, df_input = mtcars, show_debug = FAL
         n_digits <- nchar(length(cols))
         pos_num <- sprintf(paste0("%0", n_digits, "d"), idx)
         pos_let <- openxlsx::int2col(idx)
-
         data.frame(Role = role_name, Abbr = abbr, Name = var_name, Pos = pos_num, Let = pos_let, stringsAsFactors = FALSE)
       }
 
       res <- rbind(get_meta(v_rv, "Response Variable", "RV"), get_meta(v_fac, "Factor Variable", "Factor"))
-
       datatable(res, colnames = c("Role", "Abbr.", "Variable Name", "Col. Nº", "Col. Let."),
                 rownames = FALSE, options = list(dom = 't', ordering = FALSE,
                                                  columnDefs = list(list(className = 'dt-center', targets = "_all"))))
@@ -275,3 +277,6 @@ SUB_mod_var_selection_server <- function(id, df_input = mtcars, show_debug = FAL
     return(reactive({ output_rv$val }))
   })
 }
+
+# Helper global
+`%||%` <- function(a, b) if (!is.null(a)) a else b

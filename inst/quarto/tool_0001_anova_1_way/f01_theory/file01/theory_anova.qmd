@@ -1,0 +1,84 @@
+---
+title: "ANOVA de un Factor"
+subtitle: "Análisis de la Varianza (1-way ANOVA)"
+author: "RScience v.0.0.1"
+date: last-modified
+format:
+  revealjs: 
+    theme: sky
+    transition: slide
+    scrollable: true
+    slide-number: true
+    chalkboard: true
+    # --- AJUSTES DE NAVEGACIÓN ---
+    hash-type: number
+    controls: true            # Muestra las flechas en pantalla
+    touch: true               # Habilita gestos en tablets
+    pause: true               # Tecla 'B' para pantalla negra
+    click-to-proceed: true    # <--- ESTO permite avanzar con un clic
+    # -----------------------------
+    logo: "https://www.r-project.org/logo/Rlogo.png"
+    footer: "Estadística Aplicada con R"
+---
+
+## Introducción
+
+El **ANOVA de un factor** se utiliza para comparar las medias de tres o más grupos independientes.
+
+- **Variable Respuesta (RV):** Continua (Numérica).
+- **Factor:** Categórico (Nominal u Ordinal) con $k \geq 2$ niveles.
+- **Objetivo:** Determinar si al menos una media de grupo es diferente a las demás.
+
+---
+
+## La Hipótesis Estadística
+
+Planteamos el contraste de hipótesis de la siguiente manera:
+
+### Hipótesis Nula ($H_0$)
+$$H_0: \mu_1 = \mu_2 = \mu_3 = \dots = \mu_k$$
+*(Todas las medias son iguales)*
+
+### Hipótesis Alternativa ($H_1$)
+$$H_1: \exists \mu_i \neq \mu_j$$
+*(Al menos una media es diferente)*
+
+---
+
+## Supuestos Críticos
+
+Para que los resultados del ANOVA sean válidos en **RScience**, debemos cumplir:
+
+1.  **Independencia:** Las observaciones son independientes entre sí.
+2.  **Normalidad:** Los residuos deben seguir una distribución normal en cada grupo.
+3.  **Homocedasticidad:** Las varianzas entre los grupos deben ser iguales (Prueba de Levene o Bartlett).
+
+> [!TIP]
+> Si no se cumple la homocedasticidad, considera usar la corrección de **Welch**.
+
+---
+
+## ¿Cómo funciona? (La Lógica)
+
+El ANOVA descompone la variabilidad total de los datos en dos partes:
+
+1.  **Variabilidad Entre Grupos (Between):** Diferencia debida al efecto del factor.
+2.  **Variabilidad Dentro de los Grupos (Within/Error):** Variabilidad azarosa o "ruido".
+
+**El Estadístico F:**
+$$F = \frac{\text{Varianza Entre Grupos}}{\text{Varianza Dentro de los Grupos}}$$
+
+Si $F$ es significativamente alto, rechazamos $H_0$.
+
+---
+
+## Implementación en R
+
+Podemos ejecutar un ANOVA básico con el siguiente código:
+
+```r
+# Ajuste del modelo lineal
+modelo <- aov(RV ~ Factor, data = mi_dataset)
+
+# Resumen de la tabla ANOVA
+summary(modelo)

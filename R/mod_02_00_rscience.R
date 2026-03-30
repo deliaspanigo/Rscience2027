@@ -181,22 +181,22 @@ mod_02_00_rscience_ui <- function(id) {
             type = "hidden",
             tabPanelBody("tab_welcome", div(class="vh-100 d-flex align-items-center justify-content-center", h4("Select a module", class="text-muted"))),
             #######################################################################################
-            tabPanelBody("tab_dataset", div(class="p-3", mod_02_01_dataset_ui(ns("my_ns_dataset")))),
-            tabPanelBody("tab_tool", div(mod_02_02_00_tool_ui(ns("my_ns_tool")))),
-            tabPanelBody("tab_script", div(mod_02_03_00_script_ui(id=ns("my_ns_script")))),
+            tabPanelBody("tab_dataset", mod_02_01_dataset_ui(ns("my_ns_dataset"))),
+            tabPanelBody("tab_tool", mod_02_02_00_tool_ui(ns("my_ns_tool"))),
+            tabPanelBody("tab_script", mod_02_03_00_script_ui(id=ns("my_ns_script"))),
             #######################################################################################
-            tabPanelBody("tab_theory",       div(class="p-3", mod_03_00_collector01_ui_01_theory(ns("txt_1")))),
-            tabPanelBody("tab_bibliography", div(class="p-3", mod_03_00_collector01_ui_02_bibliography(ns("txt_1")))),
-            tabPanelBody("tab_cite",         div(class="p-3", mod_03_00_collector01_ui_03_cite(ns("txt_1")))),
+            tabPanelBody("tab_theory",       mod_03_00_collector01_ui_01_theory(ns("txt_1"))),
+            tabPanelBody("tab_bibliography", mod_03_00_collector01_ui_02_bibliography(ns("txt_1"))),
+            tabPanelBody("tab_cite",         mod_03_00_collector01_ui_03_cite(ns("txt_1"))),
             #######################################################################################
-            tabPanelBody("tab_settings", div(class="p-4", mod_04_00_collector02_settings_ui(ns("my_ns_collector02_settings")))),
-            tabPanelBody("tab_shiny", "Waiting for Shiny..."),
-            tabPanelBody("tab_asesor", "Waiting for Asesor..."),
+            tabPanelBody("tab_settings", mod_04_00_collector02_settings_ui(ns("my_ns_collector02_settings"))),
+            tabPanelBody("tab_shiny",    mod_05_00_collector03_ui_01_shiny_output(ns("txt_3"))),
+            tabPanelBody("tab_asesor",   mod_05_00_collector03_ui_02_asa(ns("txt_3"))),
             #######################################################################################
-            tabPanelBody("tab_script_comments", "Waiting for Scripts comments..."),
-            tabPanelBody("tab_script_basic", "Waiting for Scripts basics..."),
+            tabPanelBody("tab_script_comments",  mod_05_00_collector03_ui_03_script_comment(ns("txt_3"))),
+            tabPanelBody("tab_script_basic",     mod_05_00_collector03_ui_04_script_only(ns("txt_3"))),
             #######################################################################################
-            tabPanelBody("tab_reporting", "Waiting for Reporting..."),
+            tabPanelBody("tab_reporting", mod_05_00_collector03_ui_05_reporting(ns("txt_3"))),
             #######################################################################################
             tabPanelBody("tab_EXTRA", "EXTRA")
 
@@ -890,5 +890,14 @@ mod_02_00_rscience_server <- function(id) {
     mod_03_00_collector01_server_UNIVERSAL(id = "txt_1", folder_path_tool_script = folder_path_collector01)
 
     ############################################################################
+
+    # Colector 01 - Theory - Bibliographt - Cite
+    folder_path_collector03 <- reactive({
+      res_script()$folder_path_tool_script
+    })
+    mod_05_00_collector03_server_UNIVERSAL(id = "txt_3", folder_path_tool_script = folder_path_collector03)
+
+    ############################################################################
+
   })
 }
