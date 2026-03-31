@@ -4,59 +4,94 @@
 
 mod_02_03_00_script_ui <- function(id) {
   ns <- NS(id)
+  root_sel <- paste0(".", ns("script-container"))
 
   tagList(
-    useShinyjs(),
+    shinyjs::useShinyjs(),
     tags$head(
       tags$style(HTML(paste0("
-        .locked-main-content {
+        /* --- BLOQUEO CON VELO GRIS (SIMETRÍA DATASET) --- */
+        ", root_sel, " .lock-wrapper {
+            position: relative !important;
+            transition: all 0.3s ease !important;
+        }
+
+        ", root_sel, " .locked-disabled::after {
+            content: '' !important;
+            position: absolute !important;
+            top: -5px !important; left: -10px !important;
+            right: -10px !important; bottom: -10px !important;
+            background: rgba(0, 0, 0, 0.04) !important;
+            border: 1px dashed rgba(40, 167, 69, 0.3) !important;
+            z-index: 100 !important;
+            border-radius: 15px !important;
+            cursor: not-allowed !important;
+        }
+
+        ", root_sel, " .locked-disabled {
             pointer-events: none !important;
-            opacity: 0.9;
-            border: 5px solid #28a745 !important;
-            transition: all 0.4s ease;
-            position: relative;
+            user-select: none !important;
+            opacity: 0.7 !important;
         }
-        .locked-main-content::before {
-            content: '🔒 SELECCIÓN CONFIRMADA';
-            position: absolute; top: 10px; right: 10px;
-            background: #28a745; color: white;
-            padding: 5px 15px; border-radius: 20px;
-            font-weight: 800; z-index: 999;
+
+        /* --- OCULTAR TABS --- */
+        ", root_sel, " .nav-tabs, ", root_sel, " .nav-underline { display: none !important; }
+
+        /* --- HEADER DINÁMICO --- */
+        ", root_sel, " .selection-header {
+            padding: 15px 25px !important; display: flex !important;
+            justify-content: space-between !important; align-items: center !important;
+            border-radius: 12px !important; margin-bottom: 20px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
         }
-        .path-display {
-            background: #1a202c; color: #00FFFF;
-            padding: 8px 15px; border-radius: 8px;
-            font-family: monospace; font-size: 0.9rem;
+        ", root_sel, " .selection-header.waiting-mode { background: #f0fdff !important; border: 1px solid #00cfd4 !important; color: #008184 !important; }
+        ", root_sel, " .selection-header.active-selection { background: #fff9f0 !important; border: 1px solid #ff9100 !important; color: #b36600 !important; }
+        ", root_sel, " .selection-header.confirmed { background: #f6fff8 !important; border: 1px solid #28a745 !important; color: #1e7e34 !important; }
+
+        /* --- BOTONES PILDORA XL --- */
+        ", root_sel, " .btn.btn-pill-xl {
+            border-radius: 50px !important; padding: 15px 35px !important;
+            font-weight: 800 !important; font-size: 1.1rem !important;
+            text-transform: uppercase !important; letter-spacing: 1px !important;
+            display: inline-flex !important; align-items: center !important;
+            justify-content: center !important; gap: 10px !important;
+            transition: all 0.3s ease !important;
+        }
+        ", root_sel, " .btn.btn-pill-xl.btn-locked {
+            background-color: #e9ecef !important; color: #1e7e34 !important;
+            border-color: #1e7e34 !important; opacity: 1 !important;
         }
       ")))
     ),
 
-    div(class = "container-fluid p-4",
-        card(
-          card_header(
-            div(class = "d-flex justify-content-between align-items-center",
-                div(style = "width: 40%;",
-                    selectInput(ns("tool_selector"), "Herramienta:", choices = NULL, width = "100%")
-                ),
-                div(class = "btn-group",
-                    actionButton(ns("btn_confirm"), "Confirm", class = "btn btn-success", icon = icon("check")),
-                    actionButton(ns("btn_edit"), "Edit", class = "btn btn-warning", icon = icon("edit")),
-                    actionButton(ns("btn_reset"), "Reset", class = "btn btn-primary", icon = icon("sync"))
+    div(class = paste("container-fluid p-4", ns("script-container")),
+        uiOutput(ns("script_header_ui")),
+
+        div(class = "row g-4 align-items-end mb-4",
+            # Contenedor con lock-wrapper para el velo
+            div(class = "col-md-7",
+                div(id = ns("script_selector_wrapper"), class = "lock-wrapper",
+                    div(style = "font-weight: 800; text-transform: uppercase; margin-bottom: 10px;",
+                        "Script Tool Selection", uiOutput(ns("lock_icon_ui"), inline = TRUE)),
+                    selectInput(ns("tool_selector"), label = NULL, choices = NULL, width = "100%")
+                )
+            ),
+            div(class = "col-md-5 text-end",
+                div(class = "d-flex justify-content-end gap-2",
+                    actionButton(ns("btn_confirm"), span(icon("lock"), "Lock"), class = "btn-success btn-pill-xl"),
+                    actionButton(ns("btn_edit"),    span(icon("lock-open"), "Unlock"), class = "btn-warning btn-pill-xl"),
+                    actionButton(ns("btn_reset"),   span(icon("sync"), "Reset"), class = "btn-primary btn-pill-xl")
                 )
             )
-          ),
+        ),
 
-          div(id = ns("main_content_wrapper"),
-              card_body(
-                padding = 0,
-                navset_card_underline(id = ns("main_tabs"))
-              )
-          ),
-          uiOutput(ns("debug_footer_ui"))
+        div(id = ns("main_content_wrapper"),
+            navset_card_underline(id = ns("main_tabs"))
         )
     )
   )
 }
+
 
 mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
@@ -71,7 +106,7 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
     is_done   <- reactiveVal(FALSE)
     is_locked <- reactiveVal(FALSE)
 
-    # Definimos el estado inicial por defecto para reutilizarlo
+    # Estado inicial por defecto para retornos y resets
     default_output <- list(
       description = "*** Rscience - tool_script information ***",
       is_done   = FALSE,
@@ -87,7 +122,26 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
       if (is.function(vector_str_folder_tool_script)) vector_str_folder_tool_script() else vector_str_folder_tool_script
     })
 
-    # --- 2. PROCESO MAESTRO DE IMPORTACIÓN ---
+    # --- 2. RENDER: HEADER DINÁMICO (Sincronizado con is_locked) ---
+    output$script_header_ui <- renderUI({
+      current_sel <- input$tool_selector
+
+      if (is_locked()) {
+        div(class = "selection-header confirmed",
+            span(icon("lock"), paste(" SCRIPT LOADED:", current_sel)),
+            span(class = "header-id", "STATUS: LOCK"))
+      } else if (!is.null(current_sel) && current_sel != "") {
+        div(class = "selection-header active-selection",
+            span(icon("lock-open"), paste(" SELECTED:", current_sel)),
+            span(class = "header-id", "STATUS: UNLOCK"))
+      } else {
+        div(class = "selection-header waiting-mode",
+            span(icon("bolt"), " Waiting for script selection..."),
+            span(class = "header-id", "STATUS: WAITING"))
+      }
+    })
+
+    # --- 3. PROCESO MAESTRO DE IMPORTACIÓN (Tabs Ocultos) ---
     observeEvent(internal_vector_folder_opt(), {
       req(dir.exists(base_path))
       folders <- internal_vector_folder_opt()
@@ -115,6 +169,7 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
               local_env = local_env
             )
 
+            # Insertamos el tab (el CSS del UI se encarga de que sea invisible)
             insertTab(inputId = "main_tabs",
                       tabPanel(title = tool_name, value = tool_name,
                                div(class = "p-4", local_env$mod_special_script_info_ui(ns(tool_name)))))
@@ -126,7 +181,7 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
       tools_env(tmp_list)
     }, ignoreInit = FALSE)
 
-    # --- 3. SINCRONIZACIÓN DE INTERFAZ ---
+    # --- 4. SINCRONIZACIÓN DE INTERFAZ ---
     observeEvent(tools_env(), {
       lista <- tools_env()
       req(length(lista) > 0)
@@ -138,22 +193,24 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
       updateTabsetPanel(session, "main_tabs", selected = input$tool_selector)
     })
 
-    observeEvent(input$main_tabs, {
-      req(input$main_tabs != "", input$main_tabs %in% names(tools_env()))
-      updateSelectInput(session, "tool_selector", selected = input$main_tabs)
-    })
+    # --- 5. LÓGICA DE BOTONES (Con Velo Gris y Bloqueo XL) ---
 
-    # --- 4. LÓGICA DE BOTONES ---
-
-    # CONFIRM: Bloquea y emite datos
+    # ACCIÓN: CONFIRM (LOCK)
     observeEvent(input$btn_confirm, {
       req(input$tool_selector, tools_env())
 
+      # Aplicar Velo Gris al selector y borde verde al contenido
+      shinyjs::addClass(id = "script_selector_wrapper", class = "locked-disabled")
       shinyjs::addClass(id = "main_content_wrapper", class = "locked-main-content")
-      shinyjs::disable("tool_selector")
+
+      # Estilo Botón Confirm (Deshabilitado y color Lock)
+      shinyjs::disable("btn_confirm")
+      shinyjs::addClass(id = "btn_confirm", class = "btn-locked")
+
       is_locked(TRUE)
       is_done(TRUE)
 
+      # Emitir metadata al padre
       meta_data <- tools_env()[[input$tool_selector]]
       confirmed_output(list(
         description = "*** Rscience - tool_script information ***",
@@ -163,63 +220,71 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
         metadata  = meta_data,
         folder_path_tool_script = meta_data$folder_path_tool_script
       ))
+
+      showNotification(paste("Success: Script", input$tool_selector, "locked."), type = "message")
     })
 
-    # EDIT: Desbloquea interfaz pero RESETEA el output (mantiene selección actual)
+    # ACCIÓN: EDIT (UNLOCK)
     observeEvent(input$btn_edit, {
+      # Quitar Velo Gris y bloqueos
+      shinyjs::removeClass(id = "script_selector_wrapper", class = "locked-disabled")
       shinyjs::removeClass(id = "main_content_wrapper", class = "locked-main-content")
-      shinyjs::enable("tool_selector")
+
+      # Restaurar botones
+      shinyjs::enable("btn_confirm")
+      shinyjs::removeClass(id = "btn_confirm", class = "btn-locked")
+
       is_locked(FALSE)
       is_done(FALSE)
 
-      # Volvemos a los valores por defecto (limpia lo que ve el padre)
+      # Limpiar salida hacia el padre (vuelve a default)
       confirmed_output(default_output)
+      message("--- [SCRIPTS] Modo edición habilitado ---")
     })
 
-    # RESET: Desbloquea interfaz, RESETEA el output y vuelve al INICIO de los selectores
+    # ACCIÓN: RESET
     observeEvent(input$btn_reset, {
+      # Limpiar todos los estilos de bloqueo
+      shinyjs::removeClass(id = "script_selector_wrapper", class = "locked-disabled")
       shinyjs::removeClass(id = "main_content_wrapper", class = "locked-main-content")
-      shinyjs::enable("tool_selector")
+      shinyjs::enable("btn_confirm")
+      shinyjs::removeClass(id = "btn_confirm", class = "btn-locked")
+
       is_locked(FALSE)
       is_done(FALSE)
-
-      # Volvemos a los valores por defecto
       confirmed_output(default_output)
 
+      # Volver al primer elemento de la lista
       if (length(tools_env()) > 0) {
         updateSelectInput(session, "tool_selector", selected = names(tools_env())[1])
       }
+      message("--- [SCRIPTS] Reset completo ---")
     })
 
-    # --- 5. SALIDAS DE INFORMACIÓN Y DEBUG ---
-
+    # --- 6. SALIDAS DE INFORMACIÓN Y DEBUG ---
     output$debug_footer_ui <- renderUI({
       req(show_debug)
       card_footer(
-        div(class = "d-flex justify-content-between",
-            uiOutput(ns("path_info")),
-            actionLink(ns("toggle_debug"), "Show/Hide Debug")
+        div(class = "d-flex justify-content-between align-items-center",
+            div(class = "path-display",
+                icon("folder-open"), " ",
+                if(!is.null(input$tool_selector)) tools_env()[[input$tool_selector]]$folder_path_tool_script else "No path selected"),
+            actionLink(ns("toggle_debug"), "Show/Hide JSON Debug")
         ),
         conditionalPanel(
           condition = "input.toggle_debug % 2 != 0",
           ns = ns,
           hr(),
-          listviewer::jsoneditOutput(ns("debug_view"), height = "200px")
+          listviewer::jsoneditOutput(ns("debug_view"), height = "250px")
         )
       )
-    })
-
-    output$path_info <- renderUI({
-      req(input$tool_selector, tools_env())
-      path <- tools_env()[[input$tool_selector]]$folder_path_tool_script
-      div(class = "path-display", icon("folder-open"), " ", path)
     })
 
     output$debug_view <- listviewer::renderJsonedit({
       listviewer::jsonedit(confirmed_output(), mode = "text")
     })
 
-    # --- 6. RETORNO DE DATOS AL PADRE ---
+    # --- 7. RETORNO DE DATOS ---
     return(confirmed_output)
   })
 }
