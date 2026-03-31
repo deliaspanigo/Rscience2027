@@ -19,51 +19,49 @@ mod_02_01_dataset_ui <- function(id) {
       tags$style(HTML(paste0("
         /* --- BLOQUEO DE COLUMNA: NITIDEZ TOTAL --- */
         ", root_sel, " .lock-wrapper {
-            position: relative;
-            transition: all 0.3s ease;
+            position: relative !important;
+            transition: all 0.3s ease !important;
         }
 
         ", root_sel, " .locked-disabled::after {
-            content: '';
-            position: absolute;
-            top: -0px; left: -8px; right: -8px; bottom: -8px;
-            background: rgba(0, 0, 0, 0.03);
+            content: '' !important;
+            position: absolute !important;
+            top: -0px !important; left: -8px !important; right: -8px !important; bottom: -8px !important;
+            background: rgba(0, 0, 0, 0.03) !important;
             border-color: #1e7e34 !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
-            z-index: 100;
-            border-radius: 15px;
-            border: 1px dashed rgba(0,0,0,0.1);
+            z-index: 100 !important;
+            border-radius: 15px !important;
+            border: 1px dashed rgba(0,0,0,0.1) !important;
             cursor: not-allowed !important;
         }
 
         ", root_sel, " .locked-disabled {
             pointer-events: none !important;
-            user-select: none;
+            user-select: none !important;
             filter: none !important;
-            opacity: 0.85;
+            opacity: 0.85 !important;
         }
 
         /* --- SELECTION HEADER (MARQUESINA DINÁMICA) --- */
         ", root_sel, " .selection-header {
-            /* padding: [ARRIBA] [DERECHA] [ABAJO] [IZQUIERDA] */
-            padding: 15px 25px 15px 25px;
-
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 12px;
-            transition: all 0.4s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 15px 25px 15px 25px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            border-radius: 12px !important;
+            transition: all 0.4s ease !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
         }
 
-        ", root_sel, " .selection-header.waiting-mode { background: #f0fdff; border: 1px solid #00cfd4; color: #008184; }
-        ", root_sel, " .selection-header.active-selection { background: #fff9f0; border: 1px solid #ff9100; color: #b36600; }
-        ", root_sel, " .selection-header.confirmed { background: #f6fff8; border: 1px solid #28a745; color: #1e7e34; }
+        ", root_sel, " .selection-header.waiting-mode { background: #f0fdff !important; border: 1px solid #00cfd4 !important; color: #008184 !important; }
+        ", root_sel, " .selection-header.active-selection { background: #fff9f0 !important; border: 1px solid #ff9100 !important; color: #b36600 !important; }
+        ", root_sel, " .selection-header.confirmed { background: #f6fff8 !important; border: 1px solid #28a745 !important; color: #1e7e34 !important; }
 
         ", root_sel, " .header-id {
-            font-family: 'Monaco', 'Courier New', monospace; font-weight: 700;
-            font-size: 0.85rem; background: rgba(0,0,0,0.08); padding: 4px 15px; border-radius: 20px;
+            font-family: 'Monaco', 'Courier New', monospace !important; font-weight: 700 !important;
+            font-size: 0.85rem !important; background: rgba(0,0,0,0.08) !important; padding: 4px 15px !important; border-radius: 20px !important;
         }
 
         /* --- BOTONES PILDORA XL --- */
@@ -76,47 +74,45 @@ mod_02_01_dataset_ui <- function(id) {
             transition: all 0.3s ease !important;
         }
 
-        ", root_sel, " .btn.btn-pill-xl:hover { transform: translateY(-4px) !important; filter: brightness(1.1); }
+        ", root_sel, " .btn.btn-pill-xl:hover { transform: translateY(-4px) !important; filter: brightness(1.1) !important; }
 
         ", root_sel, " .btn.btn-pill-xl.btn-locked {
-            background-color: #e9ecef !important; /* Gris claro de fondo */
-            color: #1e7e34 !important;            /* Texto gris tenue */
+            background-color: #e9ecef !important;
+            color: #1e7e34 !important;
             border-color: #1e7e34 !important;
-            opacity: 1 !important;                /* Evita que el navegador lo ponga borroso */
+            opacity: 1 !important;
             box-shadow: none !important;
-            transform: none !important;           /* Evita el efecto de hover */
+            transform: none !important;
         }
 
         ", root_sel, " .action-row-right {
-            display: flex; flex-direction: row; justify-content: flex-end;
-            align-items: center; gap: 12px; height: 100%;
+            display: flex !important; flex-direction: row !important; justify-content: flex-end !important;
+            align-items: center !important; gap: 12px !important; height: 100% !important;
         }
 
         /* --- LABELS Y SECCIONES --- */
         ", root_sel, " .section-label {
-            font-weight: 800; font-size: 1.1rem !important;
-            color: #1a1a1a !important; text-transform: uppercase;
-            margin-bottom: 10px; letter-spacing: 1px;
+            font-weight: 800 !important; font-size: 1.1rem !important;
+            color: #1a1a1a !important; text-transform: uppercase !important;
+            margin-bottom: 10px !important; letter-spacing: 1px !important;
         }
 
-        ", root_sel, " .status-closed { color: #28a745 !important; font-weight: 900 !important; margin-left: 8px; }
+        ", root_sel, " .status-closed { color: #28a745 !important; font-weight: 900 !important; margin-left: 8px !important; }
 
         ", root_sel, " .file-info-banner {
-            background: rgba(40, 167, 69, 0.05); border-left: 5px solid #28a745;
-            padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;
+            background: rgba(40, 167, 69, 0.05) !important; border-left: 5px solid #28a745 !important;
+            padding: 15px !important; margin-bottom: 20px !important; border-radius: 0 8px 8px 0 !important;
         }
 
         /* --- DEBUG PANEL CLEAN --- */
         ", root_sel, " .debug-panel-clean {
-            margin-top: 30px; padding: 20px;
-            background: #ffffff; border: 1px solid #dee2e6;
-            border-radius: 8px; font-family: monospace;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            margin-top: 30px !important; padding: 20px !important;
+            background: #ffffff !important; border: 1px solid #dee2e6 !important;
+            border-radius: 8px !important; font-family: monospace !important;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
         }
 
         .selectize-dropdown { z-index: 999999 !important; }
-
-
       ")))
     ),
 
@@ -158,7 +154,7 @@ mod_02_01_dataset_ui <- function(id) {
                 div(class = "action-row-right",
                     actionButton(inputId = ns("btn_import"), label = span(icon("lock"), "Lock"), class = "btn-success btn-pill-xl"),
                     actionButton(ns("btn_edit"),   span(icon("lock-open"), "Unlock"),     class = "btn-warning btn-pill-xl"),
-                    actionButton(ns("btn_reset"),  span(icon("sync"), "Reset"),    class = "btn-primary btn-pill-xl")
+                    actionButton(ns("btn_reset"),  span(icon("sync"), "Reset"),     class = "btn-primary btn-pill-xl")
                 )
             )
         ),
