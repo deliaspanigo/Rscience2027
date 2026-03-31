@@ -9,6 +9,8 @@ devtools::load_all()
 # 3. APP PRINCIPAL
 # ==========================================
 ui <- fluidPage(
+  theme = bs_theme(version = 5, bootswatch = "flatly", primary = "#00d4ff"),
+
   mod_02_02_00_tool_ui("my_tool")
 )
 

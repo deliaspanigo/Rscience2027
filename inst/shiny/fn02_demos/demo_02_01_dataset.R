@@ -11,7 +11,7 @@ library(listviewer)
 ui <- fluidPage(
   theme = bs_theme(version = 5, bootswatch = "flatly", primary = "#00d4ff"),
 
-  titlePanel("Demo: Módulo de Importación de Datos"),
+  #titlePanel("Demo: Módulo de Importación de Datos"),
 
   mod_02_01_dataset_ui("demo_dataset"),
 

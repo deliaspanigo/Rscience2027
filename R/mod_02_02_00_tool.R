@@ -11,7 +11,7 @@ mod_02_02_00_tool_ui <- function(id) {
   root_sel <- paste0(".", ns("tools-container"))
 
   tagList(
-    # CSS Específico del Módulo
+    shinyjs::useShinyjs(),
     tags$head(
       tags$style(HTML(paste0("
         ", root_sel, " {
@@ -20,6 +20,35 @@ mod_02_02_00_tool_ui <- function(id) {
             padding: 20px !important; background: #f8f9fa;
             overflow: hidden;
         }
+
+        /* --- BOTONES PILDORA XL (IDÉNTICOS A DATASET) --- */
+        ", root_sel, " .btn.btn-pill-xl {
+            border-radius: 50px !important; padding: 15px 35px !important;
+            font-weight: 800 !important; font-size: 1.1rem !important;
+            text-transform: uppercase !important; letter-spacing: 1px !important;
+            display: inline-flex !important; align-items: center !important;
+            justify-content: center !important; gap: 10px !important;
+            transition: all 0.3s ease !important;
+        }
+
+        ", root_sel, " .btn.btn-pill-xl:hover { transform: translateY(-4px) !important; filter: brightness(1.1) !important; }
+
+        ", root_sel, " .btn.btn-pill-xl.btn-locked {
+            background-color: #e9ecef !important;
+            color: #1e7e34 !important;
+            border-color: #1e7e34 !important;
+            opacity: 1 !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        /* --- CONTENEDOR DE ACCIONES --- */
+        ", root_sel, " .action-row-right {
+            display: flex !important; flex-direction: row !important; justify-content: flex-end !important;
+            align-items: center !important; gap: 12px !important; height: 100% !important;
+        }
+
+        /* --- MAPA Y BLOQUEO VERDE --- */
         ", root_sel, " .map-section {
             display: flex; flex-direction: column; flex: 1;
             margin-top: 15px; position: relative;
@@ -31,7 +60,6 @@ mod_02_02_00_tool_ui <- function(id) {
             transition: all 0.3s ease;
         }
 
-        /* Bloqueo Visual Verde */
         .locked-tree {
             pointer-events: none !important;
             opacity: 0.85;
@@ -41,18 +69,13 @@ mod_02_02_00_tool_ui <- function(id) {
         }
 
         .locked-tree::after {
-            content: '🔒 SELECCIÓN CONFIRMADA';
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: #28a745;
-            color: #ffffff;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 1.2rem;
-            z-index: 2000;
-            box-shadow: 0 0 15px rgba(40, 167, 69, 0.5);
+            content: '🔒 SELECCIÓN CONFIRMADA' !important;
+            position: absolute !important;
+            top: 20px !important; left: 20px !important;
+            background: #28a745 !important; color: #ffffff !important;
+            padding: 10px 18px !important; border-radius: 8px !important;
+            font-weight: 800 !important; font-size: 1.2rem !important;
+            z-index: 2000 !important;
         }
 
         .path-display-area {
@@ -67,6 +90,26 @@ mod_02_02_00_tool_ui <- function(id) {
             background: #e6f7ff; border-left: 5px solid #1890ff;
             padding: 10px 20px; margin: 10px 0; border-radius: 4px;
         }
+
+        /* --- SELECTION HEADER (MARQUESINA DINÁMICA) --- */
+        ", root_sel, " .selection-header {
+            padding: 15px 25px 15px 25px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            border-radius: 12px !important;
+            transition: all 0.4s ease !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+        }
+
+        ", root_sel, " .selection-header.waiting-mode { background: #f0fdff !important; border: 1px solid #00cfd4 !important; color: #008184 !important; }
+        ", root_sel, " .selection-header.active-selection { background: #fff9f0 !important; border: 1px solid #ff9100 !important; color: #b36600 !important; }
+        ", root_sel, " .selection-header.confirmed { background: #f6fff8 !important; border: 1px solid #28a745 !important; color: #1e7e34 !important; }
+
+        ", root_sel, " .header-id {
+            font-family: 'Monaco', 'Courier New', monospace !important; font-weight: 700 !important;
+            font-size: 0.85rem !important; background: rgba(0,0,0,0.08) !important; padding: 4px 15px !important; border-radius: 20px !important;
+        }
       ")))
     ),
 
@@ -74,21 +117,26 @@ mod_02_02_00_tool_ui <- function(id) {
         # 1. Cabecera Dinámica
         div(class = "flex-shrink-0", uiOutput(ns("tools_header"))),
 
+
+
         # 2. Barra de Control y Path
         div(class = "row g-3 align-items-center flex-shrink-0", style="margin-top:5px;",
             div(class = "col-md-7",
                 div(class = "path-display-area", uiOutput(ns("path_chips_ui")))
             ),
-            div(class = "col-md-5 text-end",
-                actionButton(ns("btn_confirm"), "Confirm", class = "btn btn-success", icon = icon("check")),
-                actionButton(ns("btn_edit"), "Edit", class = "btn btn-warning", icon = icon("edit")),
-                actionButton(ns("btn_reset"), "Reset", class = "btn btn-primary", icon = icon("sync"))
+            div(class = "col-md-5",
+                div(class = "action-row-right",
+                    actionButton(inputId = ns("btn_confirm"), label = span(icon("lock"), "Lock"), class = "btn-success btn-pill-xl"),
+                    actionButton(inputId = ns("btn_edit"),    span(icon("lock-open"), "Unlock"), class = "btn-warning btn-pill-xl"),
+                    actionButton(inputId = ns("btn_reset"),   span(icon("sync"), "Reset"),    class = "btn-primary btn-pill-xl")
+                )
             )
         ),
 
         # 3. Banner de Información
         uiOutput(ns("scripts_info_banner")),
 
+                div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
         # 4. El Árbol (Motor de Selección)
         div(class = "map-section",
             div(id = ns("tree_wrapper"), class = "map-wrapper",
@@ -96,7 +144,7 @@ mod_02_02_00_tool_ui <- function(id) {
             )
         ),
 
-        # 5. Debug Panel (Opcional)
+        # 5. Debug Panel
         div(style = "margin-top: 10px; max-height: 200px; overflow-y: auto;",
             listviewer::jsoneditOutput(ns("debug_json"), height = "auto")
         )
@@ -117,37 +165,52 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
     rlist_tree <- mod_02_02_01_tree_server("inner_tree")
 
     # --- LÓGICA: BOTÓN CONFIRMAR ---
+    # --- DENTRO DEL SERVER ---
+
+    # LÓGICA: BOTÓN CONFIRMAR
     observeEvent(input$btn_confirm, {
-      # Accedemos a la data actual del árbol
       tree_data <- rlist_tree()
-
-      # FIX CRÍTICO: El árbol usa 'selected_node_name', no 'node_name'
       current_node <- tree_data$selected_node_name
-
-      # Debug para verificar en consola qué está llegando
-      message("--- [TOOLS] Intentando confirmar nodo: ", current_node, " ---")
-
       req(current_node)
 
-      # Si el nodo es válido y no es la raíz vacía
       if(current_node != "Rscience") {
-
-        # 1. Bloqueo Visual (Borde Verde y Cartel)
+        # 1. Bloqueo Visual del Árbol
         shinyjs::addClass(id = "tree_wrapper", class = "locked-tree")
 
-        # 2. Deshabilitar botones (Usando ns() por seguridad)
+        # 2. Estilo Bloqueado para el Botón (Igual a Dataset)
         shinyjs::disable("btn_confirm")
+        shinyjs::addClass(id = "btn_confirm", class = "btn-locked")
 
-        # 3. Actualizar estados para el Sidebar y lógica interna
         is_locked(TRUE)
         is_done(TRUE)
-
         message("--- [TOOLS] SELECCIÓN BLOQUEADA ---")
-
       } else {
-        # Feedback si intentan confirmar sin elegir una herramienta real
-        shinyjs::runjs("alert('Por favor, navega en el árbol y selecciona una herramienta específica antes de confirmar.');")
+        shinyjs::runjs("alert('Por favor, selecciona una herramienta específica.');")
       }
+    })
+
+    # LÓGICA: BOTÓN EDITAR
+    observeEvent(input$btn_edit, {
+      # 1. Quitar bloqueos visuales
+      shinyjs::removeClass(id = "tree_wrapper", class = "locked-tree")
+
+      # 2. Restaurar botón Lock
+      shinyjs::enable("btn_confirm")
+      shinyjs::removeClass(id = "btn_confirm", class = "btn-locked")
+
+      is_locked(FALSE)
+      is_done(FALSE)
+    })
+
+    # LÓGICA: BOTÓN RESET
+    observeEvent(input$btn_reset, {
+      shinyjs::removeClass(id = "tree_wrapper", class = "locked-tree")
+      shinyjs::enable("btn_confirm")
+      shinyjs::removeClass(id = "btn_confirm", class = "btn-locked")
+
+      # Aquí podrías añadir el reset del árbol si el mod_02_02_01 lo permite
+      is_locked(FALSE)
+      is_done(FALSE)
     })
 
     # --- LÓGICA: BOTÓN EDITAR (DESBLOQUEAR) ---
@@ -162,12 +225,35 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
 
     # --- RENDERIZADO DE CABECERA ---
     output$tools_header <- renderUI({
+      # Extraemos la info del árbol
       tree_data <- rlist_tree()
-      # Usamos el color Naranja o Verde según el estado de is_done
-      color_header <- if(is_done()) "#28a745" else "#ff9100"
 
-      tags$h2(paste("Herramienta:", tree_data$selected_node_name_mod),
-              style = paste0("color:", color_header, "; font-weight:900; transition: color 0.4s;"))
+      # El nombre actual es el nombre modificado del nodo seleccionado
+      # Si el nodo es "Rscience" (raíz), lo tratamos como NULL para el estado WAITING
+      current_name <- if(!is.null(tree_data$selected_node_name_mod) && tree_data$selected_node_name != "Rscience") {
+        tree_data$selected_node_name_mod
+      } else {
+        NULL
+      }
+
+      if (is_locked()) {
+        # ESTADO: BLOQUEADO (Verde)
+        div(class = "selection-header confirmed",
+            span(icon("lock"), paste(" TOOL CONFIRMED:", current_name)),
+            span(class = "header-id", "STATUS: LOCK"))
+
+      } else if (!is.null(current_name)) {
+        # ESTADO: SELECCIONADO PERO NO BLOQUEADO (Naranja)
+        div(class = "selection-header active-selection",
+            span(icon("lock-open"), paste(" SELECTED TOOL:", current_name)),
+            span(class = "header-id", "STATUS: UNLOCK"))
+
+      } else {
+        # ESTADO: ESPERANDO (Azul)
+        div(class = "selection-header waiting-mode",
+            span(icon("bolt"), " Waiting for tool selection..."),
+            span(class = "header-id", "STATUS: WAITING"))
+      }
     })
 
     # --- RENDERIZADO DE PATH (CHIPS) ---
