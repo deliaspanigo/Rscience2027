@@ -69,7 +69,7 @@ mod_02_02_00_tool_ui <- function(id) {
         }
 
         .locked-tree::after {
-            content: '🔒 SELECCIÓN CONFIRMADA' !important;
+            content: '🔒 Confirmed selection' !important;
             position: absolute !important;
             top: 20px !important; left: 20px !important;
             background: #28a745 !important; color: #ffffff !important;
