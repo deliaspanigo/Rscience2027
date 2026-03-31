@@ -26,8 +26,9 @@ mod_02_01_dataset_ui <- function(id) {
         ", root_sel, " .locked-disabled::after {
             content: '';
             position: absolute;
-            top: -8px; left: -8px; right: -8px; bottom: -8px;
+            top: -0px; left: -8px; right: -8px; bottom: -8px;
             background: rgba(0, 0, 0, 0.03);
+            border-color: #1e7e34 !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             z-index: 100;
@@ -45,8 +46,14 @@ mod_02_01_dataset_ui <- function(id) {
 
         /* --- SELECTION HEADER (MARQUESINA DINÁMICA) --- */
         ", root_sel, " .selection-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 25px; border-radius: 12px; transition: all 0.4s ease;
+            /* padding: [ARRIBA] [DERECHA] [ABAJO] [IZQUIERDA] */
+            padding: 15px 25px 15px 25px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px;
+            transition: all 0.4s ease;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
@@ -69,7 +76,16 @@ mod_02_01_dataset_ui <- function(id) {
             transition: all 0.3s ease !important;
         }
 
-        ", root_sel, " .btn.btn-pill-xl:hover { transform: translateY(-2px) !important; filter: brightness(1.1); }
+        ", root_sel, " .btn.btn-pill-xl:hover { transform: translateY(-4px) !important; filter: brightness(1.1); }
+
+        ", root_sel, " .btn.btn-pill-xl.btn-locked {
+            background-color: #e9ecef !important; /* Gris claro de fondo */
+            color: #1e7e34 !important;            /* Texto gris tenue */
+            border-color: #1e7e34 !important;
+            opacity: 1 !important;                /* Evita que el navegador lo ponga borroso */
+            box-shadow: none !important;
+            transform: none !important;           /* Evita el efecto de hover */
+        }
 
         ", root_sel, " .action-row-right {
             display: flex; flex-direction: row; justify-content: flex-end;
@@ -120,8 +136,10 @@ mod_02_01_dataset_ui <- function(id) {
                     div(class = "row g-3",
                         div(class = "col-md-4",
                             div(id = ns("label_source"), class = "section-label", "Source Type"),
-                            selectInput(ns("source"), NULL, choices = c("Local File" = "local_file",
-                                                                        "R Example" = "R_dataset"), width = "100%")
+                            selectInput(inputId = ns("source_dataset"),
+                                        label = NULL,
+                                        choices = c("Select a source..." = "", "01 - Local File" = "local_file", "02 - R Example" = "R_dataset"),
+                                        width = "100%")
                         ),
                         div(class = "col-md-8",
                             div(id = ns("label_selection"), class = "section-label", "Data Selection"),
@@ -138,9 +156,9 @@ mod_02_01_dataset_ui <- function(id) {
             # Columna de Acciones
             div(class = "col-md-4",
                 div(class = "action-row-right",
-                    actionButton(ns("btn_import"), span(icon("check"), "Import"), class = "btn-success btn-pill-xl"),
-                    actionButton(ns("btn_edit"),   span(icon("edit"), "Edit"),   class = "btn-warning btn-pill-xl"),
-                    actionButton(ns("btn_reset"),  span(icon("sync"), "Reset"),  class = "btn-primary btn-pill-xl")
+                    actionButton(inputId = ns("btn_import"), label = span(icon("lock"), "Lock"), class = "btn-success btn-pill-xl"),
+                    actionButton(ns("btn_edit"),   span(icon("lock-open"), "Unlock"),     class = "btn-warning btn-pill-xl"),
+                    actionButton(ns("btn_reset"),  span(icon("sync"), "Reset"),    class = "btn-primary btn-pill-xl")
                 )
             )
         ),
@@ -153,7 +171,7 @@ mod_02_01_dataset_ui <- function(id) {
         div(class = "row g-0",
             div(class = "col-12",
                 div(class = "section-label mb-3", icon("table"), " Data Preview"),
-                div(style = "width: 100%; overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #eee; padding: 10px;",
+                div(style = "width: 100%; background: white; border-radius: 12px; border: 1px solid #eee; padding: 10px;",
                     DTOutput(ns("preview"))
                 ),
                 listviewer::jsoneditOutput(ns("debug_json"), height = "600px")                )
@@ -210,22 +228,27 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
 
       if (lock_it) {
         shinyjs::disable("btn_import")
-        shinyjs::html("label_source", paste0("Source Type", closed_suffix))
+        # Agregamos la clase de estilo bloqueado
+        shinyjs::addClass(id = "btn_import", class = "btn-locked")
+
+        shinyjs::html("label_source",    paste0("Source Type", closed_suffix))
         shinyjs::html("label_selection", paste0("Data Selection", closed_suffix))
         shinyjs::addClass(id = "main_input_col", class = "locked-disabled")
       } else {
         shinyjs::enable("btn_import")
-        shinyjs::html("label_source", "Source Type")
+        # Quitamos la clase para que vuelva a su color original (btn-success)
+        shinyjs::removeClass(id = "btn_import", class = "btn-locked")
+
+        shinyjs::html("label_source",    "Source Type")
         shinyjs::html("label_selection", "Data Selection")
         shinyjs::removeClass(id = "main_input_col", class = "locked-disabled")
       }
-
     }
 
     # --- RENDER: HEADER DINÁMICO ---
     output$import_header <- renderUI({
       # Consistencia de IDs: usamos input$selected_R_dataset
-      current_name <- if(input$source == "local_file") {
+      current_name <- if(input$source_dataset == "local_file") {
         if(!is.null(input$file_input)) input$file_input$name else NULL
       } else {
         if(!is.null(input$selected_R_dataset) && input$selected_R_dataset != "") input$selected_R_dataset else NULL
@@ -233,12 +256,12 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
 
       if (is_locked()) {
         div(class = "selection-header confirmed",
-            span(icon("lock"), paste(" DATA IMPORTED:", data_store$metadata$name_mod)),
-            span(class = "header-id", "STATUS: READY"))
+            span(icon("lock"), paste(" DATASET IMPORTED:", data_store$metadata$name_mod)),
+            span(class = "header-id", "STATUS: LOCK"))
       } else if (!is.null(current_name)) {
         div(class = "selection-header active-selection",
-            span(icon("file-import"), paste(" SELECTED:", current_name)),
-            span(class = "header-id", "STATUS: PENDING"))
+            span(icon("lock-open"), paste(" SELECTED:", current_name)),
+            span(class = "header-id", "STATUS: UNLOCK"))
       } else {
         div(class = "selection-header waiting-mode",
             span(icon("bolt"), " Waiting for user selection..."),
@@ -247,26 +270,38 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
     })
 
     # --- RENDERS: MENUS DINÁMICOS ---
-    output$menu01_local_file <- renderUI({ req(input$source == 'local_file'); fileInput(ns("file_input"), NULL, buttonLabel = "Browse...", width = "100%") })
+    output$menu01_local_file <- renderUI({
+      req(input$source_dataset == 'local_file')
+
+      fileInput(inputId = ns("file_input"), label = NULL, buttonLabel = "Browse...", width = "100%")
+
+    })
 
     output$menu02_RData <- renderUI({
-      req(input$source == 'R_dataset')
+      req(input$source_dataset == 'R_dataset')
       selectizeInput(ns("selected_R_dataset"), NULL, choices = c("(Select Dataset)" = "", "mtcars", "iris", "airquality"),
                      width = "100%", options = list(dropdownParent = 'body'))
     })
 
     output$options_ui <- renderUI({
-      req(input$source == "local_file", input$file_input)
+      req(input$source_dataset == "local_file", input$file_input)
+      #print(input$file_input)
       ext <- tolower(tools::file_ext(input$file_input$name))
+
       if (ext %in% c("csv", "tsv", "txt")) {
+
+        vector_separator <- c("Select a column separator..." = "", "Comma (,)" = ",", "Semicolon (;)" = ";", "Tab" = "\t")
+        vector_decimal   <- c("Select a decimal..." = "","Period (.)" = ".", "Comma (,)" = ",")
+
         div(class = "mt-3", div(class = "section-label", "Parsing Options"),
             fluidRow(
-              column(4, selectizeInput(ns("sep"), "Separator", choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab" = "\t"), options = list(dropdownParent = 'body'))),
-              column(4, selectizeInput(ns("dec"), "Decimal", choices = c("Period (.)" = ".", "Comma (,)" = ","), options = list(dropdownParent = 'body'))),
+              column(4, selectizeInput(inputId = ns("sep"), label = "Separator", choices = vector_separator, options = list(dropdownParent = 'body'))),
+              column(4, selectizeInput(inputId = ns("dec"), label = "Decimal",   choices = vector_decimal,   options = list(dropdownParent = 'body'))),
               column(4, div(style = "padding-top: 35px;", checkboxInput(ns("header"), "Header", TRUE)))
             ))
-      } else if (ext %in% c("xls", "xlsx")) {
+      } else if (ext %in% c("xlsx")) {
         sheets <- tryCatch({ readxl::excel_sheets(input$file_input$datapath) }, error = function(e) NULL)
+        sheets <- c("Select a sheet..." = "", sheets)
         div(class = "mt-3", div(class = "section-label", "Sheet Selection"),
             fluidRow(column(6, selectizeInput(ns("excel_sheet"), "Select Sheet", choices = sheets, width = "100%", options = list(dropdownParent = 'body')))))
       }
@@ -278,12 +313,12 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
 
       now <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
       data_store$metadata$timestamp <- now
-      data_store$metadata$selected_source <- input$source
+      data_store$metadata$selected_source <- input$source_dataset
 
 
       # 1. VALIDACIÓN DE ENTRADAS (v.0.1.1)
       # ------------------------------------------------------------------------
-      if (input$source == "local_file") {
+      if (input$source_dataset == "local_file") {
         # Caso: Archivo Local
         if (is.null(input$file_input)) {
           string_error <- "Friendly message: No file has been selected for import."
@@ -300,7 +335,7 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
           return()
         }
 
-      } else if (input$source == "R_dataset") {
+      } else if (input$source_dataset == "R_dataset") {
         # Caso: Dataset de R
         if (is.null(input$selected_R_dataset) || input$selected_R_dataset == "") {
           string_error <- "Friendly message: Select an example dataset from the list."
@@ -309,11 +344,17 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
           return()
         }
 
+      } else if (input$source_dataset == "") {
+        string_error <- "Friendly message: Select a source dataset."
+        data_store$error_msg <- string_error
+        showNotification(string_error, type = "warning")
+        return()
+
       } else {
-        # Caso: Error interno (input$source tiene un valor no controlado)
+        # Caso: Error interno (input$source_dataset tiene un valor no controlado)
         string_error <- paste0(
-          "Error internal 01: Problems with input$source. The option is '",
-          input$source,
+          "Error internal 01: Problems with input$source_dataset. The option is '",
+          input$source_dataset,
           "' but is not a valid option."
         )
         data_store$error_msg <- string_error
@@ -327,9 +368,9 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
       data_store$error_msg <- NULL # Limpiamos errores anteriores
 
       tryCatch({
-        #data_store$metadata$selected_source <- input$source
+        #data_store$metadata$selected_source <- input$source_dataset
 
-        if (input$source == "local_file") {
+        if (input$source_dataset == "local_file") {
           path <- input$file_input$datapath
           ext <- tolower(tools::file_ext(input$file_input$name))
           data_store$metadata$name_orig <- input$file_input$name
@@ -361,7 +402,7 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
         } else {
           # Carga de datasets de R
           temp_df <- get(input$selected_R_dataset, "package:datasets")
-          data_store$metadata$name_mod <- paste0(input$selected_R_dataset, " (R Dataset)")
+          data_store$metadata$name_mod <- paste0(input$selected_R_dataset, " (R Example)")
         }
 
         # 3. ACTUALIZACIÓN DEL DATA_STORE
@@ -416,6 +457,8 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
       reset_data_store()
       shinyjs::reset("main_input_col")
       toggle_import_controls(FALSE)
+      #shinyjs::reset("file_input")
+
     })
 
     # --- OUTPUTS ---
