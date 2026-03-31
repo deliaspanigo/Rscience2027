@@ -184,8 +184,11 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
     # --- 4. SINCRONIZACIÓN DE INTERFAZ ---
     observeEvent(tools_env(), {
       lista <- tools_env()
+      vector_opts <- names(lista)
+      vector_opts <- c("Select a script..." = "", vector_opts)
+
       req(length(lista) > 0)
-      updateSelectInput(session, "tool_selector", choices = names(lista), selected = names(lista)[1])
+      updateSelectInput(session, "tool_selector", choices = vector_opts, selected = vector_opts[1])
     })
 
     observeEvent(input$tool_selector, {

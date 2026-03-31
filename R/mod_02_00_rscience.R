@@ -895,7 +895,8 @@ mod_02_00_rscience_server <- function(id) {
     folder_path_collector03 <- reactive({
       res_script()$folder_path_tool_script
     })
-    mod_05_00_collector03_server_UNIVERSAL(id = "txt_3", folder_path_tool_script = folder_path_collector03)
+    mod_05_00_collector03_server_UNIVERSAL(id = "txt_3",
+                                           folder_path_tool_script = folder_path_collector03)
 
     ############################################################################
 

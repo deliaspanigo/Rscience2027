@@ -1,5 +1,5 @@
 ---
-title: "Rscience - _script_modulo 01"
+title: "Rscience - _script_modulo 02"
 format: 
   html:
     css: custom_theme.css
