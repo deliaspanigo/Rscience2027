@@ -2211,9 +2211,10 @@ vertical-align: -.125em;
   <li><a href="#section-01---libraries" id="toc-section-01---libraries" class="nav-link active" data-scroll-target="#section-01---libraries">Section 01 - Libraries</a></li>
   <li><a href="#section-08---anova-test" id="toc-section-08---anova-test" class="nav-link" data-scroll-target="#section-08---anova-test">Section 08 - Anova Test</a></li>
   <li><a href="#section-09---tukey-test" id="toc-section-09---tukey-test" class="nav-link" data-scroll-target="#section-09---tukey-test">Section 09 - Tukey test</a></li>
-  <li><a href="#section-10---minidataset_mod" id="toc-section-10---minidataset_mod" class="nav-link" data-scroll-target="#section-10---minidataset_mod">Section 10 - minidataset_mod</a></li>
+  <li><a href="#section-10---my_minidataset_ext" id="toc-section-10---my_minidataset_ext" class="nav-link" data-scroll-target="#section-10---my_minidataset_ext">Section 10 - my_minidataset_ext</a></li>
   <li><a href="#section-11---requeriment---normality-on-residuals---shapiro-wilk-test" id="toc-section-11---requeriment---normality-on-residuals---shapiro-wilk-test" class="nav-link" data-scroll-target="#section-11---requeriment---normality-on-residuals---shapiro-wilk-test">Section 11 - Requeriment - Normality on residuals - Shapiro-Wilk test</a></li>
   <li><a href="#section-12---requeriment---homogeneity-of-variance-from-residuals---bartlett-test" id="toc-section-12---requeriment---homogeneity-of-variance-from-residuals---bartlett-test" class="nav-link" data-scroll-target="#section-12---requeriment---homogeneity-of-variance-from-residuals---bartlett-test">Section 12 - Requeriment - Homogeneity of variance from residuals - Bartlett test</a></li>
+  <li><a href="#section-13---requeriment---mean-0-for-residuals" id="toc-section-13---requeriment---mean-0-for-residuals" class="nav-link" data-scroll-target="#section-13---requeriment---mean-0-for-residuals">Section 13 - Requeriment - Mean 0 for residuals</a></li>
   </ul>
 </nav>
 </div>
@@ -2239,32 +2240,66 @@ vertical-align: -.125em;
 
 
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&quot;R_obj_env_script01_anova_import_and_control.RData&quot;</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>vector_all_obj_init <span class="ot">&lt;-</span> <span class="fu">ls</span>(<span class="at">envir =</span> .GlobalEnv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load(&quot;R_obj_env_script01_anova_import_and_control.RData&quot;)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># vector_all_obj_init &lt;- ls(envir = .GlobalEnv)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Definir la ruta del archivo</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>path_rdata <span class="ot">&lt;-</span> <span class="st">&quot;R_obj_env_script01_anova_import_and_control.RData&quot;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Crear un entorno temporal</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>temp_env <span class="ot">&lt;-</span> <span class="fu">new.env</span>()</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Cargar el archivo dentro de ese entorno específico</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(path_rdata, <span class="at">envir =</span> temp_env)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Convertir el entorno a una lista</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>list_obj_script01 <span class="ot">&lt;-</span> <span class="fu">as.list</span>(temp_env)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># (Opcional) Eliminar el entorno temporal para liberar memoria</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(temp_env)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>var_name_rv <span class="ot">&lt;-</span> list_obj_script01<span class="sc">$</span>var_name_rv</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>var_name_factor <span class="ot">&lt;-</span> list_obj_script01<span class="sc">$</span>var_name_factor</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>my_minidataset <span class="ot">&lt;-</span>  list_obj_script01<span class="sc">$</span>my_minidataset </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df_factor_info <span class="ot">&lt;-</span> list_obj_script01<span class="sc">$</span>df_factor_info</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>vector_color_levels_new <span class="ot">&lt;-</span> list_obj_script01<span class="sc">$</span>vector_color_levels_new</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>alpha_value <span class="ot">&lt;-</span> list_obj_script01<span class="sc">$</span>alpha_value</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span>(list_obj_script01)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#vector_all_obj_init &lt;- ls(envir = .GlobalEnv)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>vector_all_obj_init <span class="ot">&lt;-</span> <span class="st">&quot;&quot;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <section id="section-01---libraries" class="level2">
 <h2 class="anchored" data-anchor-id="section-01---libraries">Section 01 - Libraries</h2>
 <p>Lo primero que haremos siempre será cargar las librerias necesarias para obtener la totalidad de las tablas, gráficos y test estadísticos.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># # # # # Section 01 - Libraries ---------------------------------------------</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">&quot;stats&quot;</span>)     <span class="co"># General Linear Models</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">&quot;agricolae&quot;</span>) <span class="co"># Tukey test</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">&quot;dplyr&quot;</span>)     <span class="co"># Developing with %&gt;%</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">&quot;stringr&quot;</span>)   <span class="co"># Strings replacement</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># # # # # Section 01 - Libraries ---------------------------------------------</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">&quot;stats&quot;</span>)     <span class="co"># General Linear Models</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">&quot;agricolae&quot;</span>) <span class="co"># Tukey test</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">&quot;dplyr&quot;</span>)     <span class="co"># Developing with %&gt;%</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(<span class="st">&quot;stringr&quot;</span>)   <span class="co"># Strings replacement</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="section-08---anova-test" class="level2">
 <h2 class="anchored" data-anchor-id="section-08---anova-test">Section 08 - Anova Test</h2>
 <p>Realizamos el test de Anova a 1 Factor. Para quien es usuario de R pero no avanzado, esta es la manera en que se automatiza el análisis tomando la información detallada en la sección 03. Para recalcar que estamos en presencia de un modelo lineal general, hacemos explícita la utilización de la función lm() y luego aplicamos la función aov().</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # # # Section 08 - Anova Test ----------------------------------------------</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Anova test</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  the_formula <span class="ot">&lt;-</span> <span class="fu">paste0</span>(var_name_rv,  <span class="st">&quot; ~ &quot;</span> , var_name_factor)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  the_formula <span class="ot">&lt;-</span> <span class="fu">as.formula</span> (the_formula)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  list_lm_anova <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="at">formula =</span> the_formula, <span class="at">data =</span> minidataset)               <span class="co"># Linear model</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  list_aov_anova <span class="ot">&lt;-</span> <span class="fu">aov</span>(list_lm_anova)                                 <span class="co"># R results for anova</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  df_table_anova <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">summary</span>(list_aov_anova)[[<span class="dv">1</span>]])   <span class="co"># Common anova table</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  df_table_anova</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # # # Section 08 - Anova Test ----------------------------------------------</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Anova test</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  the_formula <span class="ot">&lt;-</span> <span class="fu">paste0</span>(var_name_rv,  <span class="st">&quot; ~ &quot;</span> , var_name_factor)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  the_formula <span class="ot">&lt;-</span> <span class="fu">as.formula</span> (the_formula)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  the_formula</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>mpg ~ cyl</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>  list_lm_anova <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="at">formula =</span> the_formula, <span class="at">data =</span> my_minidataset)               <span class="co"># Linear model</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  list_aov_anova <span class="ot">&lt;-</span> <span class="fu">aov</span>(list_lm_anova)                                 <span class="co"># R results for anova</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  df_table_anova <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">summary</span>(list_aov_anova)[[<span class="dv">1</span>]])   <span class="co"># Common anova table</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  df_table_anova</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>            Df   Sum Sq   Mean Sq  F value       Pr(&gt;F)
 cyl          2 824.7846 412.39230 39.69752 4.978919e-09
@@ -2273,16 +2308,16 @@ Residuals   29 301.2626  10.38837       NA           NA</code></pre>
 </div>
 <p>La tabla de Anova obtenida en R no es exactamente la tabla de Anova que uno espera según la bibliografía. Podemos observar que la tabla obtenida no contiene la fila referida a la variación total, y que no detalla explícitamente una columna como “fuentes de variación”. Creamos entonces nuestra propia tabla según las especificaciones de la bibliografía tradicional.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom <span class="ot">&lt;-</span> df_table_anova</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  new_row_anova <span class="ot">&lt;-</span> <span class="fu">nrow</span>(df_table_anova_classroom)<span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom[new_row_anova, ] <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, <span class="fu">ncol</span>(df_table_anova_classroom))</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Df&quot;</span>[new_row_anova] <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">na.omit</span>(df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Df&quot;</span>))</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Sum Sq&quot;</span>[new_row_anova] <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">na.omit</span>(df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Sum Sq&quot;</span>))</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Mean Sq&quot;</span>[new_row_anova] <span class="ot">&lt;-</span> df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Sum Sq&quot;</span>[new_row_anova]<span class="sc">/</span>df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Df&quot;</span>[new_row_anova]</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom <span class="ot">&lt;-</span> <span class="fu">cbind.data.frame</span>(<span class="fu">c</span>(<span class="st">&quot;Factor&quot;</span>, <span class="st">&quot;Error&quot;</span>, <span class="st">&quot;Total&quot;</span>), df_table_anova_classroom)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(df_table_anova_classroom)[<span class="dv">1</span>]  <span class="ot">&lt;-</span> <span class="st">&quot;Sources of Variation&quot;</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(df_table_anova_classroom)[new_row_anova]  <span class="ot">&lt;-</span> <span class="st">&quot;Total&quot;</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom <span class="ot">&lt;-</span> df_table_anova</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  new_row_anova <span class="ot">&lt;-</span> <span class="fu">nrow</span>(df_table_anova_classroom)<span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom[new_row_anova, ] <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, <span class="fu">ncol</span>(df_table_anova_classroom))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Df&quot;</span>[new_row_anova] <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">na.omit</span>(df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Df&quot;</span>))</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Sum Sq&quot;</span>[new_row_anova] <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">na.omit</span>(df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Sum Sq&quot;</span>))</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Mean Sq&quot;</span>[new_row_anova] <span class="ot">&lt;-</span> df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Sum Sq&quot;</span>[new_row_anova]<span class="sc">/</span>df_table_anova_classroom<span class="sc">$</span><span class="st">&quot;Df&quot;</span>[new_row_anova]</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom <span class="ot">&lt;-</span> <span class="fu">cbind.data.frame</span>(<span class="fu">c</span>(<span class="st">&quot;Factor&quot;</span>, <span class="st">&quot;Error&quot;</span>, <span class="st">&quot;Total&quot;</span>), df_table_anova_classroom)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(df_table_anova_classroom)[<span class="dv">1</span>]  <span class="ot">&lt;-</span> <span class="st">&quot;Sources of Variation&quot;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(df_table_anova_classroom)[new_row_anova]  <span class="ot">&lt;-</span> <span class="st">&quot;Total&quot;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  df_table_anova_classroom</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>            Sources of Variation Df    Sum Sq   Mean Sq  F value       Pr(&gt;F)
 cyl                       Factor  2  824.7846 412.39230 39.69752 4.978919e-09
@@ -2292,24 +2327,24 @@ Total                      Total 31 1126.0472  36.32410       NA           NA</c
 </div>
 <p>Por último, tomamos de la tabla de anova el error cuadrático medio del error para utilizarlo luego.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Standard error from model for each level</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  model_error_var_MSE <span class="ot">&lt;-</span> df_table_anova<span class="sc">$</span><span class="st">`</span><span class="at">Mean Sq</span><span class="st">`</span>[<span class="dv">2</span>]</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  model_error_sd <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(model_error_var_MSE)</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  df_model_error <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;order&quot;</span> <span class="ot">=</span> df_factor_info<span class="sc">$</span>order,</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;level&quot;</span> <span class="ot">=</span> df_factor_info<span class="sc">$</span>level,</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;n&quot;</span> <span class="ot">=</span> df_factor_info<span class="sc">$</span>n,</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;model_error_var_MSE&quot;</span> <span class="ot">=</span> model_error_var_MSE,</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;model_error_sd&quot;</span> <span class="ot">=</span> model_error_sd</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  df_model_error[<span class="st">&quot;model_error_se&quot;</span>] <span class="ot">&lt;-</span> df_model_error[<span class="st">&quot;model_error_sd&quot;</span>]<span class="sc">/</span><span class="fu">sqrt</span>(df_model_error<span class="sc">$</span>n)</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  df_model_error</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Standard error from model for each level</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  model_error_var_MSE <span class="ot">&lt;-</span> df_table_anova<span class="sc">$</span><span class="st">`</span><span class="at">Mean Sq</span><span class="st">`</span>[<span class="dv">2</span>]</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  model_error_sd <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(model_error_var_MSE)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  df_model_error <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;order&quot;</span> <span class="ot">=</span> df_factor_info<span class="sc">$</span>order,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;level&quot;</span> <span class="ot">=</span> df_factor_info<span class="sc">$</span>level,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;n&quot;</span> <span class="ot">=</span> df_factor_info<span class="sc">$</span>n,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;model_error_var_MSE&quot;</span> <span class="ot">=</span> model_error_var_MSE,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;model_error_sd&quot;</span> <span class="ot">=</span> model_error_sd</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  df_model_error[<span class="st">&quot;model_error_se&quot;</span>] <span class="ot">&lt;-</span> df_model_error[<span class="st">&quot;model_error_sd&quot;</span>]<span class="sc">/</span><span class="fu">sqrt</span>(df_model_error<span class="sc">$</span>n)</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  df_model_error</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  order level  n model_error_var_MSE model_error_sd model_error_se
-1     1     4 11            10.38837       3.223099      0.9718008
-2     2     6  7            10.38837       3.223099      1.2182168
-3     3     8 14            10.38837       3.223099      0.8614094</code></pre>
+1     1     8 14            10.38837       3.223099      0.8614094
+2     2     4 11            10.38837       3.223099      0.9718008
+3     3     6  7            10.38837       3.223099      1.2182168</code></pre>
 </div>
 </div>
 <p>Recordamos al operador que aún no hemos realizado ningún tipo de verificación sobre los requisitos del modelo, y por lo tanto aún no sabemos si los valores estadísticos obtenidos para el test de Anova son válidos para sacar conclusiones. En secciones posteriores realizamos la verificaciòn de los requisitos y una automatización de la interpretación de los valores estadísticos.</p>
@@ -2324,24 +2359,24 @@ Total                      Total 31 1126.0472  36.32410       NA           NA</c
 <p>Se dice que hay desbalance en repeticiones cuando el ‘n’ entre los niveles del factor no es el mismo. Si hay desbalance internamente el test de Tukey debe generar una corrección.<br>
 Determinamos entonces si hay desbalance o no, y generamos a su vez una frase automatizada sobre esta característica de nuestros datos.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># # # ## Section 09 - Tukey test</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Step 01 - Check unbalanced repetitions on levels</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Unbalanced reps for levels?</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Important information for Tukey test.</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  check_unbalanced_reps <span class="ot">&lt;-</span> <span class="fu">length</span>(<span class="fu">unique</span>(df_factor_info<span class="sc">$</span>n)) <span class="sc">&gt;</span> <span class="dv">1</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  check_unbalanced_reps</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># # # ## Section 09 - Tukey test</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Step 01 - Check unbalanced repetitions on levels</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Unbalanced reps for levels?</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Important information for Tukey test.</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  check_unbalanced_reps <span class="ot">&lt;-</span> <span class="fu">length</span>(<span class="fu">unique</span>(df_factor_info<span class="sc">$</span>n)) <span class="sc">&gt;</span> <span class="dv">1</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  check_unbalanced_reps</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] TRUE</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>  phrase_yes_unbalanced <span class="ot">&lt;-</span> <span class="st">&quot;The design is unbalanced in repetitions. A correction is applied to the Tukey test.&quot;</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  phrase_no_unbalanced  <span class="ot">&lt;-</span> <span class="st">&quot;The design is not unbalanced in repetitions. A correction not be applied to the Tukey test.&quot;</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  phrase_selected_check_unbalanced <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="at">test =</span> check_unbalanced_reps, </span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">yes =</span> phrase_yes_unbalanced,</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">no  =</span> phrase_no_unbalanced)</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  phrase_selected_check_unbalanced</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>  phrase_yes_unbalanced <span class="ot">&lt;-</span> <span class="st">&quot;The design is unbalanced in repetitions. A correction is applied to the Tukey test.&quot;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  phrase_no_unbalanced  <span class="ot">&lt;-</span> <span class="st">&quot;The design is not unbalanced in repetitions. A correction not be applied to the Tukey test.&quot;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  phrase_selected_check_unbalanced <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(<span class="at">test =</span> check_unbalanced_reps, </span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">yes =</span> phrase_yes_unbalanced,</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">no  =</span> phrase_no_unbalanced)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  phrase_selected_check_unbalanced</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] &quot;The design is unbalanced in repetitions. A correction is applied to the Tukey test.&quot;</code></pre>
 </div>
@@ -2349,16 +2384,16 @@ Determinamos entonces si hay desbalance o no, y generamos a su vez una frase aut
 <p>Ahora si estamos en condiciones de realizar el test de Tukey. Lo obtendremos el test de Tukey en dos formatos. El primer formato es como informe agrupado, en el cual obtenemos la información clásica de los agrupameintos de Tukey con letras para los niveles del factor. El segundo formato es el listado completo de todas las comparaciones dobles realizadas para generar el primer informe.</p>
 <p>El formato clásico para Tukey:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>  <span class="do">##############################################################################</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  tukey01_full_groups <span class="ot">&lt;-</span> agricolae<span class="sc">::</span><span class="fu">HSD.test</span>(<span class="at">y =</span> list_lm_anova,</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">trt =</span> var_name_factor,</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">alpha =</span> alpha_value,</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">group =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">console =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">unbalanced =</span> check_unbalanced_reps)</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  tukey01_full_groups</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>  <span class="do">##############################################################################</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  tukey01_full_groups <span class="ot">&lt;-</span> agricolae<span class="sc">::</span><span class="fu">HSD.test</span>(<span class="at">y =</span> list_lm_anova,</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">trt =</span> var_name_factor,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">alpha =</span> alpha_value,</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">group =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">console =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>                                             <span class="at">unbalanced =</span> check_unbalanced_reps)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  tukey01_full_groups</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>$statistics
    MSerror Df     Mean      CV
@@ -2389,15 +2424,15 @@ attr(,&quot;class&quot;)
 </div>
 <p>El formato con todos los pares de comparaciones utilizados para generar el primer formato:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Tukey test - Tukey pairs comparation - Full version</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  tukey02_full_pairs <span class="ot">&lt;-</span> agricolae<span class="sc">::</span><span class="fu">HSD.test</span>(<span class="at">y =</span> list_lm_anova,</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">trt =</span> var_name_factor,</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">alpha =</span> alpha_value,</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">group =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">console =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">unbalanced =</span> check_unbalanced_reps)</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  tukey02_full_pairs</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Tukey test - Tukey pairs comparation - Full version</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  tukey02_full_pairs <span class="ot">&lt;-</span> agricolae<span class="sc">::</span><span class="fu">HSD.test</span>(<span class="at">y =</span> list_lm_anova,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">trt =</span> var_name_factor,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">alpha =</span> alpha_value,</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">group =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">console =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">unbalanced =</span> check_unbalanced_reps)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  tukey02_full_pairs</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>$statistics
    MSerror Df     Mean      CV
@@ -2428,9 +2463,9 @@ attr(,&quot;class&quot;)
 </div>
 <p>Podemos ahora simplemente obtener la famosa tabla de Tukey:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # Original table from R about Tukey</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  df_tukey_original_table <span class="ot">&lt;-</span> tukey01_full_groups<span class="sc">$</span>groups</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  df_tukey_original_table</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # Original table from R about Tukey</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  df_tukey_original_table <span class="ot">&lt;-</span> tukey01_full_groups<span class="sc">$</span>groups</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  df_tukey_original_table</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       mpg groups
 4 26.66364      a
@@ -2440,18 +2475,18 @@ attr(,&quot;class&quot;)
 </div>
 <p>La tabla que ofrece R es ligeramente diferente a la detallada en bibliografía, por lo cual armamos nuestra propia tabla:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # New table about Tukey</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  df_tukey_table_classroom <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;order&quot;</span> <span class="ot">=</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(tukey01_full_groups<span class="sc">$</span>groups),</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;level&quot;</span> <span class="ot">=</span> <span class="fu">rownames</span>(tukey01_full_groups<span class="sc">$</span>groups),</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;mean&quot;</span> <span class="ot">=</span> tukey01_full_groups<span class="sc">$</span>groups[,<span class="dv">1</span>],</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;group&quot;</span> <span class="ot">=</span> tukey01_full_groups<span class="sc">$</span>groups[,<span class="dv">2</span>]</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>   df_tukey_table_classroom[,<span class="st">&quot;level&quot;</span>] <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> df_tukey_table_classroom[,<span class="st">&quot;level&quot;</span>],       <span class="co"># La variable original de factor</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> df_tukey_table_classroom[,<span class="st">&quot;level&quot;</span>]  <span class="co"># El orden de los niveles que calculamos en el Paso 2</span></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  df_tukey_table_classroom</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # New table about Tukey</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  df_tukey_table_classroom <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;order&quot;</span> <span class="ot">=</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(tukey01_full_groups<span class="sc">$</span>groups),</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;level&quot;</span> <span class="ot">=</span> <span class="fu">rownames</span>(tukey01_full_groups<span class="sc">$</span>groups),</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;mean&quot;</span> <span class="ot">=</span> tukey01_full_groups<span class="sc">$</span>groups[,<span class="dv">1</span>],</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;group&quot;</span> <span class="ot">=</span> tukey01_full_groups<span class="sc">$</span>groups[,<span class="dv">2</span>]</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>   df_tukey_table_classroom[,<span class="st">&quot;level&quot;</span>] <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> df_tukey_table_classroom[,<span class="st">&quot;level&quot;</span>],       <span class="co"># La variable original de factor</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> df_tukey_table_classroom[,<span class="st">&quot;level&quot;</span>]  <span class="co"># El orden de los niveles que calculamos en el Paso 2</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  df_tukey_table_classroom</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  order level     mean group
 1     1     4 26.66364     a
@@ -2460,80 +2495,58 @@ attr(,&quot;class&quot;)
 </div>
 </div>
 </section>
-<section id="section-10---minidataset_mod" class="level2">
-<h2 class="anchored" data-anchor-id="section-10---minidataset_mod">Section 10 - minidataset_mod</h2>
-<p>En la obtención del test de Anova han sido generado también los residuos y los predichos de cada dato.<br>
-Los residuos serán utilizados en secciones posteriores para la comprobación de los requisitos del modelo. Será necesario tambien detallar para cada dato de manera explícita que color le corresponde para realizar los ploteos correspondientes. Podemos también detallar aspectos del modelo, como es los valores de “i” y “j” para cada dato. En caso de haber tenido filas eliminadas entre el dataset y el minidataset, puede ser interesante saber cuales son las filas del minidataset que están dentro del dataset original. Toda esta inforamción será recolectada en un nuevo dataframa llamado “minidataset_mod”.</p>
+<section id="section-10---my_minidataset_ext" class="level2">
+<h2 class="anchored" data-anchor-id="section-10---my_minidataset_ext">Section 10 - my_minidataset_ext</h2>
+<p>Hasta el momento nuestro objeto my_minidataset contiene la variable respuesta, el factor, el color correspondiente a cada nivel del factor, y el id tanto respecto a my_datasete y my_minidataset. En la obtención del test de Anova han sido generado también los residuos de cada dato, sera posible y necesario generar a partir de ellos los residuos studentizados con ciertas peculiaridades para el casod e Anova. Los residuos serán utilizados en secciones posteriores para la comprobación de los requisitos del modelo. Toda esta inforamción será recolectada en un nuevo dataframa llamado “my_minidataset_ext” con la idea de manifestar que es una extension de lo que ha sido el minidataset original.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # # # Section 10 - minidataset_mod --------------------------------------------</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># The i number for each data</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  vector_number_i_model <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(minidataset[,var_name_factor])</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># The j number for each data</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  vector_number_j_model <span class="ot">&lt;-</span> <span class="fu">ave</span>(</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> minidataset[,var_name_rv],            <span class="co"># Variable a contar (no importa cuál, solo para estructura)</span></span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">FUN =</span> seq_along,            <span class="co"># Función que asigna 1, 2, 3...</span></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> minidataset[,var_name_factor]            <span class="co"># Agrupado por el factor (cyl)</span></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Rows detection from dataset on minidataset</span></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  dt_rows_my_dataset_ok <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(<span class="sc">!</span><span class="fu">is.na</span>(my_dataset[vector_name_selected_vars])) <span class="sc">==</span> <span class="fu">ncol</span>(minidataset)</span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creation: Dataframe minidataset_mod</span></span>
-<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  minidataset_mod <span class="ot">&lt;-</span> minidataset</span>
-<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>  minidataset_mod<span class="sc">$</span><span class="st">&quot;number_i_model&quot;</span> <span class="ot">&lt;-</span> vector_number_i_model</span>
-<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>  minidataset_mod<span class="sc">$</span><span class="st">&quot;number_j_model&quot;</span> <span class="ot">&lt;-</span> vector_number_j_model</span>
-<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>  minidataset_mod<span class="sc">$</span><span class="st">&quot;lvl_color&quot;</span>      <span class="ot">&lt;-</span> vector_ordered_colors[minidataset_mod<span class="sc">$</span><span class="st">&quot;number_i_model&quot;</span>]</span>
-<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>  minidataset_mod<span class="sc">$</span><span class="st">&quot;fitted.values&quot;</span>  <span class="ot">&lt;-</span> list_lm_anova<span class="sc">$</span><span class="st">&quot;fitted.values&quot;</span>  </span>
-<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>  minidataset_mod<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>      <span class="ot">&lt;-</span> list_lm_anova<span class="sc">$</span>residuals</span>
-<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>  minidataset_mod<span class="sc">$</span><span class="st">&quot;studres&quot;</span>        <span class="ot">&lt;-</span> minidataset_mod<span class="sc">$</span><span class="st">&quot;residuals&quot;</span><span class="sc">/</span>model_error_sd</span>
-<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>  minidataset_mod<span class="sc">$</span><span class="st">&quot;id_dataset&quot;</span>     <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(my_dataset))[dt_rows_my_dataset_ok]</span>
-<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>  minidataset_mod<span class="sc">$</span><span class="st">&quot;id_minidataset&quot;</span> <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(minidataset)</span>
-<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># First 5 rows from minidataset_mod</span></span>
-<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="at">x =</span> minidataset_mod, <span class="at">n =</span> <span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creation: Dataframe my_minidataset_ext</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  my_minidataset_ext <span class="ot">&lt;-</span> my_minidataset</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  my_minidataset_ext<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>      <span class="ot">&lt;-</span> list_lm_anova<span class="sc">$</span>residuals</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  my_minidataset_ext<span class="sc">$</span><span class="st">&quot;studres&quot;</span>        <span class="ot">&lt;-</span> my_minidataset_ext<span class="sc">$</span><span class="st">&quot;residuals&quot;</span><span class="sc">/</span>model_error_sd</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># First 5 rows from my_minidataset_ext</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="at">x =</span> my_minidataset_ext, <span class="at">n =</span> <span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                   mpg cyl number_i_model number_j_model lvl_color fitted.values residuals    studres id_dataset id_minidataset
-Mazda RX4         21.0   6              2              1   #00FF00      19.74286  1.257143  0.3900417          1              1
-Mazda RX4 Wag     21.0   6              2              2   #00FF00      19.74286  1.257143  0.3900417          2              2
-Datsun 710        22.8   4              1              1   #FF0000      26.66364 -3.863636 -1.1987335          3              3
-Hornet 4 Drive    21.4   6              2              3   #00FF00      19.74286  1.657143  0.5141459          4              4
-Hornet Sportabout 18.7   8              3              1   #0000FF      15.10000  3.600000  1.1169376          5              5</code></pre>
+<pre><code>                   mpg cyl id_dataset id_minidataset   color residuals    studres
+Mazda RX4         21.0   6          1              1 #0000FF  1.257143  0.3900417
+Mazda RX4 Wag     21.0   6          2              2 #0000FF  1.257143  0.3900417
+Datsun 710        22.8   4          3              3 #00FF00 -3.863636 -1.1987335
+Hornet 4 Drive    21.4   6          4              4 #0000FF  1.657143  0.5141459
+Hornet Sportabout 18.7   8          5              5 #FF0000  3.600000  1.1169376</code></pre>
 </div>
 </div>
 <p>Algo importante de las sentencias anteriores es la manera en que se ha definido a los residuos estandarizados.<br>
-El modelo de anova tiene su pripia estimación de varianza del error que no es la estimación de la varianza tomando todos los residuos, ya que difiere en los grados de libertad. La estandarización de los residuos se realiza entonces con el desvío estandard del error del modelo, y no con desvío estándard de todos los residuos.</p>
+El modelo de anova tiene su pripia estimación de varianza del error que no es la estimación de la varianza tomando todos los residuos, ya que difiere en los grados de libertad. La estandarización de los residuos se realiza entonces con el desvío estandard del error del modelo, y no con desvío estándard de todos los residuos ni con el desvio estandard de cada nivel del factor. Un error comun aqui es aplicar funciones de R para realizar la studentizacion de los residuos. Dichas funciones no obtienen el desvio estadnard del modelo sino que aplican otras reglas que no son las correctas para este caso.</p>
 </section>
 <section id="section-11---requeriment---normality-on-residuals---shapiro-wilk-test" class="level2">
 <h2 class="anchored" data-anchor-id="section-11---requeriment---normality-on-residuals---shapiro-wilk-test">Section 11 - Requeriment - Normality on residuals - Shapiro-Wilk test</h2>
 <p>Realizamos el test de normalidad de Shapiro-Wilk sobre los residuos.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # ## Section 11 - Requeriment - Normality on residuals - Shapiro-Wilk test</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Normality test (Shapiro-Wilk)</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  list_test_residuals_normality <span class="ot">&lt;-</span> <span class="fu">shapiro.test</span>(<span class="at">x =</span> minidataset_mod<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>)</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  list_test_residuals_normality</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # ## Section 11 - Requeriment - Normality on residuals - Shapiro-Wilk test</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Normality test (Shapiro-Wilk)</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  list_test_residuals_normality <span class="ot">&lt;-</span> <span class="fu">shapiro.test</span>(<span class="at">x =</span> my_minidataset_ext<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  list_test_residuals_normality</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Shapiro-Wilk normality test
 
-data:  minidataset_mod$residuals
+data:  my_minidataset_ext$residuals
 W = 0.97065, p-value = 0.5177</code></pre>
 </div>
 </div>
 <p>De la salida original de R podemos armar la siguiente tabla.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>df_normality <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;variable&quot;</span> <span class="ot">=</span> <span class="st">&quot;residuals&quot;</span>, </span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;test&quot;</span> <span class="ot">=</span> list_test_residuals_normality<span class="sc">$</span>method,</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;statistic&quot;</span>  <span class="ot">=</span> list_test_residuals_normality<span class="sc">$</span>statistic,</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;p_value&quot;</span> <span class="ot">=</span> list_test_residuals_normality<span class="sc">$</span>p.value</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>str_new_name_shapiro <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;statistic&quot;</span>, <span class="st">&quot;(&quot;</span>, <span class="fu">names</span>(list_test_residuals_normality<span class="sc">$</span>statistic), <span class="st">&quot;)&quot;</span>)</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(df_normality)[<span class="dv">3</span>] <span class="ot">&lt;-</span> str_new_name_shapiro</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(df_normality) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>df_normality</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>df_normality <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;variable&quot;</span> <span class="ot">=</span> <span class="st">&quot;residuals&quot;</span>, </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;test&quot;</span> <span class="ot">=</span> list_test_residuals_normality<span class="sc">$</span>method,</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;statistic&quot;</span>  <span class="ot">=</span> list_test_residuals_normality<span class="sc">$</span>statistic,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;p_value&quot;</span> <span class="ot">=</span> list_test_residuals_normality<span class="sc">$</span>p.value</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>str_new_name_shapiro <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;statistic&quot;</span>, <span class="st">&quot;(&quot;</span>, <span class="fu">names</span>(list_test_residuals_normality<span class="sc">$</span>statistic), <span class="st">&quot;)&quot;</span>)</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(df_normality)[<span class="dv">3</span>] <span class="ot">&lt;-</span> str_new_name_shapiro</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(df_normality) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>df_normality</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   variable                        test statistic(W)  p_value
 1 residuals Shapiro-Wilk normality test    0.9706547 0.517665</code></pre>
@@ -2544,12 +2557,12 @@ W = 0.97065, p-value = 0.5177</code></pre>
 <h2 class="anchored" data-anchor-id="section-12---requeriment---homogeneity-of-variance-from-residuals---bartlett-test">Section 12 - Requeriment - Homogeneity of variance from residuals - Bartlett test</h2>
 <p>Realizamos el test de homogeneidad de varianzas de Bartlett sobre los residuos.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # # # Section 12 - Requeriment - Homogeneity of variance from residuals - Bartlett test </span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Homogeinidy test (Bartlett)</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  the_formula_bartlett <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;residuals&quot;</span>, <span class="st">&quot; ~ &quot;</span>, var_name_factor)</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  the_formula_bartlett <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(the_formula_bartlett)</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  list_test_residuals_homogeneity <span class="ot">&lt;-</span> <span class="fu">bartlett.test</span>(the_formula_bartlett, <span class="at">data =</span> minidataset_mod)</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  list_test_residuals_homogeneity</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # # # Section 12 - Requeriment - Homogeneity of variance from residuals - Bartlett test </span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Homogeinidy test (Bartlett)</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  the_formula_bartlett <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;residuals&quot;</span>, <span class="st">&quot; ~ &quot;</span>, var_name_factor)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  the_formula_bartlett <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(the_formula_bartlett)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  list_test_residuals_homogeneity <span class="ot">&lt;-</span> <span class="fu">bartlett.test</span>(the_formula_bartlett, <span class="at">data =</span> my_minidataset_ext)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  list_test_residuals_homogeneity</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     Bartlett test of homogeneity of variances
@@ -2559,73 +2572,84 @@ Bartlett&#39;s K-squared = 8.3934, df = 2, p-value = 0.01505</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>df_homogeneity <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;variable&quot;</span> <span class="ot">=</span> <span class="st">&quot;residuals&quot;</span>, </span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;test&quot;</span> <span class="ot">=</span> list_test_residuals_homogeneity<span class="sc">$</span>method,</span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;statistic&quot;</span>  <span class="ot">=</span> list_test_residuals_homogeneity<span class="sc">$</span>statistic,</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;p_value&quot;</span> <span class="ot">=</span> list_test_residuals_homogeneity<span class="sc">$</span>p.value</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>str_new_name_bartlett <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;statistic&quot;</span>, <span class="st">&quot;(&quot;</span>, <span class="fu">names</span>(list_test_residuals_homogeneity<span class="sc">$</span>statistic), <span class="st">&quot;)&quot;</span>)</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(df_homogeneity)[<span class="dv">3</span>] <span class="ot">&lt;-</span> str_new_name_bartlett</span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(df_homogeneity) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>df_homogeneity</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>df_homogeneity <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;variable&quot;</span> <span class="ot">=</span> <span class="st">&quot;residuals&quot;</span>, </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;test&quot;</span> <span class="ot">=</span> list_test_residuals_homogeneity<span class="sc">$</span>method,</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;statistic&quot;</span>  <span class="ot">=</span> list_test_residuals_homogeneity<span class="sc">$</span>statistic,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;p_value&quot;</span> <span class="ot">=</span> list_test_residuals_homogeneity<span class="sc">$</span>p.value</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>str_new_name_bartlett <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">&quot;statistic&quot;</span>, <span class="st">&quot;(&quot;</span>, <span class="fu">names</span>(list_test_residuals_homogeneity<span class="sc">$</span>statistic), <span class="st">&quot;)&quot;</span>)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(df_homogeneity)[<span class="dv">3</span>] <span class="ot">&lt;-</span> str_new_name_bartlett</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(df_homogeneity) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>df_homogeneity</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   variable                                      test statistic(Bartlett&#39;s K-squared)    p_value
 1 residuals Bartlett test of homogeneity of variances                        8.393396 0.01504518</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Residuals variance from levels from original residuals</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  df_raw_error <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;order&quot;</span> <span class="ot">=</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(minidataset_mod[,var_name_factor]),</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;level&quot;</span> <span class="ot">=</span> <span class="fu">levels</span>(minidataset_mod[,var_name_factor]),</span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;n&quot;</span> <span class="ot">=</span> <span class="fu">tapply</span>(minidataset_mod<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>, minidataset_mod[,var_name_factor], length),</span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;raw_error_var&quot;</span> <span class="ot">=</span> <span class="fu">tapply</span>(minidataset_mod<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>, minidataset_mod[,var_name_factor], var),</span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;raw_error_sd&quot;</span> <span class="ot">=</span> <span class="fu">tapply</span>(minidataset_mod<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>, minidataset_mod[,var_name_factor], sd)</span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>  df_model_error[<span class="st">&quot;raw_error_se&quot;</span>] <span class="ot">&lt;-</span> df_model_error[<span class="st">&quot;model_error_sd&quot;</span>]<span class="sc">/</span><span class="fu">sqrt</span>(df_model_error<span class="sc">$</span><span class="st">&quot;n&quot;</span>)</span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(df_raw_error) <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(df_raw_error)</span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>  df_raw_error</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Residuals variance from levels from original residuals</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  df_raw_error <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;order&quot;</span> <span class="ot">=</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nlevels</span>(my_minidataset_ext[,var_name_factor]),</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;level&quot;</span> <span class="ot">=</span> <span class="fu">levels</span>(my_minidataset_ext[,var_name_factor]),</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;n&quot;</span> <span class="ot">=</span> <span class="fu">tapply</span>(my_minidataset_ext<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>, my_minidataset_ext[,var_name_factor], length),</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;raw_error_var&quot;</span> <span class="ot">=</span> <span class="fu">tapply</span>(my_minidataset_ext<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>, my_minidataset_ext[,var_name_factor], var),</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;raw_error_sd&quot;</span> <span class="ot">=</span> <span class="fu">tapply</span>(my_minidataset_ext<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>, my_minidataset_ext[,var_name_factor], sd)</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  df_model_error[<span class="st">&quot;raw_error_se&quot;</span>] <span class="ot">&lt;-</span> df_model_error[<span class="st">&quot;model_error_sd&quot;</span>]<span class="sc">/</span><span class="fu">sqrt</span>(df_model_error<span class="sc">$</span><span class="st">&quot;n&quot;</span>)</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames</span>(df_raw_error) <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(df_raw_error)</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  df_raw_error</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  order level  n raw_error_var raw_error_sd
-1     1     4 11     20.338545     4.509828
-2     2     6  7      2.112857     1.453567
-3     3     8 14      6.553846     2.560048</code></pre>
+1     1     8 14      6.553846     2.560048
+2     2     4 11     20.338545     4.509828
+3     3     6  7      2.112857     1.453567</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>  phrase_info_errors <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="st">Anova and Tukey use MSE from model with &#39;n-k&#39; degree of freedom.</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="st">Bartlett use variance from raw error on each level with &#39;n_i&#39; defree of freedom on each level.</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="st">Only if there is homogeneity from raw error variances then is a good idea take decision from MSE in Anova and Tukey.&quot;</span></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(phrase_info_errors)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>  phrase_info_errors <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="st">Anova and Tukey use MSE from model with &#39;n-k&#39; degree of freedom.</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="st">Bartlett use variance from raw error on each level with &#39;n_i&#39; defree of freedom on each level.</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="st">Only if there is homogeneity from raw error variances then is a good idea take decision from MSE in Anova and Tukey.&quot;</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(phrase_info_errors)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Anova and Tukey use MSE from model with &#39;n-k&#39; degree of freedom.
 Bartlett use variance from raw error on each level with &#39;n_i&#39; defree of freedom on each level.
 Only if there is homogeneity from raw error variances then is a good idea take decision from MSE in Anova and Tukey.</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Sum for residuals</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  sum_residuals <span class="ot">&lt;-</span> <span class="fu">sum</span>(minidataset_mod<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>)</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  sum_residuals</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] -3.330669e-16</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Mean for residuals</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  mean_residuals <span class="ot">&lt;-</span> <span class="fu">mean</span>(minidataset_mod<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>)</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  mean_residuals</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] -1.040834e-17</code></pre>
-</div>
-</div>
+</section>
+<section id="section-13---requeriment---mean-0-for-residuals" class="level2">
+<h2 class="anchored" data-anchor-id="section-13---requeriment---mean-0-for-residuals">Section 13 - Requeriment - Mean 0 for residuals</h2>
+<p>Uno de los requisitos del modelo es la media 0 para los residuos.<br>
+Por suerte para nosotros esto no es necesario probar ya que ocurre si o si en cualquier contexto con o sin normalidad de los reisduos e incluso con o sin homogeneidad de los residuos. Hay una prueba estadistica para realizar ya que ocurre como una caracteristica intrinseca de los residuos y hay una demostracion matematica que lo demuestra. Hay otro detalle propio de los residuos que es que la suma de l os residuos da cero. En cualquier caos, podemos tomar los residuos y realizar la sumatoria y obtener la media.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>vector_all_obj_end <span class="ot">&lt;-</span> <span class="fu">ls</span>(<span class="at">envir =</span> .GlobalEnv)</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Excluir los que NO quieres guardar</span></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>vector_exclusion <span class="ot">&lt;-</span> vector_all_obj_init</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>vector_save_obj <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(vector_all_obj_end, vector_exclusion)</span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Guardar todo excepto los excluidos</span></span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(<span class="at">list =</span> vector_save_obj, <span class="at">file =</span> <span class="st">&quot;R_obj_env_script02_anova_full_test.RData&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Sum for residuals</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  sum_residuals <span class="ot">&lt;-</span> <span class="fu">sum</span>(my_minidataset_ext<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  sum_residuals</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.471046e-15</code></pre>
+</div>
+</div>
+<p>Si bien la suma de los resiudos puede no ser cero, esto se debe a pequenios errores de calculo informatico. En caulquier caso debiera ocurrir obtener una suma de los residuos cero o muy pequenia.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>  <span class="co"># # # Mean for residuals</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  mean_residuals <span class="ot">&lt;-</span> <span class="fu">mean</span>(my_minidataset_ext<span class="sc">$</span><span class="st">&quot;residuals&quot;</span>)</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  mean_residuals</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4.597017e-17</code></pre>
+</div>
+</div>
+<p>La media de los residuos debe ser cero por demostracion matematica, y ocurre que los pequenios errores de calculo informatico nos llevan a que no sea exactamente cero.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>vector_all_obj_end <span class="ot">&lt;-</span> <span class="fu">ls</span>(<span class="at">envir =</span> .GlobalEnv)</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Excluir los que NO quieres guardar</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>vector_exclusion <span class="ot">&lt;-</span> vector_all_obj_init</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>vector_save_obj  <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(vector_all_obj_end, vector_exclusion)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Guardar todo excepto los excluidos</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(<span class="at">list =</span> vector_save_obj, <span class="at">file =</span> <span class="st">&quot;R_obj_env_script02_anova_full_test.RData&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 
