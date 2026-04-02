@@ -167,7 +167,7 @@ mod_05_00_collector03_server_UNIVERSAL <- function(id, folder_path_tool_script) 
         if (!is.null(local_env$mod_special_shiny_output_server)) local_env$mod_special_shiny_output_server("sub_shiny_output")
         if (!is.null(local_env$mod_special_asa_server)) local_env$mod_special_asa_server("sub_asa")
         if (!is.null(local_env$mod_special_script_comment_server)) local_env$mod_special_script_comment_server(id = "sub_script_comment", folder_temp_path = folder_temp_path)
-        if (!is.null(local_env$mod_special_script_only_server)) local_env$mod_special_script_only_server("sub_script_only")
+        if (!is.null(local_env$mod_special_script_only_server)) local_env$mod_special_script_only_server(id = "sub_script_only", folder_temp_path = folder_temp_path)
         if (!is.null(local_env$mod_special_reporting_server)) local_env$mod_special_reporting_server("sub_reporting")
       }, silent = FALSE)
 

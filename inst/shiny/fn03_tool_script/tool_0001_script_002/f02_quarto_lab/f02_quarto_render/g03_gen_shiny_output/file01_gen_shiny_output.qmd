@@ -1,0 +1,178 @@
+---
+title: "Rscience - Anova - script01 - Anova - Import and control"
+format: 
+  html:
+    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+
+    
+---
+
+# Local Output Folder
+```{r eval=TRUE, echo=FALSE}
+
+output_folder <- normalizePath(file.path("output"), mustWork = FALSE)
+
+cat("Output folder: ", output_folder, "\n")
+
+# Si NO existe la carpeta, la creamos
+if (!dir.exists(output_folder)) {
+  dir.create(output_folder, recursive = TRUE)
+  cat("Carpeta creada:", output_folder, "\n")
+} else {
+  cat("La carpeta ya existe.\n")
+}
+
+
+```
+
+
+# Cleanning Local Output Folder
+```{r eval=TRUE, echo=FALSE}
+
+# 1. Listar todos los archivos dentro de la carpeta
+# full.names = TRUE es clave para tener la ruta completa y que R sepa qué borrar
+vector_local_files <- list.files(path = output_folder, full.names = TRUE, recursive = FALSE)
+
+# 2. Borrar los archivos si la lista no está vacía
+if (length(vector_local_files) > 0) {
+  # file.remove devuelve TRUE por cada archivo borrado con éxito
+  check_delete <- file.remove(vector_local_files)
+  
+  if (all(check_delete)) {
+    cat("✓ Carpeta 'output' limpiada con éxito (", length(vector_local_files), " archivos eliminados).\n")
+  } else {
+    cat("! Advertencia: Algunos archivos no pudieron ser eliminados.\n")
+  }
+} else {
+  cat("i La carpeta 'output' ya estaba vacía.\n")
+}
+```
+
+
+# Output RData file for shiny
+```{r eval=TRUE, echo=FALSE}
+
+output_file_name_RData_shiny <- "R_obj_env_special_shiny.RData"
+output_file_path_RData_shiny <- normalizePath(file.path(output_folder, output_file_name_RData_shiny), mustWork = FALSE)
+check_shiny_exists <- file.exists(output_file_path_RData_shiny)
+  
+cat("File name: ", output_file_name_RData_shiny, "\n")
+cat("File path: ", output_file_path_RData_shiny, "\n")
+cat("File exists: ", check_shiny_exists, "\n")
+```
+
+```{r eval=TRUE, echo=FALSE}
+
+list_for_shiny <- list()
+list_for_shiny[[1]] <- list()
+
+```
+
+
+# Input RData files
+```{r eval=TRUE, echo=FALSE}
+
+# 1. Definir la carpeta base
+input_folder01 <- file.path("..", "f02_quarto_mod")
+cat("Input folder---------------------------------------------------------", "\n",
+    "Relative path: ", input_folder01, "\n",
+    "Absolute path: ", normalizePath(input_folder01, mustWork = FALSE), "\n",
+    "---------------------------------------------------------------------------")
+
+
+# 2. Definir el vector de archivos
+vector_RData <- c("R_obj_env_script01_anova_import_and_control.RData",
+                  "R_obj_env_script02_anova_full_test.RData",
+                  "R_obj_env_script03_anova_model.RData",
+                  "R_obj_env_script04_anova_descriptive_rv.RData",
+                  "R_obj_env_script05_anova_descriptive_residuals.RData",
+                  "R_obj_env_script06_anova_asa.RData")
+
+# 3. Armar el vector de paths completos
+paths_completos <- file.path(input_folder01, vector_RData)
+print(paths_completos)
+
+# (Opcional) Si quieres que las rutas sean absolutas para evitar problemas:
+paths_absolutos <- normalizePath(paths_completos, mustWork = FALSE)
+print(paths_absolutos)
+# Ver el resultado
+
+
+vector_file_exists <- file.exists(paths_completos)
+print(vector_file_exists)
+
+check_all_exists <- sum(vector_file_exists) == length(vector_file_exists)
+print(check_all_exists)
+
+phrase01_yes <- "All files exists. Avoiding render qmd to obtain RData files."
+phrase01_no <- "All files does not exists. Rendering qmd to obtain RData files."
+phrase_seleceted <- ifelse(test = check_all_exists, yes = phrase01_yes, no = phrase01_no)
+cat(phrase_seleceted)
+```
+
+
+```{r eval=TRUE, echo=FALSE}
+# ================================================
+# FUNCIÓN PARA COPIAR CONTENIDO .qmd → .R
+# ================================================
+
+# ==============================================================================
+# 1. EJECUCIÓN DE QMD (Tu función original, sin cambios)
+# ==============================================================================
+qmd_file_path <- file.path("..", "g01_render_all_quarto_mod", "file01_render_all_quarto_mod.qmd")
+qmd_file_path <- normalizePath(qmd_file_path, mustWork = TRUE)
+  
+fn_render_file_qmd <- function(qmd_file_path) {
+ 
+
+  old_wd <- getwd()
+  
+  for (qmd_file in qmd_file_path) {
+    tryCatch({
+      folder_qmd <- dirname(qmd_file)
+      setwd(folder_qmd)
+      quarto::quarto_render(input = basename(qmd_file), output_format = "all")
+    }, error = function(e) cat("✗ Error en", basename(qmd_file), "\n"))
+  }
+  setwd(old_wd)
+}
+
+if (!check_all_exists) {
+  cat("Rendering...")
+  fn_render_file_qmd(qmd_file_path = qmd_file_path)
+  cat("Render is done...")
+  vector_file_exists <- file.exists(paths_completos)
+  print(vector_file_exists)
+  
+  check_all_exists <- sum(vector_file_exists) == length(vector_file_exists)
+  print(check_all_exists)
+  
+  phrase01_yes <- "All files exists. Continue!"
+  phrase01_no <- "All files does not exists. ERROR!!!!!!!!!!"
+  phrase_seleceted <- ifelse(test = check_all_exists, yes = phrase01_yes, no = phrase01_no)
+  cat(phrase_seleceted)
+
+}
+``` 
+
+
+
+```{r eval=TRUE, echo=FALSE}
+
+
+``` 
+
