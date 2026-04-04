@@ -319,8 +319,14 @@ df_table_factor_plot002[,"level"] <- factor(
   
   # # # Plot output
   plot_factor001
-  
-  
+```  
+
+```{r eval=TRUE, echo=TRUE}    
+plot_factor001 <- plotly::plotly_build(plot_factor001)
+```
+
+```{r eval=TRUE, echo=TRUE}    
+
   ##############################################################################
   
   # # # Create a new plot...
@@ -357,7 +363,13 @@ df_table_factor_plot002[,"level"] <- factor(
   # # # Plot output
   plot_factor002
   
-  ##############################################################################
+```  
+
+```{r eval=TRUE, echo=TRUE}    
+plot_factor002 <- plotly::plotly_build(plot_factor002)
+```
+
+```{r eval=TRUE, echo=TRUE}  
   
   
   # # # Create a new plot...
@@ -394,7 +406,13 @@ df_table_factor_plot002[,"level"] <- factor(
   # # # Plot output
   plot_factor003
   
-  ##############################################################################
+```  
+
+```{r eval=TRUE, echo=TRUE}    
+plot_factor003 <- plotly::plotly_build(plot_factor003)
+```
+
+```{r eval=TRUE, echo=TRUE}  
   
   
   # # # New plotly...
@@ -431,7 +449,13 @@ df_table_factor_plot002[,"level"] <- factor(
   # # # Output plot004_anova...
   plot_factor004
   
-  ##############################################################################
+```  
+
+```{r eval=TRUE, echo=TRUE}    
+plot_factor004 <- plotly::plotly_build(plot_factor004)
+```
+
+```{r eval=TRUE, echo=TRUE}  
   
   all_levels <- vector_order_levels_new
   n_levels <- length(all_levels)
@@ -503,7 +527,13 @@ df_table_factor_plot002[,"level"] <- factor(
   # # # Output plot003_anova...
   plot_factor005
   
-  ##############################################################################
+```  
+
+```{r eval=TRUE, echo=TRUE}    
+plot_factor005 <- plotly::plotly_build(plot_factor005)
+```
+
+```{r eval=TRUE, echo=TRUE}  
   
   
   # #library(plotly)
@@ -541,89 +571,18 @@ df_table_factor_plot002[,"level"] <- factor(
     
   }
   plot_factor006
-  # plot_factor006 <- plotly::plot_ly()
-  # 
-  # # Add traces
-  # plot_factor006 <- plotly::add_trace(p = plot_factor006,
-  #                                     type = "violin",
-  #                                     y = my_minidataset[,var_name_rv],
-  #                                     x = my_minidataset[,var_name_factor],
-  #                                     showlegend = TRUE,
-  #                                     side = "positive",
-  #                                     points = "all",
-  #                                     name = "Violinplot",
-  #                                     color = my_minidataset$FACTOR,
-  #                                     colors = df_table_factor_plot006$color)
-  # 
-  # 
-  # 
-  # # # # Title and settings...
-  # plot_factor006 <- plotly::layout(p = plot_factor006,
-  #                                  title = "Plot 006 - Scatterplot + Jitter +  Smoothed",
-  #                                  font = list(size = 20),
-  #                                  margin = list(t = 100))
-  # 
-  # 
-  # # # # Without zerolines...
-  # plot_factor006 <- plotly::layout(p = plot_factor006,
-  #                                  xaxis = list(zeroline = FALSE),
-  #                                  yaxis = list(zeroline = FALSE))
-  # 
-  # # # # Output plot003_anova...
-  # plot_factor006
-  
-  ##############################################################################
-  
-  # # # Create a new plot...
-  plot_factor007 <- plotly::plot_ly()
   
   
-  # # # Adding errors...
-  plot_factor007 <-   plotly::add_trace(p = plot_factor007,
-                                        type = "scatter",
-                                        mode = "markers",
-                                        x = df_table_factor_plot007$level,
-                                        y = df_table_factor_plot007$mean,
-                                        color = df_table_factor_plot007$level,
-                                        colors = df_table_factor_plot007$color,
-                                        marker = list(symbol = "line-ew-open",
-                                                      size = 50,
-                                                      opacity = 1,
-                                                      line = list(width = 5)),
-                                        error_y = list(type = "data", array = df_table_factor_plot007$model_error_se)
-  )
-  
-  
-  
-  plot_factor007 <-  add_text(p = plot_factor007,
-                              x = df_table_factor_plot007$level,
-                              y = df_table_factor_plot007$mean,
-                              text = df_table_factor_plot007$group, name = "Tukey Group",
-                              size = 20)
-  
-  # # # Title and settings...
-  plot_factor007 <- plotly::layout(p = plot_factor007,
-                                   title = "Plot 007 - Mean y model standard error",
-                                   font = list(size = 20),
-                                   margin = list(t = 100))
-  
-  # # # Without zerolines
-  plot_factor007 <-plotly::layout(p = plot_factor007,
-                                  xaxis = list(zeroline = FALSE),
-                                  yaxis = list(zeroline = FALSE))
-  
-  
-  # # # Plot output
-  plot_factor007
-  
-  #######----
+
   
 
   
 ```
 
 
-
+```{r eval=TRUE, echo=TRUE}    
+plot_factor006 <- plotly::plotly_build(plot_factor006)
+```
 
 
 ```{r eval=TRUE, echo=TRUE} 
@@ -638,4 +597,4 @@ vector_save_obj <- setdiff(vector_all_obj_end, vector_exclusion)
 save(list = vector_save_obj, file = "R_obj_env_script04_anova_descriptive_rv.RData")
 
 ```
-```
+

@@ -2175,8 +2175,9 @@ vertical-align: -.125em;
   <ul>
   <li><a href="#local-output-folder" id="toc-local-output-folder" class="nav-link active" data-scroll-target="#local-output-folder">Local Output Folder</a></li>
   <li><a href="#cleanning-local-output-folder" id="toc-cleanning-local-output-folder" class="nav-link" data-scroll-target="#cleanning-local-output-folder">Cleanning Local Output Folder</a></li>
-  <li><a href="#output-rdata-file-for-shiny" id="toc-output-rdata-file-for-shiny" class="nav-link" data-scroll-target="#output-rdata-file-for-shiny">Output RData file for shiny</a></li>
-  <li><a href="#input-rdata-files" id="toc-input-rdata-files" class="nav-link" data-scroll-target="#input-rdata-files">Input RData files</a></li>
+  <li><a href="#input-qmd-file-file01_render_all_quarto_mod.qmd" id="toc-input-qmd-file-file01_render_all_quarto_mod.qmd" class="nav-link" data-scroll-target="#input-qmd-file-file01_render_all_quarto_mod.qmd">Input qmd file: ‘file01_render_all_quarto_mod.qmd’</a></li>
+  <li><a href="#input-folder-f02_quarto_mod" id="toc-input-folder-f02_quarto_mod" class="nav-link" data-scroll-target="#input-folder-f02_quarto_mod">Input Folder: ‘f02_quarto_mod’</a></li>
+  <li><a href="#rdata-files" id="toc-rdata-files" class="nav-link" data-scroll-target="#rdata-files">RData files</a></li>
   </ul>
 </nav>
 </div>
@@ -2205,10 +2206,13 @@ vertical-align: -.125em;
 <h1>Local Output Folder</h1>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>Output folder:  /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/g03_gen_shiny_output/output </code></pre>
+<pre><code>Confirmed, folder exists!</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>La carpeta ya existe.</code></pre>
+<pre><code>Output folder---------------------------------------------------------  
+ Local output folder relative:  output 
+ Local output folder absolute:  /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/g03_gen_shiny_output/output 
+ Local output folder exists:    TRUE </code></pre>
 </div>
 </div>
 </section>
@@ -2216,57 +2220,62 @@ vertical-align: -.125em;
 <h1>Cleanning Local Output Folder</h1>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>i La carpeta &#39;output&#39; ya estaba vacía.</code></pre>
+<pre><code>Limpieza no permitida.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>There are  0 files inside the output folder. </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>character(0)</code></pre>
 </div>
 </div>
 </section>
-<section id="output-rdata-file-for-shiny" class="level1">
-<h1>Output RData file for shiny</h1>
+<section id="input-qmd-file-file01_render_all_quarto_mod.qmd" class="level1">
+<h1>Input qmd file: ‘file01_render_all_quarto_mod.qmd’</h1>
+<p>Este archivo verifica que existan todos los archivos .RData y los archivos .HTML correspondientes a cada .qmd. Si al menos uno de los .RData o .HTML no existe, vuelve a regenerar todos los archivos.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>File name:  R_obj_env_special_shiny.RData </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>File path:  /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/g03_gen_shiny_output/output/R_obj_env_special_shiny.RData </code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>File exists:  FALSE </code></pre>
+<pre><code>Rendering external qmd!Render ended!</code></pre>
 </div>
 </div>
 </section>
-<section id="input-rdata-files" class="level1">
-<h1>Input RData files</h1>
+<section id="input-folder-f02_quarto_mod" class="level1">
+<h1>Input Folder: ‘f02_quarto_mod’</h1>
+<p>Esta carpeta contiene los archivos qmd de codigo. Deben ser ejecutados para generar sus correspondientes HTML y RData.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>Input folder--------------------------------------------------------- 
  Relative path:  ../f02_quarto_mod 
  Absolute path:  /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod 
+ Folder exists: TRUE 
  ---------------------------------------------------------------------------</code></pre>
 </div>
+</div>
+</section>
+<section id="rdata-files" class="level1">
+<h1>RData files</h1>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] &quot;../f02_quarto_mod/R_obj_env_script01_anova_import_and_control.RData&quot;   
-[2] &quot;../f02_quarto_mod/R_obj_env_script02_anova_full_test.RData&quot;            
-[3] &quot;../f02_quarto_mod/R_obj_env_script03_anova_model.RData&quot;                
-[4] &quot;../f02_quarto_mod/R_obj_env_script04_anova_descriptive_rv.RData&quot;       
-[5] &quot;../f02_quarto_mod/R_obj_env_script05_anova_descriptive_residuals.RData&quot;
-[6] &quot;../f02_quarto_mod/R_obj_env_script06_anova_asa.RData&quot;                  </code></pre>
+<pre><code>  order                                            file_name file_exists
+1     1    R_obj_env_script01_anova_import_and_control.RData        TRUE
+2     2             R_obj_env_script02_anova_full_test.RData        TRUE
+3     3                 R_obj_env_script03_anova_model.RData        TRUE
+4     4        R_obj_env_script04_anova_descriptive_rv.RData        TRUE
+5     5 R_obj_env_script05_anova_descriptive_residuals.RData        TRUE
+6     6                   R_obj_env_script06_anova_asa.RData        TRUE
+                                                                                                                                                                                      file_path
+1    /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script01_anova_import_and_control.RData
+2             /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script02_anova_full_test.RData
+3                 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script03_anova_model.RData
+4        /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script04_anova_descriptive_rv.RData
+5 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script05_anova_descriptive_residuals.RData
+6                   /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script06_anova_asa.RData</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] &quot;/home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script01_anova_import_and_control.RData&quot;   
-[2] &quot;/home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script02_anova_full_test.RData&quot;            
-[3] &quot;/home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script03_anova_model.RData&quot;                
-[4] &quot;/home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script04_anova_descriptive_rv.RData&quot;       
-[5] &quot;/home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script05_anova_descriptive_residuals.RData&quot;
-[6] &quot;/home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod/R_obj_env_script06_anova_asa.RData&quot;                  </code></pre>
+<pre><code>All RData files exists.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] TRUE TRUE TRUE TRUE TRUE TRUE</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] TRUE</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>All files exists. Avoiding render qmd to obtain RData files.</code></pre>
+<pre><code>Check all RData:  TRUE </code></pre>
 </div>
 </div>
 </section>

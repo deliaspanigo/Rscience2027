@@ -338,6 +338,10 @@ plot_control001
 
 ``` 
 
+```{r eval=TRUE, echo=TRUE}
+plot_control001 <- plotly::plotly_build(plot_control001)
+```        
+
 
 ## Section 10 - Saving objects from this script
 ```{r eval=TRUE, echo=TRUE}

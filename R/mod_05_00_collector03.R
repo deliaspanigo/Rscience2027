@@ -164,11 +164,11 @@ mod_05_00_collector03_server_UNIVERSAL <- function(id, folder_path_tool_script) 
 
       # Inicialización de servidores
       try({
-        if (!is.null(local_env$mod_special_shiny_output_server)) local_env$mod_special_shiny_output_server("sub_shiny_output")
-        if (!is.null(local_env$mod_special_asa_server)) local_env$mod_special_asa_server("sub_asa")
+        if (!is.null(local_env$mod_special_shiny_output_server))   local_env$mod_special_shiny_output_server("sub_shiny_output", folder_temp_path = folder_temp_path)
+        if (!is.null(local_env$mod_special_asa_server))            local_env$mod_special_asa_server(id = "sub_asa", folder_temp_path = folder_temp_path)
         if (!is.null(local_env$mod_special_script_comment_server)) local_env$mod_special_script_comment_server(id = "sub_script_comment", folder_temp_path = folder_temp_path)
-        if (!is.null(local_env$mod_special_script_only_server)) local_env$mod_special_script_only_server(id = "sub_script_only", folder_temp_path = folder_temp_path)
-        if (!is.null(local_env$mod_special_reporting_server)) local_env$mod_special_reporting_server("sub_reporting")
+        if (!is.null(local_env$mod_special_script_only_server))    local_env$mod_special_script_only_server(id = "sub_script_only", folder_temp_path = folder_temp_path)
+        if (!is.null(local_env$mod_special_reporting_server))      local_env$mod_special_reporting_server(id = "sub_reporting", folder_temp_path = folder_temp_path)
       }, silent = FALSE)
 
       message("--- [RScience] Módulos Collector03 cargados en temporal para: ", id)

@@ -343,7 +343,9 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
 ```  
   
-  
+```{r eval=TRUE, echo=TRUE}    
+plot_residuals001 <- plotly::plotly_build(plot_residuals001)
+```  
   
   
 ```{r eval=TRUE, echo=TRUE}    
@@ -383,7 +385,9 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
 ```  
   
-  
+```{r eval=TRUE, echo=TRUE}    
+plot_residuals002 <- plotly::plotly_build(plot_residuals002)
+```    
   
   
 ```{r eval=TRUE, echo=TRUE}    
@@ -423,6 +427,9 @@ Medidas de dispersión de los residuos para cada nivel del factor.
 ```  
   
   
+```{r eval=TRUE, echo=TRUE}    
+plot_residuals003 <- plotly::plotly_build(plot_residuals003)
+```   
   
   
 ```{r eval=TRUE, echo=TRUE}    
@@ -463,7 +470,10 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
 ```  
   
-  
+
+```{r eval=TRUE, echo=TRUE}    
+plot_residuals004 <- plotly::plotly_build(plot_residuals004)
+```  
   
   
 ```{r eval=TRUE, echo=TRUE}    
@@ -521,7 +531,9 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
 ```  
   
-  
+```{r eval=TRUE, echo=TRUE}    
+plot_residuals005 <- plotly::plotly_build(plot_residuals005)
+```    
   
   
 ```{r eval=TRUE, echo=TRUE}    
@@ -558,7 +570,10 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
 ```  
   
-  
+
+```{r eval=TRUE, echo=TRUE}    
+plot_residuals006 <- plotly::plotly_build(plot_residuals006)
+```   
   
   
 ```{r eval=TRUE, echo=TRUE}    
@@ -596,7 +611,9 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
 ```  
   
-  
+```{r eval=TRUE, echo=TRUE}    
+plot_residuals007 <- plotly::plotly_build(plot_residuals007)
+```    
   
   
 ```{r eval=TRUE, echo=TRUE}    
@@ -638,7 +655,9 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
 ```  
   
-  
+```{r eval=TRUE, echo=TRUE}    
+plot_residuals008 <- plotly::plotly_build(plot_residuals008)
+```    
   
   
 ```{r eval=TRUE, echo=TRUE}    
@@ -705,7 +724,9 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
 ```  
   
-  
+```{r eval=TRUE, echo=TRUE}    
+plot_residuals009 <- plotly::plotly_build(plot_residuals009)
+```    
   
   
 ```{r eval=TRUE, echo=TRUE}    
@@ -761,6 +782,10 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   plot_residuals010
   
 ```
+
+```{r eval=TRUE, echo=TRUE}    
+plot_residuals010 <- plotly::plotly_build(plot_residuals010)
+```  
 
 
 ```{r eval=TRUE, echo=TRUE} 

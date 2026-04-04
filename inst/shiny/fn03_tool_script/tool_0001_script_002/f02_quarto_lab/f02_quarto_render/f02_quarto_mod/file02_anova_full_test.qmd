@@ -21,6 +21,15 @@ knitr:
     
 ---
 
+```{r}
+#| eval: true
+#| echo: true
+#| message: false
+#| warning: false
+library(dplyr)
+library(plotly)
+```
+
 ```{r eval=TRUE, echo=TRUE} 
 # load("R_obj_env_script01_anova_import_and_control.RData")
 # vector_all_obj_init <- ls(envir = .GlobalEnv)
@@ -252,6 +261,81 @@ nuestra propia tabla:
 ```  
   
   
+```{r eval=TRUE, echo=TRUE}
+
+df_table_tukey_plot001 <- data.frame(
+    "order" = df_factor_info$order,
+    "level" = df_factor_info$level,
+    "n" = df_factor_info$n,
+    "mean" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], mean),
+    "model_error_se" = df_model_error$model_error_se
+  )
+  df_table_tukey_plot001["lower_limit"] <- df_table_tukey_plot001$mean - df_table_tukey_plot001$model_error_se
+  df_table_tukey_plot001["upper_limmit"] <- df_table_tukey_plot001$mean + df_table_tukey_plot001$model_error_se
+  df_table_tukey_plot001["color"] <- df_factor_info$color
+
+  df_table_tukey_plot001[,"level"] <- factor(
+  x = df_table_tukey_plot001[,"level"],       # La variable original de factor
+  levels = df_table_tukey_plot001[,"level"]  # El orden de los niveles que calculamos en el Paso 2
+)
+  
+
+correct_pos_letters <- order(df_tukey_table_classroom$level)
+vector_letters <- df_tukey_table_classroom$group[correct_pos_letters]
+df_table_tukey_plot001["group"] <- vector_letters
+df_table_tukey_plot001
+```
+
+```{r eval=TRUE, echo=TRUE}
+  # # # Create a new plot...
+  plot_tukey001 <- plotly::plot_ly()
+  
+  
+  # # # Adding errors...
+  plot_tukey001 <-   plotly::add_trace(p = plot_tukey001,
+                                        type = "scatter",
+                                        mode = "markers",
+                                        x = df_table_tukey_plot001$level,
+                                        y = df_table_tukey_plot001$mean,
+                                        color = df_table_tukey_plot001$level,
+                                        colors = df_table_tukey_plot001$color,
+                                        marker = list(symbol = "line-ew-open",
+                                                      size = 50,
+                                                      opacity = 1,
+                                                      line = list(width = 5)),
+                                        error_y = list(type = "data", array = df_table_tukey_plot001$model_error_se)
+  )
+  
+  
+  
+  plot_tukey001 <-  add_text(p = plot_tukey001,
+                              x = df_table_tukey_plot001$level,
+                              y = df_table_tukey_plot001$mean,
+                              text = df_table_tukey_plot001$group, name = "Tukey Group",
+                              size = 20)
+  
+  # # # Title and settings...
+  plot_tukey001 <- plotly::layout(p = plot_tukey001,
+                                   title = "Plot 007 - Mean y model standard error",
+                                   font = list(size = 20),
+                                   margin = list(t = 100))
+  
+  # # # Without zerolines
+  plot_tukey001 <-plotly::layout(p = plot_tukey001,
+                                  xaxis = list(zeroline = FALSE),
+                                  yaxis = list(zeroline = FALSE))
+  
+  
+  # # # Plot output
+  plot_tukey001
+  
+
+```  
+
+```{r eval=TRUE, echo=TRUE}
+plot_tukey001 <- plotly::plotly_build(plot_tukey001)
+```      
+
 ## Section 10 - my_minidataset_ext
 Hasta el momento nuestro objeto my_minidataset contiene la variable respuesta, el factor, el color correspondiente a 
 cada nivel del factor, y el id tanto respecto a my_datasete y my_minidataset.

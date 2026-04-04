@@ -30,7 +30,8 @@ mod_06_00_render_and_show_server <- function(id,
                                              input_file_path_qmd,
                                              output_file_path,
                                              stamp_time = reactive(Sys.time()),
-                                             show_debug = TRUE) {
+                                             show_debug = TRUE,
+                                             show_file = TRUE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -126,6 +127,7 @@ mod_06_00_render_and_show_server <- function(id,
     # 5. VISUALIZACIÓN E INTERACCIÓN
     output$display_zone <- renderUI({
 
+      req(show_file)
       # 1. Agregamos esto para que el UI se refresque cuando hagas clic en Run
       # Pero NO usamos req(input$run) porque eso bloquearía la carga si el archivo ya existe.
       force_refresh <- input$run
