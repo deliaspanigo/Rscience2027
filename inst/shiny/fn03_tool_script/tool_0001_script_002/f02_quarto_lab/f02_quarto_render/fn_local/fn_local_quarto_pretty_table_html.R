@@ -1,4 +1,4 @@
-fn_local_quarto_pretty_table_html <- function(df, title = "Resumen de Datos", color = "#2c3e50") {
+fn_local_quarto_pretty_table_html <- function(df, title = "", color = "#2c3e50") {
 
   # Validación de datos
   if (is.null(df) || nrow(df) == 0) return("No hay datos disponibles.")

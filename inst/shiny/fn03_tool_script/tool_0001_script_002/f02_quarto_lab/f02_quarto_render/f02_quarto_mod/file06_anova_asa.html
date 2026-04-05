@@ -3185,7 +3185,7 @@ Tukey is subject to the rejection of the ANOVA hypothesis. Since the ANOVA null 
 </div>
 <p>We now have an entire set of outputs with short phrases that can be used in different parts of the report.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(phrase01_normality_selected, </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>vector_text_pack01 <span class="ot">&lt;-</span> <span class="fu">c</span>(phrase01_normality_selected, </span>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    phrase01_homogeneity_selected,</span>
 <span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    phrase01A_requeriments_selected,</span>
 <span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    phrase01B_requeriments_selected,</span>
@@ -3194,7 +3194,9 @@ Tukey is subject to the rejection of the ANOVA hypothesis. Since the ANOVA null 
 <span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>    phrase01A_tukey_selected,</span>
 <span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>    phrase01B_tukey_selected,</span>
 <span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>    phrase01C_tukey_selected,</span>
-<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    phrase01_anova_tukey_selected)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    phrase01_anova_tukey_selected)</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(vector_text_pack01)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 The null hypothesis of normal distribution of residuals is not rejected.
@@ -3223,7 +3225,7 @@ Tukey is subject to the rejection of the ANOVA hypothesis. Since the ANOVA null 
 </div>
 <p>And a second set comprised of longer phrases that serve to accompany statistical results or to properly assemble a paragraph or a page of the report.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(phrase02_normality_selected, </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>vector_text_pack02 <span class="ot">&lt;-</span> <span class="fu">c</span>(phrase02_normality_selected, </span>
 <span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    phrase02_homogeneity_selected,</span>
 <span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    phrase02A_requeriments_selected,</span>
 <span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    phrase02B_requeriments_selected,</span>
@@ -3232,7 +3234,9 @@ Tukey is subject to the rejection of the ANOVA hypothesis. Since the ANOVA null 
 <span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    phrase02A_tukey_selected,</span>
 <span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    phrase02B_tukey_selected,</span>
 <span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>    phrase02C_tukey_selected,</span>
-<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>    phrase02_anova_tukey_selected)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>    phrase02_anova_tukey_selected)</span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(vector_text_pack02)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 The p value about normality distibution is 0.517664951040294.  

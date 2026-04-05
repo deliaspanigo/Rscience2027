@@ -621,7 +621,7 @@ phrase02_anova_tukey_selected     <- ifelse(test = check_anova_yes_tukey_no,    
 
 We now have an entire set of outputs with short phrases that can be used in different parts of the report.
 ```{r eval=TRUE, echo=TRUE}
-cat(phrase01_normality_selected, 
+vector_text_pack01 <- c(phrase01_normality_selected, 
     phrase01_homogeneity_selected,
     phrase01A_requeriments_selected,
     phrase01B_requeriments_selected,
@@ -632,12 +632,13 @@ cat(phrase01_normality_selected,
     phrase01C_tukey_selected,
     phrase01_anova_tukey_selected)
 
+cat(vector_text_pack01)
 ```
 
 And a second set comprised of longer phrases that serve to accompany statistical results or to properly assemble a paragraph or a page of the report.
 
 ```{r eval=TRUE, echo=TRUE}
-cat(phrase02_normality_selected, 
+vector_text_pack02 <- c(phrase02_normality_selected, 
     phrase02_homogeneity_selected,
     phrase02A_requeriments_selected,
     phrase02B_requeriments_selected,
@@ -647,37 +648,21 @@ cat(phrase02_normality_selected,
     phrase02B_tukey_selected,
     phrase02C_tukey_selected,
     phrase02_anova_tukey_selected)
+
+cat(vector_text_pack02)
 
 ```
 
 ####  Phrases
 The first phrase is short, and serves to summarize. Without details.
 ```{r eval=TRUE, echo=FALSE}
-cat(phrase01_normality_selected, 
-    phrase01_homogeneity_selected,
-    phrase01A_requeriments_selected,
-    phrase01B_requeriments_selected,
-    phrase01C_requeriments_selected,
-    phrase01_anova_selected,
-    phrase01A_tukey_selected,
-    phrase01B_tukey_selected,
-    phrase01C_tukey_selected,
-    phrase01_anova_tukey_selected)
+cat(vector_text_pack01)
 
 ```
 
 The second phrase is longer and serves to help the operator (you) appropriately interpret the p-value obtained for the Shapiro-Wilk normality test applied to the residuals.
 ```{r eval=TRUE, echo=FALSE}
-cat(phrase02_normality_selected, 
-    phrase02_homogeneity_selected,
-    phrase02A_requeriments_selected,
-    phrase02B_requeriments_selected,
-    phrase02C_requeriments_selected,
-    phrase02_anova_selected,
-    phrase02A_tukey_selected,
-    phrase02B_tukey_selected,
-    phrase02C_tukey_selected,
-    phrase02_anova_tukey_selected)
+cat(vector_text_pack02)
 
 ```
 :::

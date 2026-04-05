@@ -188,46 +188,111 @@ names(super_bag) <- basename(vector_RData_file_path)
 ```
 
 
-# Anova Table
-```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_pretty_table_html(super_bag[[2]]$df_table_anova_classroom)
-```
-
-# Error from Model
-```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_pretty_table_html(super_bag[[2]]$df_model_error)
-
-```
-
-# Tukey Table
-```{r eval=TRUE, echo=FALSE}
-super_bag[[2]]$phrase_selected_check_unbalanced
-
-fn_local_quarto_pretty_table_html(super_bag[[2]]$df_tukey_table_classroom)
-```
 
 
 
-# Tukey Plot
+# Selected Case
 ```{r eval=TRUE, echo=FALSE}
 
-super_bag[[2]]$plot_tukey001
-
-```
-
-# Tukey groups - Original R output
-```{r eval=TRUE, echo=FALSE}
-
-super_bag[[2]]$tukey01_full_groups
+my_selected_row <- super_bag[[6]]$row_match_index
 
 ```
 
 
-# Tukey pairs - Original R output
+# DF case
 ```{r eval=TRUE, echo=FALSE}
 
-super_bag[[2]]$tukey02_full_pairs
+
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init, title = "", color = "#2c3e50")
+
+#super_bag[[6]]$row_match_index
 
 ```
 
+# DF selected case
+```{r eval=TRUE, echo=FALSE}
+
+
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+#super_bag[[6]]$row_match_index
+
+```
+
+# DF human
+```{r eval=TRUE, echo=FALSE}
+
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_general <- super_bag[[6]]$df_decision_cases_01_human[my_selected_row,"General_Decision"]
+
+cat(text_general)
+```
+
+# DF 02 - Requeriments
+```{r eval=TRUE, echo=FALSE}
+
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+
+
+#super_bag[[6]]$row_match_index
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_requeriments <- super_bag[[6]]$df_decision_cases_02_model_requeriments[my_selected_row,"Requeriments_Decision"]
+cat(text_requeriments)
+```
+
+
+# DF 03 - Anova
+```{r eval=TRUE, echo=FALSE}
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_anova <- super_bag[[6]]$df_decision_cases_03_anova[my_selected_row,"Anova_Decision"]
+cat(text_anova)
+```
+
+
+# DF 04 - Tukey
+```{r eval=TRUE, echo=FALSE}
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_tukey <-  super_bag[[6]]$df_decision_cases_04_tukey[my_selected_row,"Tukey_Decision"]
+cat(text_tukey)
+```
 

@@ -190,46 +190,38 @@ names(super_bag) <- basename(vector_RData_file_path)
 
 # Summary Anova
 ```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_pretty_table_html(super_bag[[6]]$df_summary_anova)
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_summary_anova, title = "", color = "#2c3e50")
 ```
 
-# Frases LEvel 01
+# Tukey Plot
 ```{r eval=TRUE, echo=FALSE}
 
-vector_obj <- c("phrase01_normality_selected", 
-    "phrase01_homogeneity_selected",
-    "phrase01A_requeriments_selected",
-    "phrase01B_requeriments_selected",
-    "phrase01C_requeriments_selected",
-    "phrase01_anova_selected",
-    "phrase01A_tukey_selected",
-    "phrase01B_tukey_selected",
-    "phrase01C_tukey_selected",
-    "phrase01_anova_tukey_selected")
+super_bag[[2]]$plot_tukey001
 
-aver <- super_bag[[6]][vector_obj]
-
-lapply(aver, cat)
 ```
 
-# Alpha value and confidence value
-```{r eval=TRUE, echo=FALSE}
+# Frases Level 01
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
 
-vector_obj02 <- c("phrase02_normality_selected", 
-    "phrase02_homogeneity_selected",
-    "phrase02A_requeriments_selected",
-    "phrase02B_requeriments_selected",
-    "phrase02C_requeriments_selected",
-    "phrase02_anova_selected",
-    "phrase02A_tukey_selected",
-    "phrase02B_tukey_selected",
-    "phrase02C_tukey_selected",
-    "phrase02_anova_tukey_selected")
 
-aver02 <- super_bag[[6]][vector_obj02]
+aver01 <- super_bag[[6]]$vector_text_pack01
 
-lapply(aver02, cat)
+cat(aver01)
+```
 
+# Frases Level 02
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+aver02 <- super_bag[[6]]$vector_text_pack02
+
+cat(aver02)
 ```
 
 
@@ -245,7 +237,7 @@ my_selected_row <- super_bag[[6]]$row_match_index
 ```{r eval=TRUE, echo=FALSE}
 
 
-fn_local_quarto_pretty_table_html(super_bag[[6]]$df_decision_cases_init)
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init, title = "", color = "#2c3e50")
 
 #super_bag[[6]]$row_match_index
 
@@ -255,7 +247,7 @@ fn_local_quarto_pretty_table_html(super_bag[[6]]$df_decision_cases_init)
 ```{r eval=TRUE, echo=FALSE}
 
 
-fn_local_quarto_pretty_table_html(super_bag[[6]]$df_decision_cases_init[my_selected_row,])
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
 
 #super_bag[[6]]$row_match_index
 
@@ -264,31 +256,57 @@ fn_local_quarto_pretty_table_html(super_bag[[6]]$df_decision_cases_init[my_selec
 # DF human
 ```{r eval=TRUE, echo=FALSE}
 
-fn_local_quarto_pretty_table_html(super_bag[[6]]$df_decision_cases_init[my_selected_row,])
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
 
 text_general <- super_bag[[6]]$df_decision_cases_01_human[my_selected_row,"General_Decision"]
 
 cat(text_general)
-
 ```
 
 # DF 02 - Requeriments
 ```{r eval=TRUE, echo=FALSE}
 
-fn_local_quarto_pretty_table_html(super_bag[[6]]$df_decision_cases_init[my_selected_row,])
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
 
-text_requeriments <- super_bag[[6]]$df_decision_cases_02_model_requeriments[my_selected_row,"Requeriments_Decision"]
-cat(text_requeriments)
+
 
 #super_bag[[6]]$row_match_index
 
 ```
 
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_requeriments <- super_bag[[6]]$df_decision_cases_02_model_requeriments[my_selected_row,"Requeriments_Decision"]
+cat(text_requeriments)
+```
 
 
 # DF 03 - Anova
 ```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_pretty_table_html(super_bag[[6]]$df_decision_cases_init[my_selected_row,])
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
 
 text_anova <- super_bag[[6]]$df_decision_cases_03_anova[my_selected_row,"Anova_Decision"]
 cat(text_anova)
@@ -297,11 +315,18 @@ cat(text_anova)
 
 # DF 04 - Tukey
 ```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_pretty_table_html(super_bag[[6]]$df_decision_cases_init[my_selected_row,])
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
 
 text_tukey <-  super_bag[[6]]$df_decision_cases_04_tukey[my_selected_row,"Tukey_Decision"]
 cat(text_tukey)
 ```
-
-
 

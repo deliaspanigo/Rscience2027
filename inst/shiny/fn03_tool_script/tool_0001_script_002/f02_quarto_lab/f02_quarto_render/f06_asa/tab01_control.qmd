@@ -188,39 +188,17 @@ names(super_bag) <- basename(vector_RData_file_path)
 ```
 
 
-# Selected Variables
-```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_pretty_table_html(super_bag[[1]]$df_selected_vars)
+# Frases Level 02
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+aver02 <- super_bag[[6]]$vector_text_pack02
+
+cat(aver02)
 ```
 
-# My minidataset
-```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_DT_table_html(super_bag[[1]]$my_minidataset)
-```
 
-# Alpha value and confidence value
-```{r eval=TRUE, echo=FALSE}
 
-fn_local_quarto_pretty_table_html(super_bag[[1]]$df_alpha_confidence)
-
-```
-
-# Control 
-```{r eval=TRUE, echo=FALSE}
-
-fn_local_quarto_pretty_table_html(super_bag[[1]]$df_control_my_minidataset)
-
-```
-
-# Factor summary
-```{r eval=TRUE, echo=FALSE}
-
-fn_local_quarto_pretty_table_html(super_bag[[1]]$df_factor_info)
-```
-
-# Scatter plot
-```{r eval=TRUE, echo=FALSE}
-
-super_bag[[1]]$plot_control001
-
-```
