@@ -1,0 +1,311 @@
+---
+title: "Rscience - Anova - script01"
+subtitle: "Import and control"
+author: "David Elías Panigo"
+format:
+  typst:
+    papersize: a4
+    margin:
+      x: 1.5cm # Un poco más estrecho para que quepan los gráficos
+      y: 2cm
+    columns: 1
+    toc: true
+    section-numbering: 1.1.a
+    # NUEVO: Configuración global para figuras
+    fig-format: png      # PNG suele dar mejor resultado para Plotly que JPEG
+    fig-width: 6.5       # Pulgadas (aprox el ancho útil de un A4)
+    fig-height: 4.5
+    fig-align: center
+
+knitr: 
+  opts_chunk: 
+    collapse: false
+    comment: ""
+    # NUEVO: Forzar a webshot2 a esperar un poco para que Plotly cargue
+    webshot: "webshot2" 
+params:
+  clean_all: false
+  special_echo: false
+  special_include: false
+---
+
+<!-- HIDDEN - LIBRERIAS -->
+```{r}
+#| eval: true
+#| echo: false
+#| include: false
+#| message: false
+#| warning: false
+
+library("knitr")
+library("kableExtra")
+library("tools")
+library("DT")
+library("htmltools")
+library("webshot2")
+
+fn_local_quarto_pretty_table_pdf <- function(df, title = "Resumen de Datos", font_size = 9) {
+  
+  library(flextable)
+  library(officer) # Para definir el tipo de línea (bordes)
+
+  # Validación de datos
+  if (is.null(df) || nrow(df) == 0) return("No hay datos disponibles.")
+
+  # Definimos el estilo de la línea (color y grosor)
+  std_border <- fp_border(color = "black", width = 1)
+
+  # Creamos la flextable
+  ft <- flextable(df) %>%
+    # 1. Título (Caption)
+    set_caption(caption = title) %>%
+    
+    # 2. Configuración de Fuente
+    fontsize(size = font_size, part = "all") %>%
+    font(fontname = "Arial", part = "all") %>%
+    
+    # 3. Diseño de Encabezado (Estética Rscience)
+    bg(bg = "#2c3e50", part = "header") %>%
+    color(color = "white", part = "header") %>%
+    bold(part = "header") %>%
+    
+    # 4. Bordes DETALLADOS (Líneas horizontales y verticales)
+    border_remove() %>% # Limpiamos bordes por defecto para control total
+    border_outer(border = std_border, part = "all") %>%
+    border_inner_h(border = std_border, part = "all") %>%
+    border_inner_v(border = std_border, part = "all") %>%
+    
+    # 5. Ajustes de celda
+    align(align = "center", part = "all") %>%
+    padding(padding = 3, part = "all") %>%
+    autofit() # Ajusta el ancho de las columnas al contenido automáticamente
+
+  # Retornamos la tabla lista para Typst/PDF
+  return(ft)
+}
+
+fn_local_pretty_table <- function(df, title = "Resumen de Datos", color = "#2c3e50") {
+  
+  # Detectar si estamos en HTML o PDF
+  is_html <- knitr::is_html_output()
+  
+  if (is_html) {
+    # Tu función original para HTML
+    return(fn_local_quarto_pretty_table_html(df, title, color))
+  } else {
+    # Nueva lógica para PDF/Typst
+    return(knitr::kable(df, caption = title, align = "c", booktabs = TRUE))
+  }
+}
+
+```
+
+
+
+<!-- HIDDEN - Loading local fn -->
+```{r}
+#| eval: true
+#| echo: !expr params$special_echo
+#| include: !expr params$special_include
+
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
+
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
+
+
+
+<!-- HIDDEN - Input folder (for RData files) -->
+```{r}
+#| eval: !expr params$special_include
+#| echo: !expr params$special_echo
+#| include: !expr params$special_include
+#| results: asis
+
+
+
+if(params$special_include) cat("# Input Folder: 'f02_quarto_mod", "\n")
+if(params$special_include) cat("Esta carpeta contiene los archivos RData, los HTML y los QMD de codigo.", "\n")
+```
+
+
+```{r}
+#| eval: true
+#| echo: !expr params$special_echo
+#| include: !expr params$special_include
+
+
+
+
+# 1. Definir la carpeta base
+input_folder01_relative <- file.path("..", "f02_quarto_mod")
+input_folder01_absolute <- normalizePath(input_folder01_relative, mustWork = TRUE)
+input_folder01_exists <- dir.exists(input_folder01_absolute)
+
+cat("Input folder---------------------------------------------------------", "\n",
+    "Relative path: ", input_folder01_relative, "\n",
+    "Absolute path: ", input_folder01_absolute, "\n",
+    "Folder exists:", input_folder01_exists, "\n",
+    "---------------------------------------------------------------------------")
+
+
+if(!input_folder01_exists) {
+  cat("ERROR GRAVE - No se encontro la carpeta que debe contener a los archivos QMD y los archivos RData.",
+      "Varifica si el nombre de la carpeta es el correcto o algun problema en el path de la carpeta.")
+  knitr::knit_exit()
+}
+```
+
+
+<!-- HIDDEN - LISTADO DE RDATA -->
+```{r}
+#| eval: !expr params$special_include
+#| echo: !expr params$special_echo
+#| include: !expr params$special_include
+#| results: asis
+
+
+
+if(params$special_include) cat("# RData files", "\n")
+if(params$special_include) cat("Listamos los archivos RData que hay en la carpeta que los genera.", "\n")
+```
+
+
+```{r}
+#| eval: true
+#| echo: !expr params$special_echo
+#| include: !expr params$special_include
+
+
+vector_RData_file_path <- list.files(path = input_folder01_absolute, pattern = "\\.RData$", full.names = T)
+vector_RData_file_path <- normalizePath(vector_RData_file_path, mustWork = TRUE)
+vector_RData_file_exists <- file.exists(vector_RData_file_path)
+vector_RData_file_name <- basename(vector_RData_file_path)
+vector_RData_order <- 1:length(vector_RData_file_path)
+
+df_RData <- data.frame(
+  "order" = vector_RData_order,
+  "file_name" = vector_RData_file_name,
+  "file_exists" = vector_RData_file_exists,
+  "file_path" = vector_RData_file_path)
+df_RData
+
+check_all_exists_RData <- all(vector_RData_file_exists)
+phrase_check_yes_RData <- "All RData files exists." 
+phrase_check_no_RData  <- "Not all RData files exists."
+phrase_check_selected_RData <- ifelse(test = check_all_exists_RData, 
+                                     yes = phrase_check_yes_RData, 
+                                     no = phrase_check_no_RData)
+
+cat(phrase_check_selected_RData)
+cat("Check all RData: ", check_all_exists_RData, "\n")
+
+if(!check_all_exists_RData) {
+  cat("ERROR GRAVE 02 - No se encontraron en la carpeta alguno de los archivos RData.",
+      "Varifica si el nombre de los archivos es correcto, o tal vez el path de la carpeta.")
+  knitr::knit_exit()
+}
+```
+
+
+
+```{r}
+#| eval: true
+#| echo: !expr params$special_echo
+#| include: !expr params$special_include
+
+# Supongamos que vector_RData_file_path ya existe
+# Ejemplo: vector_RData_file_path <- c("data1.R", "data2.R")
+
+# vector_RData_file_path contiene las rutas a tus archivos .RData
+
+super_bag <- lapply(vector_RData_file_path, function(file_path) {
+  
+  # 1. Creamos un entorno nuevo para CADA archivo
+  # Esto evita que si dos archivos tienen un objeto llamado 'plot_01', se borren entre sí.
+  temp_env <- new.env()
+  
+  # 2. Normalizamos la ruta (importante en Linux/Windows)
+  file_path_clean <- normalizePath(file_path, winslash = TRUE, mustWork = TRUE)
+  
+  # 3. Usamos LOAD especificando el entorno de destino
+  # A diferencia de source(), load() no devuelve error de multibyte en binarios.
+  load(file_path_clean, envir = temp_env)
+  
+  # 4. Convertimos el entorno a lista para que sea fácil de usar en Shiny
+  return(as.list(temp_env))
+})
+
+# 5. Opcional: Ponemos nombres a los elementos de la lista según el archivo
+names(super_bag) <- basename(vector_RData_file_path)
+
+```
+
+
+# Summary Anova
+```{r}
+#| eval: true
+#| echo: false
+
+
+fn_local_quarto_pretty_table_pdf(
+  df = super_bag[[6]]$df_summary_anova, 
+  title = "Tabla de Resultados: ANOVA Master", 
+  font_size = 8
+)
+```
+
+
+
+```{r}
+#| label: fig-tukey-png
+#| fig-cap: "Análisis de Comparaciones Múltiples (Tukey)"
+#| echo: false
+#| eval: true
+#| results: asis
+#| warning: false
+#| message: false
+
+library(plotly)
+library(webshot2)
+
+# 1. Recuperar el gráfico
+p <- super_bag[[2]]$plot_tukey001
+
+# 2. Quitar el menú (modebar)
+p_sin_menu <- p %>% 
+  config(
+    displayModeBar = FALSE,
+    displaylogo = FALSE
+  )
+
+# 3. Preparar carpeta y ruta
+png_dir <- "png"
+if (!dir.exists(png_dir)) dir.create(png_dir, recursive = TRUE)
+
+png_path_relative <- file.path(png_dir, "tukey_plot.png")
+png_path_absolute <- normalizePath(png_path_relative, mustWork = FALSE)
+
+# 4. Guardar como PNG con webshot2 (más estable en Quarto/Typst)
+webshot2::webshot(
+  url = htmltools::save_html(p_sin_menu, file = tempfile(fileext = ".html")),
+  file = png_path_absolute,
+  vwidth = 1600,      # ancho en píxeles
+  vheight = 900,      # alto en píxeles
+  delay = 2,          # espera 2 segundos para que cargue bien plotly
+  zoom = 2            # mejor calidad
+)
+
+# 5. Insertar la imagen en Typst (ruta relativa)
+cat(sprintf('\n\n![](%s){width=100%%}\n\n', png_path_relative))
+```
+
+

@@ -335,6 +335,59 @@ df_table_tukey_plot001
 plot_tukey001 <- plotly::plotly_build(plot_tukey001)
 ```      
 
+
+# --- 1. CONSTRUCCIÓN DEL GGPLOT ---
+plot_tukey_gg <- ggplot(df_table_tukey_plot001, 
+                        aes(x = level, 
+                            y = mean, 
+                            color = level)) +
+  
+  # Réplica del marker symbol "line-ew-open" (una línea horizontal ancha)
+  # Usamos geom_segment para dibujar la línea horizontal de la media
+  geom_segment(aes(x = as.numeric(level) - 0.2, 
+                   xend = as.numeric(level) + 0.2, 
+                   y = mean, 
+                   yend = mean), 
+               size = 2.5) +
+  
+  # Réplica del error_y (Barras de error)
+  geom_errorbar(aes(ymin = mean - model_error_se, 
+                    ymax = mean + model_error_se), 
+                width = 0.1, size = 1) +
+  
+  # Réplica del add_text (Las letras de los grupos de Tukey)
+  # 'vjust' ajusta la posición vertical para que no se pegue al punto
+  geom_text(aes(label = group), 
+            vjust = -1.5, 
+            size = 6, 
+            show.legend = FALSE) +
+  
+  # Aplicamos tus colores manuales exactos
+  scale_color_manual(values = df_table_tukey_plot001$color) +
+  
+  # Estética y Títulos
+  labs(title = "Plot 007 - Mean y model standard error (Tukey Groups)",
+       x = "Niveles del Factor",
+       y = "Media VR") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.text = element_text(size = 12),
+    legend.position = "none" # Quitamos leyenda, el eje X ya dice los niveles
+  ) +
+  # Ajustamos el límite superior para que la letra de Tukey no se corte
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15)))
+
+
+# --- 2. GUARDAR PNG (Inmune a errores de Chrome/libproviders) ---
+# Esto te asegura tener el archivo físico sin fallos de sistema
+ggsave("plot_tukey_007.png", plot = plot_tukey_gg, width = 10, height = 7, dpi = 300)
+
+# --- 3. RENDERIZAR INTERACTIVO (Para tu Quarto HTML) ---
+# Al convertirlo, mantienes la interactividad (zoom, tooltips)
+ggplotly(plot_tukey_gg, tooltip = c("x", "y"))
+
+
 ## Section 10 - my_minidataset_ext
 Hasta el momento nuestro objeto my_minidataset contiene la variable respuesta, el factor, el color correspondiente a 
 cada nivel del factor, y el id tanto respecto a my_datasete y my_minidataset.
