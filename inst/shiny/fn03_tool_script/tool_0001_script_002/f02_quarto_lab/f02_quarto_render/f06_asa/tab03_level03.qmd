@@ -188,70 +188,111 @@ names(super_bag) <- basename(vector_RData_file_path)
 ```
 
 
-# Response Variable - Position - Levels
-```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_pretty_table_html(super_bag[[4]]$df_rv_position_levels)
-```
 
-# Response Variable - Dispersion - Levels
-```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_pretty_table_html(super_bag[[4]]$df_rv_dispersion_levels)
-```
 
-# Response Variable - Position - General
+
+# Selected Case
 ```{r eval=TRUE, echo=FALSE}
 
-fn_local_quarto_pretty_table_html(super_bag[[4]]$df_rv_position_general)
+my_selected_row <- super_bag[[6]]$row_match_index
 
 ```
 
-# Response Variable - Dispersion - General
+
+# DF case
 ```{r eval=TRUE, echo=FALSE}
 
-fn_local_quarto_pretty_table_html(super_bag[[4]]$df_rv_dispersion_general)
+
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init, title = "", color = "#2c3e50")
+
+#super_bag[[6]]$row_match_index
 
 ```
 
-# Response Variable - Mean and Errors from Model
+# DF selected case
 ```{r eval=TRUE, echo=FALSE}
 
-fn_local_quarto_pretty_table_html(super_bag[[4]]$df_table_factor_plot002)
+
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+#super_bag[[6]]$row_match_index
 
 ```
 
-# Plot Factor - 001
+# DF human
 ```{r eval=TRUE, echo=FALSE}
 
-super_bag[[4]]$plot_factor001
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+
+
 ```
 
-# Plot Factor - 002
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_general <- super_bag[[6]]$df_decision_cases_01_human[my_selected_row,"General_Decision"]
+
+cat(text_general)
+```
+
+# DF 02 - Requeriments
 ```{r eval=TRUE, echo=FALSE}
 
-super_bag[[4]]$plot_factor002
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
+
+
+
+#super_bag[[6]]$row_match_index
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_requeriments <- super_bag[[6]]$df_decision_cases_02_model_requeriments[my_selected_row,"Requeriments_Decision"]
+cat(text_requeriments)
 ```
 
 
-# Plot Factor - 003
+# DF 03 - Anova
 ```{r eval=TRUE, echo=FALSE}
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
 
-super_bag[[4]]$plot_factor003
+
 ```
 
-# Plot Factor - 004
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_anova <- super_bag[[6]]$df_decision_cases_03_anova[my_selected_row,"Anova_Decision"]
+cat(text_anova)
+```
+
+
+# DF 04 - Tukey
 ```{r eval=TRUE, echo=FALSE}
+fn_local_quarto_pretty_table_html(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "", color = "#2c3e50")
 
-super_bag[[4]]$plot_factor004
+
 ```
 
-# Plot Factor - 005
-```{r eval=TRUE, echo=FALSE}
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
 
-super_bag[[4]]$plot_factor005
+
+text_tukey <-  super_bag[[6]]$df_decision_cases_04_tukey[my_selected_row,"Tukey_Decision"]
+cat(text_tukey)
 ```
 
-# Plot Factor - 006
-```{r eval=TRUE, echo=FALSE}
-
-super_bag[[4]]$plot_factor006
-```

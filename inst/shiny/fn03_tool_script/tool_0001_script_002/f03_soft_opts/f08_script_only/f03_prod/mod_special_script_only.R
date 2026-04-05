@@ -54,12 +54,12 @@ mod_special_script_only_server <- function(id, folder_temp_path) {
 
     base_folder01 <- reactive({
       req(folder_temp_path())
-      file.path(folder_temp_path(), "f02_quarto_lab", "f02_quarto_render", "f03_script_internal")
+      file.path(folder_temp_path(), "f02_quarto_lab", "f02_quarto_render", "g04_script_external")
     })
 
     base_folder02 <- reactive({
       req(folder_temp_path())
-      file.path(folder_temp_path(), "f02_quarto_lab", "f02_quarto_render", "f03_script_internal", "output")
+      file.path(folder_temp_path(), "f02_quarto_lab", "f02_quarto_render", "g04_script_external", "output")
     })
 
     # base_folder <- reactive({
@@ -71,32 +71,32 @@ mod_special_script_only_server <- function(id, folder_temp_path) {
     mod_06_00_render_and_show_server(id = "anova_01",
                  super_label = "Import and Control",
                  bg_color = "#e7f1ff", # Un azul muy suave
-                 input_file_path_qmd = reactive(file.path(base_folder01(), "file01_gen_all_scripts_internal.qmd")),
+                 input_file_path_qmd = reactive(file.path(base_folder01(), "AAA_01_RUNNER_g04_script_external.qmd")),
                  output_file_path    = reactive(file.path(base_folder02(), "script01_anova_import_and_control.R")))
 
     mod_06_00_render_and_show_server(id = "anova_02",
                  super_label = "Full Test",
                  bg_color = "#f0fff4", # Un verde muy suave
-                 input_file_path_qmd = reactive(file.path(base_folder01(), "file01_gen_all_scripts_internal.qmd")),
+                 input_file_path_qmd = reactive(file.path(base_folder01(), "AAA_01_RUNNER_g04_script_external.qmd")),
                  output_file_path    = reactive(file.path(base_folder02(), "script02_anova_full_test.R")))
 
     mod_06_00_render_and_show_server(id = "anova_03",
                  super_label = "Model",
                  bg_color = "#f0fff4", # Un verde muy suave
-                 input_file_path_qmd = reactive(file.path(base_folder01(), "file01_gen_all_scripts_internal.qmd")),
+                 input_file_path_qmd = reactive(file.path(base_folder01(), "AAA_01_RUNNER_g04_script_external.qmd")),
                  output_file_path    = reactive(file.path(base_folder02(), "script03_anova_model.R")))
 
     mod_06_00_render_and_show_server(id = "anova_04",
                  super_label = "Response Variable",
                  bg_color = "#f0fff4", # Un verde muy suave
-                 input_file_path_qmd = reactive(file.path(base_folder01(), "file01_gen_all_scripts_internal.qmd")),
+                 input_file_path_qmd = reactive(file.path(base_folder01(), "AAA_01_RUNNER_g04_script_external.qmd")),
                  output_file_path    = reactive(file.path(base_folder02(), "script04_anova_descriptive_rv.R")))
 
 
     mod_06_00_render_and_show_server(id = "anova_05",
                  super_label = "Residuals",
                  bg_color = "#f0fff4", # Un verde muy suave
-                 input_file_path_qmd = reactive(file.path(base_folder01(), "file01_gen_all_scripts_internal.qmd")),
+                 input_file_path_qmd = reactive(file.path(base_folder01(), "AAA_01_RUNNER_g04_script_external.qmd")),
                  output_file_path    = reactive(file.path(base_folder02(), "script05_anova_descriptive_residuals.R")))
 
 
@@ -104,7 +104,7 @@ mod_special_script_only_server <- function(id, folder_temp_path) {
     mod_06_00_render_and_show_server(id = "anova_06",
                  super_label = "ASA",
                  bg_color = "#f0fff4", # Un verde muy suave
-                 input_file_path_qmd = reactive(file.path(base_folder01(), "file01_gen_all_scripts_internal.qmd")),
+                 input_file_path_qmd = reactive(file.path(base_folder01(), "AAA_01_RUNNER_g04_script_external.qmd")),
                  output_file_path    = reactive(file.path(base_folder02(), "script06_anova_asa.R")))
 
 

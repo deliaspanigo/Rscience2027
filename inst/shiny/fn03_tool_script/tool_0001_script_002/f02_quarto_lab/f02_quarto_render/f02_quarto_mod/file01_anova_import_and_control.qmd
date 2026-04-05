@@ -2,7 +2,7 @@
 title: "Rscience - Anova - script01 - Anova - Import and control"
 format: 
   html:
-    css: custom_theme.css
+#    css: custom_theme.css
     grid:
       body-width: 2000px
       margin-width: 250px
@@ -12,13 +12,10 @@ format:
     toc-location: right
     self-contained: true
     link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
-
 knitr: 
     opts_chunk: 
         collapse: false
         comment: ""
-
-    
 ---
 
 ```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
@@ -355,7 +352,7 @@ vector_exclusion <- c("")
 vector_save_obj <- setdiff(vector_all_obj, vector_exclusion)
 
 # Guardar todo excepto los excluidos
-save(list = vector_save_obj, file = "R_obj_env_script01_anova_import_and_control.RData")
+save(list = vector_save_obj, file = "R_obj_env_file01_anova_import_and_control.RData")
 
 
 ``` 

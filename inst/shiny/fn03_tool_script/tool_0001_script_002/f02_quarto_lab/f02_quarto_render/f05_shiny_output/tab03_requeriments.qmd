@@ -46,7 +46,7 @@ library("htmltools")
 #| echo: !expr params$special_echo
 #| include: !expr params$special_include
 
-folder_fn_local_relative <- "../fn_local"
+folder_fn_local_relative <- "../zzz_fn_local"
 folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
 vector_fn <- list.files(
   path = folder_fn_local_absolute, 

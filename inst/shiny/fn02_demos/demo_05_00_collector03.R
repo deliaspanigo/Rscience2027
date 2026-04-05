@@ -29,7 +29,7 @@ ui <- page_fluid(
 
         # 2. Pestaña: Shiny
         nav_panel(
-          title = "Shiny",
+          title = "Shiny Output",
           icon = icon("book"),
           mod_05_00_collector03_ui_01_shiny_output("txt_3")
         ),

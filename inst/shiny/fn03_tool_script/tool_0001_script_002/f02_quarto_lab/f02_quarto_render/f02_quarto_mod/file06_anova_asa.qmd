@@ -2,7 +2,7 @@
 title: "Rscience - Anova - script06 - ASA"
 format: 
   html:
-    css: custom_theme.css
+#    css: custom_theme.css
     grid:
       body-width: 2000px
       margin-width: 250px
@@ -12,13 +12,10 @@ format:
     toc-location: right
     self-contained: true
     link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
-
 knitr: 
     opts_chunk: 
         collapse: false
         comment: ""
-
-    
 ---
 
 ```{r}
@@ -33,11 +30,11 @@ library(tidyverse)
 
 ```{r eval=TRUE, echo=TRUE} 
 
-load("R_obj_env_script01_anova_import_and_control.RData")
-load("R_obj_env_script02_anova_full_test.RData")
-load("R_obj_env_script03_anova_model.RData")
-load("R_obj_env_script04_anova_descriptive_rv.RData")
-load("R_obj_env_script05_anova_descriptive_residuals.RData")
+load("R_obj_env_file01_anova_import_and_control.RData")
+load("R_obj_env_file02_anova_full_test.RData")
+load("R_obj_env_file03_anova_model.RData")
+load("R_obj_env_file04_anova_descriptive_rv.RData")
+load("R_obj_env_file05_anova_descriptive_residuals.RData")
 
 vector_all_obj_init <- ls(envir = .GlobalEnv)
 ```
@@ -1393,6 +1390,6 @@ vector_exclusion <- vector_all_obj_init
 vector_save_obj <- setdiff(vector_all_obj_end, vector_exclusion)
 
 # Guardar todo excepto los excluidos
-save(list = vector_save_obj, file = "R_obj_env_script06_anova_asa.RData")
+save(list = vector_save_obj, file = "R_obj_env_file06_anova_asa.RData")
 
 ```

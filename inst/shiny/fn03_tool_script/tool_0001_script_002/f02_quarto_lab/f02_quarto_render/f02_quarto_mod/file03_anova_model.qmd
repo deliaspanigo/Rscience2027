@@ -2,7 +2,7 @@
 title: "Rscience - Anova - script03 - Anova - Model"
 format: 
   html:
-    css: custom_theme.css
+#    css: custom_theme.css
     grid:
       body-width: 2000px
       margin-width: 250px
@@ -12,34 +12,12 @@ format:
     toc-location: right
     self-contained: true
     link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
-
 knitr: 
     opts_chunk: 
         collapse: false
         comment: ""
-
-    
 ---
-```{r setup_style, results='asis', echo=FALSE}
-# 1. Configurar el ancho de salida de la consola de R
-options(width = 3000)
 
-# 2. Inyectar el CSS para forzar el scroll horizontal en las celdas de salida
-cat("
-<style>
-  .cell-output-stdout {
-    overflow-x: auto !important;
-    display: block !important;
-  }
-  .cell-output-stdout pre {
-    white-space: pre !important;
-    word-wrap: normal !important;
-    width: max-content !important;
-    min-width: 100% !important;
-  }
-</style>
-")
-```
 
 ```{r}
 #| eval: true
@@ -61,39 +39,32 @@ options(width = 500)
 
 ```
 
-```{r eval=TRUE, echo=FALSE} 
-fn_load_env_hidden <- function(path_rdata){
-  # 1. Definir la ruta del archivo
+```{r eval=TRUE, echo=FALSE}
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
 
-  # 2. Crear un entorno temporal
-  temp_env <- new.env()
-  
-  # 3. Cargar el archivo dentro de ese entorno específico
-  load(path_rdata, envir = temp_env)
-  
-  # 4. Convertir el entorno a una lista
-  list_obj_script01 <- as.list(temp_env)
-  
-  # (Opcional) Eliminar el entorno temporal para liberar memoria
-  rm(temp_env)
-    
-  return(list_obj_script01)
-}
-
-```
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
 
 ```{r eval=TRUE, echo=TRUE} 
 # load("R_obj_env_script01_anova_import_and_control.RData")
 # vector_all_obj_init <- ls(envir = .GlobalEnv)
 
 # 1. Definir la ruta del archivo
-path_rdata_script01 <- "R_obj_env_script01_anova_import_and_control.RData"
-path_rdata_script02 <- "R_obj_env_script02_anova_full_test.RData"
+path_rdata_file01 <- "R_obj_env_file01_anova_import_and_control.RData"
+path_rdata_file02 <- "R_obj_env_file02_anova_full_test.RData"
 
 
 # 4. Convertir el entorno a una lista
-list_obj_script01 <- fn_load_env_hidden(path_rdata = path_rdata_script01)
-list_obj_script02 <- fn_load_env_hidden(path_rdata = path_rdata_script02)
+list_obj_file01 <- fn_load_env_RData_hidden(path_rdata = path_rdata_file01)
+list_obj_file02 <- fn_load_env_RData_hidden(path_rdata = path_rdata_file02)
 
 
 
@@ -101,22 +72,22 @@ list_obj_script02 <- fn_load_env_hidden(path_rdata = path_rdata_script02)
 
 ```{r eval=TRUE, echo=TRUE} 
 # From Script01
-var_name_rv <- list_obj_script01$var_name_rv
-var_name_factor <- list_obj_script01$var_name_factor
-my_minidataset <-  list_obj_script01$my_minidataset 
-df_factor_info <- list_obj_script01$df_factor_info
-vector_color_levels_new <- list_obj_script01$vector_color_levels_new
-alpha_value <- list_obj_script01$alpha_value
+var_name_rv <- list_obj_file01$var_name_rv
+var_name_factor <- list_obj_file01$var_name_factor
+my_minidataset <-  list_obj_file01$my_minidataset 
+df_factor_info <- list_obj_file01$df_factor_info
+vector_color_levels_new <- list_obj_file01$vector_color_levels_new
+alpha_value <- list_obj_file01$alpha_value
 
 # From Script02
-my_minidataset_ext <- list_obj_script02$my_minidataset_ext
+my_minidataset_ext <- list_obj_file02$my_minidataset_ext
 
 ```
 
 ```{r eval=TRUE, echo=TRUE} 
 
-rm(list_obj_script01)
-rm(list_obj_script02)
+rm(list_obj_file01)
+rm(list_obj_file02)
 vector_all_obj_init <- ls(envir = .GlobalEnv)
 #vector_all_obj_init <- ""
 ```
@@ -557,6 +528,6 @@ vector_exclusion <- vector_all_obj_init
 vector_save_obj <- setdiff(vector_all_obj_end, vector_exclusion)
 
 # Guardar todo excepto los excluidos
-save(list = vector_save_obj, file = "R_obj_env_script03_anova_model.RData")
+save(list = vector_save_obj, file = "R_obj_env_file03_anova_model.RData")
 
 ```

@@ -17,7 +17,21 @@ mod_special_asa_ui <- function(id) {
   tagList(
     useShinyjs(),
     div(class = "special-comment-wrapper",
-        mod_06_00_render_and_show_ui(id = ns("anova_99"))
+        navset_card_tab(
+          title = "Editor de Reportes Quarto",
+          nav_panel(
+            title = "Control",
+            mod_06_00_render_and_show_ui(id = ns("asa_01"))
+          ),
+          nav_panel(
+            title = "Anova and Tukey",
+            mod_06_00_render_and_show_ui(id = ns("asa_02"))
+          ),
+          nav_panel(
+            title = "Requeriments",
+            mod_06_00_render_and_show_ui(id = ns("asa_03"))
+          )
+        )
     )
   )
 }
@@ -28,17 +42,34 @@ mod_special_asa_server <- function(id, folder_temp_path) {
 
     base_folder01 <- reactive({
       req(folder_temp_path())
-      file.path(folder_temp_path(), "f02_quarto_lab", "f02_quarto_render", "g04_asa")
+      file.path(folder_temp_path(), "f02_quarto_lab", "f02_quarto_render", "g06_asa")
+    })
+
+    base_folder02 <- reactive({
+      req(folder_temp_path())
+      file.path(folder_temp_path(), "f02_quarto_lab", "f02_quarto_render", "f06_asa")
     })
 
 
+
     # Ejemplo con colores distintos configurados desde el Server
-    mod_06_00_render_and_show_server(id = "anova_99",
+    mod_06_00_render_and_show_server(id = "asa_01",
                                      super_label = "Import and Control",
                                      bg_color = "#e7f1ff", # Un azul muy suave
-                                     input_file_path_qmd = reactive(file.path(base_folder01(), "AAA_RUNNER_asa.qmd")),
-                                     output_file_path    = reactive(file.path(base_folder01(), "AAA_RUNNER_asa.html")))
+                                     input_file_path_qmd = reactive(file.path(base_folder01(), "AAA_01_RUNNER_g06_asa.qmd")),
+                                     output_file_path    = reactive(file.path(base_folder02(), "tab01_summary_anova.html")))
 
+    mod_06_00_render_and_show_server(id = "asa_02",
+                                     super_label = "Full Test",
+                                     bg_color = "#f0fff4", # Un verde muy suave
+                                     input_file_path_qmd = reactive(file.path(base_folder01(), "AAA_01_RUNNER_g06_asa.qmd")),
+                                     output_file_path    = reactive(file.path(base_folder02(), "tab02_level02.html")))
+
+    mod_06_00_render_and_show_server(id = "asa_03",
+                                     super_label = "Model",
+                                     bg_color = "#f0fff4", # Un verde muy suave
+                                     input_file_path_qmd = reactive(file.path(base_folder01(), "AAA_01_RUNNER_g06_asa.qmd")),
+                                     output_file_path    = reactive(file.path(base_folder02(), "tab03_level03.html")))
 
 
 

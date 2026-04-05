@@ -1,0 +1,386 @@
+---
+title: "Rscience - Anova - script01 - Anova - Import and control"
+format: 
+  html:
+    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+params:
+  clean_all: false
+    
+---
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+library("knitr")
+library("tools")
+```
+
+
+```{r eval=TRUE, echo=FALSE}
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
+
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
+
+
+# Local Output Folder
+```{r eval=TRUE, echo=FALSE}
+
+output_folder_path_relative <- file.path("output")
+output_folder_path_absolute <- normalizePath(output_folder_path_relative, mustWork = FALSE)
+
+check_action01 <- fn_local_create_new_folder(new_folder_path = output_folder_path_absolute)
+# output_folder_path_exists <-  dir.exists(output_folder_path_absolute)
+output_folder_path_exists <-  check_action01
+
+
+cat("Output folder--------------------------------------------------------- ", "\n",
+    "Local output folder relative: ", output_folder_path_relative, "\n",
+    "Local output folder absolute: ", output_folder_path_absolute, "\n",
+    "Local output folder exists:   ", output_folder_path_exists, "\n")
+
+
+
+if(!check_action01){
+  cat("No pudo crearse la carpeta. Esto imposibilita continuar con el procesamiento. Que sucedio!!!????")
+  knitr::knit_exit()
+}
+```
+
+# Cleanning Local Output Folder
+```{r eval=TRUE, echo=FALSE}
+
+# 1. Listar todos los archivos dentro de la carpeta
+# full.names = TRUE es clave para tener la ruta completa y que R sepa qué borrar
+
+if(params$clean_all){
+  
+  check_action02 <- fn_local_clean_folder_SECURITY(folder_path = output_folder_path_absolute)
+  if(!check_action02){
+    cat("Error grave 01: No pude limpiarse la carpeta. Que sucedio!!!????")
+    knitr::knit_exit()
+  }
+
+} else cat("Limpieza no permitida.")
+
+list_files_output_folder <- list.files(path = output_folder_path_absolute, recursive = T)
+
+cat("There are ", length(list_files_output_folder), "files inside the output folder.", "\n")
+print(list_files_output_folder)
+
+```
+
+# Input qmd file: 'file01_render_all_quarto_mod.qmd'
+Este archivo verifica que existan todos los archivos .RData y los archivos .HTML correspondientes a cada .qmd.
+Si al menos uno de los .RData o .HTML no existe, vuelve a regenerar todos los archivos.
+```{r eval=TRUE, echo=FALSE}
+
+str_qmd_render_all_quarto_relative <- file.path("..", "g02_quarto_mod", "AAA_01_RUNNER_g02_quarto_mod.qmd")
+str_qmd_render_all_quarto_absolute <- normalizePath(str_qmd_render_all_quarto_relative, mustWork = T)
+str_qmd_render_all_quarto_exists <- file.exists(str_qmd_render_all_quarto_absolute)
+
+if(str_qmd_render_all_quarto_exists){
+    cat("Rendering external qmd!")
+    fn_local_render_all_qmd(vector_qmd_file_path = str_qmd_render_all_quarto_absolute)
+    cat("Render ended!")
+} else  {
+  
+  cat("ERROR GRAVE 02 - El archivo qmd deberia existir pero no existe. Verifica el  nombre y el path.",
+        "Verificar!!!")
+    knitr::knit_exit()
+}
+```
+
+
+
+
+
+# Input Folder: 'f02_quarto_mod'
+Esta carpeta contiene los archivos qmd de codigo. Deben ser ejecutados para generar sus correspondientes HTML y RData.
+```{r eval=TRUE, echo=FALSE}
+
+# 1. Definir la carpeta base
+input_folder01_relative <- file.path("..", "f02_quarto_mod")
+input_folder01_absolute <- normalizePath(input_folder01_relative, mustWork = TRUE)
+input_folder01_exists <- dir.exists(input_folder01_absolute)
+
+cat("Input folder---------------------------------------------------------", "\n",
+    "Relative path: ", input_folder01_relative, "\n",
+    "Absolute path: ", input_folder01_absolute, "\n",
+    "Folder exists:", input_folder01_exists, "\n",
+    "---------------------------------------------------------------------------")
+
+
+if(!input_folder01_exists) {
+  cat("ERROR GRAVE - No se encontro la carpeta que debe contener a los archivos QMD y los archivos RData.",
+      "Varifica si el nombre de la carpeta es el correcto o algun problema en el path de la carpeta.")
+  knitr::knit_exit()
+}
+```
+
+
+
+# RData files
+```{r eval=TRUE, echo=FALSE}
+
+vector_RData_file_path <- list.files(path = input_folder01_absolute, pattern = "\\.RData$", full.names = T)
+vector_RData_file_path <- normalizePath(vector_RData_file_path, mustWork = TRUE)
+vector_RData_file_exists <- file.exists(vector_RData_file_path)
+vector_RData_file_name <- basename(vector_RData_file_path)
+vector_RData_order <- 1:length(vector_RData_file_path)
+
+df_RData <- data.frame(
+  "order" = vector_RData_order,
+  "file_name" = vector_RData_file_name,
+  "file_exists" = vector_RData_file_exists,
+  "file_path" = vector_RData_file_path)
+df_RData
+
+check_all_exists_RData <- all(vector_RData_file_exists)
+phrase_check_yes_RData <- "All RData files exists." 
+phrase_check_no_RData  <- "Not all RData files exists."
+phrase_check_selected_RData <- ifelse(test = check_all_exists_RData, 
+                                     yes = phrase_check_yes_RData, 
+                                     no = phrase_check_no_RData)
+
+cat(phrase_check_selected_RData)
+cat("Check all RData: ", check_all_exists_RData, "\n")
+
+if(!check_all_exists_RData) {
+  cat("ERROR GRAVE 02 - No se encontraron en la carpeta alguno de los archivos RData.",
+      "Varifica si el nombre de los archivos es correcto, o tal vez el path de la carpeta.")
+  knitr::knit_exit()
+}
+```
+
+
+# Input Folder: 'f05_shiny_output'
+Esta carpeta contiene los archivos qmd de codigo propios para el shiny output. Estos utilizan lso arhvios .RData del punto anteiror.. Deben ser ejecutados para generar sus correspondientes HTML.
+```{r eval=TRUE, echo=FALSE}
+
+# 1. Definir la carpeta base
+input_folder01_relative <- file.path("..", "f05_shiny_output")
+input_folder01_absolute <- normalizePath(input_folder01_relative, mustWork = TRUE)
+input_folder01_exists <- dir.exists(input_folder01_absolute)
+
+cat("Input folder---------------------------------------------------------", "\n",
+    "Relative path: ", input_folder01_relative, "\n",
+    "Absolute path: ", input_folder01_absolute, "\n",
+    "Folder exists:", input_folder01_exists, "\n",
+    "---------------------------------------------------------------------------")
+
+
+if(!input_folder01_exists) {
+  cat("ERROR GRAVE - No se encontro la carpeta que debe contener a los archivos QMD.",
+      "Varifica si el nombre de la carpeta es el correcto o algun problema en el path de la carpeta.")
+  knitr::knit_exit()
+}
+```
+
+
+
+# QMD files init
+```{r eval=TRUE, echo=FALSE}
+
+vector_qmd_file_path <- list.files(path = input_folder01_absolute, pattern = "\\.qmd$", full.names = T)
+vector_qmd_file_path <- normalizePath(vector_qmd_file_path, mustWork = TRUE)
+vector_qmd_file_exists <- file.exists(vector_qmd_file_path)
+vector_qmd_file_name <- basename(vector_qmd_file_path)
+vector_qmd_order <- 1:length(vector_qmd_file_path)
+
+df_qmd <- data.frame(
+  "order" = vector_qmd_order,
+  "file_name" = vector_qmd_file_name,
+  "file_exists" = vector_qmd_file_exists,
+  "file_path" = vector_qmd_file_path)
+df_qmd
+
+check_all_exists_qmd <- all(vector_qmd_file_exists)
+phrase_check_yes_qmd <- "All qmd files exists." 
+phrase_check_no_qmd  <- "Not all qmd files exists."
+phrase_check_selected_qmd <- ifelse(test = check_all_exists_qmd, 
+                                     yes = phrase_check_yes_qmd, 
+                                     no = phrase_check_no_qmd)
+
+cat(phrase_check_selected_qmd)
+cat("Check all qmd: ", check_all_exists_qmd, "\n")
+
+if(!check_all_exists_qmd) {
+  cat("ERROR GRAVE 02 - No se encontraron en la carpeta alguno de los archivos QMD.",
+      "Varifica si el nombre de los archivos es correcto, o tal vez el path de la carpeta.")
+  knitr::knit_exit()
+}
+```
+
+
+
+# HTML files init
+```{r eval=TRUE, echo=FALSE}
+
+fn_internal_HTML <- function(){
+  html_folder <- dirname(vector_qmd_file_path[1])
+  vector_html_file_name <- paste0(tools::file_path_sans_ext(vector_qmd_file_name), ".html")
+  vector_html_file_path <-  normalizePath(file.path(html_folder, vector_html_file_name), mustWork = FALSE)
+  vector_html_file_exists <- file.exists(vector_html_file_path)
+  
+  vector_html_order <- 1:length(vector_html_file_path)
+  
+  df_html <- data.frame(
+    "order" = vector_html_order,
+    "file_name" = vector_html_file_name,
+    "file_exists" = vector_html_file_exists,
+    "file_path" = vector_html_file_path)
+  print(df_html)
+  
+  
+  check_all_exists_html <- all(vector_html_file_exists)
+  phrase_check_yes_html <- "All HTML files exists." 
+  phrase_check_no_html  <- "Not all HTML files exists."
+  phrase_check_selected_html <- ifelse(test = check_all_exists_html, 
+                                       yes = phrase_check_yes_html, 
+                                       no = phrase_check_no_html)
+  cat("\n")
+  cat(phrase_check_selected_html, "\n")
+  cat("Check all HTML: ", check_all_exists_html, "\n")
+  
+  
+  list_output <- list(check_all_exists_html = check_all_exists_html,
+                      df_html = df_html)
+  
+  return(list_output)
+}
+list_html_init <- fn_internal_HTML()
+check_all_exists_html_init <- list_html_init$check_all_exists_html
+vector_html_file_path_init <- list_html_init$df_html$file_path
+
+```
+
+
+
+
+# Universe Init
+```{r eval=TRUE, echo=FALSE}
+
+vector_check_all_universe <- c("QMD"   = check_all_exists_qmd, 
+                               "HTML init"  = check_all_exists_html_init)
+
+df_universe <- data.frame(
+  order = 1:length(vector_check_all_universe),
+  label = names(vector_check_all_universe),
+  check = vector_check_all_universe
+)
+df_universe
+
+
+check_universe <- all(vector_check_all_universe)
+check_render <- !check_universe
+
+phrase_check_yes_universe <- "All the espected HTML files exists." 
+phrase_check_no_universe  <- "Not all HTML files exists. Render will start soon."
+phrase_check_selected_universe <- ifelse(test = check_universe, 
+                                     yes = phrase_check_yes_universe, 
+                                     no = phrase_check_no_universe)
+cat(phrase_check_selected_universe)
+cat("Check all Universe: ", check_universe , "\n")
+cat("Will we run render???: ", check_render , "\n")
+
+
+```
+
+
+
+# Rendering QMD files
+```{r eval=TRUE, echo=FALSE}
+# ================================================
+# FUNCIÓN PARA COPIAR CONTENIDO .qmd → .R
+# ================================================
+
+# ==============================================================================
+# 1. EJECUCIÓN DE QMD (Tu función original, sin cambios)
+# ==============================================================================
+# folder_qmd <- normalizePath(file.path("..", "f02_quarto_mod"), mustWork = TRUE)
+# 
+
+
+
+if(check_render) {
+  fn_local_render_all_qmd(vector_qmd_file_path = vector_qmd_file_path)
+  cat("Rendering QMD finished!")
+} else cat("Avoiding render QMD files. All HTML exists!")
+
+```
+
+
+# HTML files end
+```{r eval=TRUE, echo=FALSE}
+
+if(check_render) {
+  list_html_end <- fn_internal_HTML()
+  check_all_exists_html_end <- list_html_end$check_all_exists_html
+  vector_html_file_path_end <- list_html_end$df_html$file_path
+} else {
+  cat("Avoiding HTML end. All exists!")
+  vector_html_file_path_end <- vector_html_file_path_init
+}
+
+```
+
+
+
+# Zip files HTML
+```{r eval=TRUE, echo=FALSE}
+
+# 
+# # ==============================================================================
+# # 2. FUNCIÓN PARA ZIPEAR LOS HTML GENERADOS
+# # ==============================================================================
+# 
+
+zip_html_file_path_relative <- file.path(".", "output", "shiny_output_html.zip")
+zip_html_file_path_absolute <- normalizePath(path = zip_html_file_path_relative, mustWork = FALSE)
+zip_html_file_exists01 <- file.exists(zip_html_file_path_absolute)
+
+if(!zip_html_file_exists01) {
+
+  vector_html_file_path_SELECTED <- vector_html_file_path_init
+  
+  print(vector_html_file_path_SELECTED)
+  
+  fn_local_gen_zip_from_vector_file_path(vector_file_path = vector_html_file_path_SELECTED, 
+                                   str_output_zip_file_path = zip_html_file_path_absolute) 
+    
+  print(zip_html_file_path_absolute)
+  zip_html_file_exists02 <- file.exists(zip_html_file_path_absolute)
+  
+  if(!zip_html_file_exists02) {
+    cat("ERROR GRAVE 04 - El archivo zip deberia existir luego de ejeceutar todo.",
+        "Varificar!!!")
+    knitr::knit_exit()
+  }
+
+} else cat("El archivo zip para html ya existe y no sera generado de nuevo.")
+
+
+
+``` 
+

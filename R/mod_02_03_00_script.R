@@ -84,6 +84,7 @@ mod_02_03_00_script_ui <- function(id) {
                 )
             )
         ),
+        div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
 
         div(id = ns("main_content_wrapper"),
             navset_card_underline(id = ns("main_tabs"))

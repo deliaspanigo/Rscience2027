@@ -14,12 +14,17 @@ mod_02_02_00_tool_ui <- function(id) {
     shinyjs::useShinyjs(),
     tags$head(
       tags$style(HTML(paste0("
-        ", root_sel, " {
-            display: flex; flex-direction: column;
-            width: 100%; height: calc(100vh - 80px);
-            padding: 20px !important; background: #f8f9fa;
-            overflow: hidden;
-        }
+       ", root_sel, " {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          height: calc(100vh - 80px);
+          /* Quitamos el padding o lo ponemos en 0 */
+          padding: 0 !important;
+          /* Quitamos el fondo gris */
+          background: transparent;
+          overflow: hidden;
+      }
 
         /* --- BOTONES PILDORA XL (IDÉNTICOS A DATASET) --- */
         ", root_sel, " .btn.btn-pill-xl {
@@ -119,7 +124,7 @@ mod_02_02_00_tool_ui <- function(id) {
 
 
 
-        # 2. Barra de Control y Path
+        # 2. Tree Path and Buttons
         div(class = "row g-3 align-items-center flex-shrink-0", style="margin-top:5px;",
             div(class = "col-md-7",
                 div(class = "path-display-area", uiOutput(ns("path_chips_ui")))
@@ -133,16 +138,19 @@ mod_02_02_00_tool_ui <- function(id) {
             )
         ),
 
-        # 3. Banner de Información
-        uiOutput(ns("scripts_info_banner")),
 
-                div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
+
+        div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
+
         # 4. El Árbol (Motor de Selección)
         div(class = "map-section",
             div(id = ns("tree_wrapper"), class = "map-wrapper",
                 mod_02_02_01_tree_ui(ns("inner_tree"))
             )
         ),
+
+        # 3. Banner de Información
+        uiOutput(ns("scripts_info_banner")),
 
         # 5. Debug Panel
         div(style = "margin-top: 10px; max-height: 200px; overflow-y: auto;",

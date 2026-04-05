@@ -188,70 +188,17 @@ names(super_bag) <- basename(vector_RData_file_path)
 ```
 
 
-# Response Variable - Position - Levels
-```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_pretty_table_html(super_bag[[4]]$df_rv_position_levels)
-```
+# Frases Level 02
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
 
-# Response Variable - Dispersion - Levels
-```{r eval=TRUE, echo=FALSE}
-fn_local_quarto_pretty_table_html(super_bag[[4]]$df_rv_dispersion_levels)
-```
 
-# Response Variable - Position - General
-```{r eval=TRUE, echo=FALSE}
+aver02 <- super_bag[[6]]$vector_text_pack02
 
-fn_local_quarto_pretty_table_html(super_bag[[4]]$df_rv_position_general)
-
-```
-
-# Response Variable - Dispersion - General
-```{r eval=TRUE, echo=FALSE}
-
-fn_local_quarto_pretty_table_html(super_bag[[4]]$df_rv_dispersion_general)
-
-```
-
-# Response Variable - Mean and Errors from Model
-```{r eval=TRUE, echo=FALSE}
-
-fn_local_quarto_pretty_table_html(super_bag[[4]]$df_table_factor_plot002)
-
-```
-
-# Plot Factor - 001
-```{r eval=TRUE, echo=FALSE}
-
-super_bag[[4]]$plot_factor001
-```
-
-# Plot Factor - 002
-```{r eval=TRUE, echo=FALSE}
-
-super_bag[[4]]$plot_factor002
+cat(aver02)
 ```
 
 
-# Plot Factor - 003
-```{r eval=TRUE, echo=FALSE}
 
-super_bag[[4]]$plot_factor003
-```
-
-# Plot Factor - 004
-```{r eval=TRUE, echo=FALSE}
-
-super_bag[[4]]$plot_factor004
-```
-
-# Plot Factor - 005
-```{r eval=TRUE, echo=FALSE}
-
-super_bag[[4]]$plot_factor005
-```
-
-# Plot Factor - 006
-```{r eval=TRUE, echo=FALSE}
-
-super_bag[[4]]$plot_factor006
-```
