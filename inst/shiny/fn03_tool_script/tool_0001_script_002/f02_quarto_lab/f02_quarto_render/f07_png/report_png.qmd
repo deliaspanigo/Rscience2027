@@ -47,8 +47,8 @@ library("htmlwidgets")
 <!-- HIDDEN - Loading local fn -->
 ```{r}
 #| eval: true
-#| echo: !expr params$special_echo
-#| include: !expr params$special_include
+#| echo: true #!expr params$special_echo
+#| include: true #!expr params$special_include
 
 folder_fn_local_relative <- "../zzz_fn_local"
 folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
@@ -67,9 +67,9 @@ invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
 
 <!-- HIDDEN - Input folder (for RData files) -->
 ```{r}
-#| eval: !expr params$special_include
-#| echo: !expr params$special_echo
-#| include: !expr params$special_include
+#| eval: true #!expr params$special_include
+#| echo: true #!expr params$special_echo
+#| include: true #!expr params$special_include
 #| results: asis
 
 
@@ -81,8 +81,8 @@ if(params$special_include) cat("Esta carpeta contiene los archivos RData, los HT
 
 ```{r}
 #| eval: true
-#| echo: !expr params$special_echo
-#| include: !expr params$special_include
+#| echo: true #!expr params$special_echo
+#| include: true #!expr params$special_include
 
 
 
@@ -109,9 +109,9 @@ if(!input_folder01_exists) {
 
 <!-- HIDDEN - LISTADO DE RDATA -->
 ```{r}
-#| eval: !expr params$special_include
-#| echo: !expr params$special_echo
-#| include: !expr params$special_include
+#| eval: true #!expr params$special_include
+#| echo: true #!expr params$special_echo
+#| include: true #!expr params$special_include
 #| results: asis
 
 
@@ -161,8 +161,8 @@ if(!check_all_exists_RData) {
 
 ```{r}
 #| eval: true
-#| echo: !expr params$special_echo
-#| include: !expr params$special_include
+#| echo: true #!expr params$special_echo
+#| include: true #!expr params$special_include
 
 # Supongamos que vector_RData_file_path ya existe
 # Ejemplo: vector_RData_file_path <- c("data1.R", "data2.R")
@@ -273,15 +273,15 @@ fn_save_plotly_dual_format <- function(list_plots, output_dir = "plotly_exports"
       setwd(path_png_abs)
       
       # webshot2 usará automáticamente el CHROMOTE_CHROME que seteamos arriba
-      # 2. Definir el nombre del archivo
-      archivo_salida <- "grafico_mtcars.png"
+      webshot(
+        url = full_path_html, 
+        file = file_png, 
+        vwidth = width, 
+        vheight = height, 
+        delay = 2,    # Un poco más de delay por seguridad
+        zoom = 2
+      )
       
-      # 3. Guardar como PNG directo
-      # width y height definen el tamaño en píxeles
-      # scale aumenta la resolución (ej: 2 es el doble de DPI)
-      save_image(fig, file = archivo_salida, width = 1000, height = 800, scale = 2)
-      
-            
       message("Exportado Dual OK: ", nombre_base)
     })
     setwd(dir_original)

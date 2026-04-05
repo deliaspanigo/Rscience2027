@@ -19,6 +19,41 @@ ul.task-list li input[type="checkbox"] {
 width: 0.8em;
 margin: 0 0.8em 0.2em -1em;  vertical-align: middle;
 }
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+}
+pre.numberSource { margin-left: 3em; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -2193,66 +2228,91 @@ vertical-align: -.125em;
 
 <!-- HIDDEN - LIBRERIAS -->
 <!-- HIDDEN - Loading local fn -->
-<!-- HIDDEN - Input folder (for RData files) -->
-<!-- HIDDEN - LISTADO DE RDATA -->
 <div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>folder_fn_local_relative <span class="ot">&lt;-</span> <span class="st">&quot;../zzz_fn_local&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>folder_fn_local_absolute <span class="ot">&lt;-</span> <span class="fu">normalizePath</span>(folder_fn_local_relative, <span class="at">mustWork =</span> T)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>vector_fn <span class="ot">&lt;-</span> <span class="fu">list.files</span>(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">path =</span> folder_fn_local_absolute, </span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">pattern =</span> <span class="st">&quot;^fn_local.*</span><span class="sc">\\</span><span class="st">.R$&quot;</span>, </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">full.names =</span> <span class="cn">TRUE</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>vector_fn <span class="ot">&lt;-</span> <span class="fu">normalizePath</span>(vector_fn, <span class="at">mustWork =</span> T)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">invisible</span>(<span class="fu">lapply</span>(vector_fn, source, <span class="at">local =</span> <span class="cn">FALSE</span>, <span class="at">encoding =</span> <span class="st">&quot;UTF-8&quot;</span>))</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co">#lapply(vector_fn, source, local = FALSE, encoding = &quot;UTF-8&quot;)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<!-- HIDDEN - Input folder (for RData files) -->
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(params<span class="sc">$</span>special_include) <span class="fu">cat</span>(<span class="st">&quot;# Input Folder: &#39;f02_quarto_mod&quot;</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(params<span class="sc">$</span>special_include) <span class="fu">cat</span>(<span class="st">&quot;Esta carpeta contiene los archivos RData, los HTML y los QMD de codigo.&quot;</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Definir la carpeta base</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>input_folder01_relative <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">&quot;..&quot;</span>, <span class="st">&quot;f02_quarto_mod&quot;</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>input_folder01_absolute <span class="ot">&lt;-</span> <span class="fu">normalizePath</span>(input_folder01_relative, <span class="at">mustWork =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>input_folder01_exists <span class="ot">&lt;-</span> <span class="fu">dir.exists</span>(input_folder01_absolute)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Input folder---------------------------------------------------------&quot;</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Relative path: &quot;</span>, input_folder01_relative, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Absolute path: &quot;</span>, input_folder01_absolute, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Folder exists:&quot;</span>, input_folder01_exists, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;---------------------------------------------------------------------------&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
+<pre><code>Input folder--------------------------------------------------------- 
+ Relative path:  ../f02_quarto_mod 
+ Absolute path:  /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f02_quarto_mod 
+ Folder exists: TRUE 
+ ---------------------------------------------------------------------------</code></pre>
 </div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span>input_folder01_exists) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">&quot;ERROR GRAVE - No se encontro la carpeta que debe contener a los archivos QMD y los archivos RData.&quot;</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;Varifica si el nombre de la carpeta es el correcto o algun problema en el path de la carpeta.&quot;</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">knit_exit</span>()</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Error in initialize(...) : Invalid path to Chrome</code></pre>
-</div>
+<!-- HIDDEN - LISTADO DE RDATA -->
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(params<span class="sc">$</span>special_include) <span class="fu">cat</span>(<span class="st">&quot;# RData files&quot;</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(params<span class="sc">$</span>special_include) <span class="fu">cat</span>(<span class="st">&quot;Listamos los archivos RData que hay en la carpeta que los genera.&quot;</span>, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Supongamos que vector_RData_file_path ya existe</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejemplo: vector_RData_file_path &lt;- c(&quot;data1.R&quot;, &quot;data2.R&quot;)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># vector_RData_file_path contiene las rutas a tus archivos .RData</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>super_bag_plots <span class="ot">&lt;-</span> <span class="fu">lapply</span>(vector_RData_file_path, <span class="cf">function</span>(file_path) {</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 1. Creamos un entorno nuevo para CADA archivo</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Esto evita que si dos archivos tienen un objeto llamado &#39;plot_01&#39;, se borren entre sí.</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  temp_env <span class="ot">&lt;-</span> <span class="fu">new.env</span>()</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 2. Normalizamos la ruta (importante en Linux/Windows)</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  file_path_clean <span class="ot">&lt;-</span> <span class="fu">normalizePath</span>(file_path, <span class="at">winslash =</span> <span class="cn">TRUE</span>, <span class="at">mustWork =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 3. Usamos LOAD especificando el entorno de destino</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># A diferencia de source(), load() no devuelve error de multibyte en binarios.</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">load</span>(file_path_clean, <span class="at">envir =</span> temp_env)</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  mi_list <span class="ot">&lt;-</span> <span class="fu">as.list</span>(temp_env)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  vector_names <span class="ot">&lt;-</span> <span class="fu">names</span>(mi_list)</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  vector_names <span class="ot">&lt;-</span> <span class="fu">grep</span>(<span class="st">&quot;^plot_&quot;</span>, vector_names, <span class="at">value =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">#vector_names</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  <span class="co">#if(length(vector_names) == 0) next()</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  mi_list_plotly <span class="ot">&lt;-</span> mi_list[vector_names]</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># 4. Convertimos el entorno a lista para que sea fácil de usar en Shiny</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(mi_list_plotly)</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Opcional: Ponemos nombres a los elementos de la lista según el archivo</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(super_bag_plots) <span class="ot">&lt;-</span> <span class="fu">basename</span>(vector_RData_file_path)</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>list_plotly <span class="ot">&lt;-</span> <span class="fu">do.call</span>(c, super_bag_plots)</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Cambia tu lógica por esto:</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>vector_check_plotly <span class="ot">&lt;-</span> <span class="fu">sapply</span>(list_plotly, <span class="cf">function</span>(x) <span class="fu">inherits</span>(x, <span class="st">&quot;plotly&quot;</span>))</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Ahora sí, el filtrado funcionará perfecto</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>list_plotly <span class="ot">&lt;-</span> list_plotly[vector_check_plotly]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 
 </main>
