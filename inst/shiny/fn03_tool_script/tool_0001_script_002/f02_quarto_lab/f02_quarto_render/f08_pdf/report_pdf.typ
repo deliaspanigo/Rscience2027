@@ -293,80 +293,118 @@
       affiliation: [],
       email: [] ),
     ),
+  date: [2026-04-06],
   sectionnumbering: "1.1.a",
-  toc: true,
   toc_title: [Table of contents],
   toc_depth: 3,
   cols: 1,
   doc,
 )
 
+#pagebreak()
+#outline(indent: auto, title: "Índice")
+#pagebreak()
 = Summary Anova
 <summary-anova>
-#block[
-```
-
-Attaching package: 'flextable'
-```
-
-]
-#block[
-```
-The following objects are masked from 'package:kableExtra':
-
-    as_image, footnote
-```
-
-]
 #box(image("report_pdf_files/figure-typst/unnamed-chunk-8-1.png"))
 
-```
-Loading required package: ggplot2
-```
+= Tukey plot
+<tukey-plot>
+#figure([
+#box(image("grafico_final.png", width: 100.0%))
+], caption: figure.caption(
+position: bottom, 
+[
+Análisis de Comparaciones Múltiples - Test de Tukey
+]), 
+kind: "quarto-float-fig", 
+supplement: "Figure", 
+)
+<fig-tukey-001>
 
-```
 
-Attaching package: 'plotly'
-```
+= Frases Level 01
+<frases-level-01>
+The null hypothesis of normal distribution of residuals is not rejected.
 
-```
-The following object is masked from 'package:ggplot2':
+The hypothesis of homogeneity of variances (homoscedasticity) is rejected.
 
-    last_plot
-```
+Not all requirements for the model are met.
 
-```
-The following objects are masked from 'package:flextable':
+It is NOT valid to draw conclusions from the ANOVA test.
 
-    highlight, style
-```
+As the model requirements are not met, the ANOVA and Tukey analyses must be discarded, irrespective of the statistical values obtained. The literal and decontextualized interpretation of the ANOVA test and the Tukey test is detailed below for demonstrative purposes only, but holds no validity for drawing conclusions from them.
 
-```
-The following object is masked from 'package:stats':
+The null hypothesis of the ANOVA test is rejected. There are statistically significant differences in at least one level of the factor.
 
-    filter
-```
+Since the ANOVA null hypothesis is rejected, the use of a multiple comparison test to accompany the ANOVA test is valid.
 
-```
-The following object is masked from 'package:graphics':
+The Tukey test is selected as the multiple comparison test for this script.
 
-    layout
-```
+The Tukey test indicates that there are at least 2 groups among the factor levels. The number of groups and their structure must be analyzed in detail using the Tukey table.
 
-```
-Warning in plotly::export(p_builded, file = absolute_path, vwidth = 1600, : 'plotly::export' is deprecated.
-Use 'save_image' instead.
-See help("Deprecated")
-```
+ANOVA indicates that all factor levels are equal, while Tukey has found at least 2 groups. Tukey is subject to the rejection of the ANOVA hypothesis. Since the ANOVA null hypothesis is not rejected, the Tukey test must not be taken into account for decision-making. All factor levels are equal.
 
-```
-Registered S3 method overwritten by 'webshot':
-  method        from    
-  print.webshot webshot2
-```
+= Frases Level 02
+<frases-level-02>
+The p value about normality distibution is 0.517664951040294. \
+Alpha value is 0.05. \
+The p value is equal or mayor than alpha value. \
+The null hypothesis of normal distribution of residuals is not rejected. \
+Los residuos poseen distribución normal.
 
-```
-PhantomJS not found. You can install it with webshot::install_phantomjs(). If it is installed, please make sure the phantomjs executable can be found via the PATH variable.
-```
+The p value about homogeneity variances from residuals is 0.0150451770493758. \
+Alpha value is 0.05. \
+The p value is less than alpha value. \
+The null hypothesis of homogeneity of variances from residuals is rejected. \
+Los residuos son homogeneos.
 
-#box(image("png/tukey_plot.png", width: 100.0%))
+Not all requirements for the model are met.
+
+It is NOT valid to draw conclusions from the ANOVA test. This dataset must be analyzed with another statistical tool such as the Kruskal-Wallis test. If a more sophisticated tool is desired, the possibility of utilizing generalized linear mixed models, generalized linear models, generalized linear models, exact distribution linear models, etc., could be evaluated.
+
+It is NOT valid to draw conclusions from the ANOVA test. As the model requirements are not met, the ANOVA and Tukey analyses must be discarded, irrespective of the statistical values obtained. The literal and decontextualized interpretation of the ANOVA test and the Tukey test is detailed below for demonstrative purposes only, but holds no validity for drawing conclusions from them.
+
+The p-value for the ANOVA test is 4.97891917440017e-09. The alpha value is 0.05. The p-value is less than the alpha value. The null hypothesis of equal means for the ANOVA test is rejected. There are statistically significant differences in at least one level of the factor. By rejecting the null hypothesis, the ANOVA test guarantees statistically significant differences in at least one level of the factor with the lowest mean and the level of the factor with the highest mean.
+
+Since the ANOVA null hypothesis is rejected, the use of a multiple comparison test to accompany the ANOVA test is valid.
+
+The Tukey test is selected as the multiple comparison test for this script.
+
+The Tukey test details at least 2 statistically different groups. The group structure detailed by the Tukey test must now be considered in order to provide a recommendation in your area of work.
+
+Irrespective of Tukey's finding groups, since the ANOVA null hypothesis was not rejected, all factor levels are equal.
+
+= Selected Case
+<selected-case>
+= DF case
+<df-case>
+#box(image("report_pdf_files/figure-typst/unnamed-chunk-12-1.png"))
+
+= DF selected case
+<df-selected-case>
+#box(image("report_pdf_files/figure-typst/unnamed-chunk-13-1.png"))
+
+= DF human
+<df-human>
+#box(image("report_pdf_files/figure-typst/unnamed-chunk-14-1.png"))
+
+When not all model requirements (Normality and/or Homogeneity) are met, the ANOVA analysis is immediately discarded. This invalidation occurs irrespective of whether the failure is due to non-normality of the residuals, non-homogeneity, or both requirements. Indistinctly of the statistical values obtained in the ANOVA test and the Tukey test, it is NOT valid to draw conclusions of any type; the entire analysis is completely discarded. An alternative statistical tool or path must be sought to analyze the data, with the quickest recommended tool being the Kruskal-Wallis test, although a better analysis may allow for the use of more robust tools such as Generalized Linear Mixed Models or Exact Statistics; the alternative statistical path is to perform a transformation on the response variable and attempt the 1-Factor ANOVA test again. The statistical options suggested must be verified and justified for their feasibility of use. Continuing with statistical interpretations without fulfilling the model's requirements is a serious error common among those new to statistics, and a common practice among those lacking the sufficient statistical knowledge to correctly analyze the reality they intend to study. If, despite all these warnings, you continue with the analysis, you expose your work to severe criticism from colleagues, evaluation committees, and publication reviewers.
+
+= DF 02 - Requeriments
+<df-02---requeriments>
+#box(image("report_pdf_files/figure-typst/unnamed-chunk-16-1.png"))
+
+The ANOVA statistical test is based on 3 points for decision-making: shape, dispersion, and position. The shape is the normal distribution of the residuals. The dispersion is the homogeneous variances in the residuals, and the position is the mean of the response variable for one of the factor levels. By guaranteeing that the shape and dispersion of the residuals have a certain particular structure, ANOVA manages to test the position in the response variable. This is why the fulfillment of normality and homogeneity of variances of the residuals is a requirement, and only with the simultaneous fulfillment of both requirements is it valid to make an interpretation of the means. If all requirements are not met simultaneously, the ANOVA analysis must be discarded, irrespective of the results it may have yielded. There is no escape, and you must seek another statistical tool to interpret these results.
+
+= DF 03 - Anova
+<df-03---anova>
+#box(image("report_pdf_files/figure-typst/unnamed-chunk-18-1.png"))
+
+The model requirements are not met. The ANOVA statistical test has the indispensable requirement of residual normality and homogeneity of variances. Both requirements must be met jointly for it to be valid to draw conclusions about the factor levels. Continuing with the statistical interpretation without fulfilling all the requirements is a catastrophic error. The ANOVA model requirements are neither optional nor can they be assumed. The model requirements are the fundamental basis upon which the ANOVA test relies to make decisions about the means of the factor levels. In this case, you must seek another statistical tool to perform the analysis of your data.
+
+= DF 04 - Tukey
+<df-04---tukey>
+#box(image("report_pdf_files/figure-typst/unnamed-chunk-20-1.png"))
+
+The use of the Tukey test is subject to the validity of the ANOVA model and the rejection of the ANOVA hypothesis. As the model requirements are not met, the ANOVA test is not valid, and therefore the Tukey test is not valid either. The information related to the Tukey test must be discarded. As detailed before, in this context, continuing with the statistical interpretation is a serious statistical error that demonstrates a total lack of statistical criteria for decision-making.

@@ -20,7 +20,8 @@ mod_special_reporting_ui <- function(id) {
         card(
           title = "Editor de Reportes Quarto",
             mod_06_00_render_and_show_ui(id = ns("anova_01")),
-            mod_06_00_render_and_show_ui(id = ns("anova_02"))
+            mod_06_00_render_and_show_ui(id = ns("anova_02")),
+            mod_06_00_render_and_show_ui(id = ns("anova_03"))
 
 
         )
@@ -66,7 +67,13 @@ mod_special_reporting_server <- function(id, folder_temp_path) {
                                      show_file = F)
 
 
-
+    mod_06_00_render_and_show_server(id = "anova_03",
+                                     super_label = "PDF",
+                                     bg_color = "#f0fff4", # Un verde muy suave
+                                     input_file_path_qmd = reactive(file.path(base_folder01(), "f08_pdf", "report_pdf.qmd")),
+                                     output_file_path    = reactive(file.path(base_folder01(), "f08_pdf", "report_pdf.pdf")),
+                                     show_debug = T,
+                                     show_file = F)
 
   })
 }

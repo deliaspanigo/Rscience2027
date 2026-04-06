@@ -2,32 +2,32 @@
 title: "Rscience - Anova - script01"
 subtitle: "Import and control"
 author: "David Elías Panigo"
+date: today
 format:
   typst:
     papersize: a4
     margin:
-      x: 1.5cm # Un poco más estrecho para que quepan los gráficos
+      x: 1.5cm
       y: 2cm
-    columns: 1
-    toc: true
+    toc: false
     section-numbering: 1.1.a
-    # NUEVO: Configuración global para figuras
-    fig-format: png      # PNG suele dar mejor resultado para Plotly que JPEG
-    fig-width: 6.5       # Pulgadas (aprox el ancho útil de un A4)
-    fig-height: 4.5
-    fig-align: center
-
-knitr: 
-  opts_chunk: 
-    collapse: false
-    comment: ""
-    # NUEVO: Forzar a webshot2 a esperar un poco para que Plotly cargue
-    webshot: "webshot2" 
+    # Añadimos esto para separar la carátula
+    keep-typ: true 
 params:
   clean_all: false
   special_echo: false
   special_include: false
 ---
+
+
+
+```{=typst}
+#pagebreak()
+#outline(indent: auto, title: "Índice")
+#pagebreak()
+```
+
+
 
 <!-- HIDDEN - LIBRERIAS -->
 ```{r}
@@ -43,7 +43,8 @@ library("tools")
 library("DT")
 library("htmltools")
 library("webshot2")
-
+library(plotly)
+library(flextable)
 fn_local_quarto_pretty_table_pdf <- function(df, title = "Resumen de Datos", font_size = 9) {
   
   library(flextable)
@@ -264,7 +265,7 @@ fn_local_quarto_pretty_table_pdf(
 ```
 
 
-
+# Tukey plot
 ```{r}
 #| label: fig-tukey-png
 #| fig-cap: "Análisis de Comparaciones Múltiples (Tukey)"
@@ -274,38 +275,218 @@ fn_local_quarto_pretty_table_pdf(
 #| warning: false
 #| message: false
 
-library(plotly)
-library(webshot2)
+# 1. Configuración inicial de Chrome (si no está seteado)
+if (Sys.getenv("CHROMOTE_CHROME") == "") {
+  Sys.setenv(CHROMOTE_CHROME = pagedown::find_chrome())
+}
 
-# 1. Recuperar el gráfico
+# 2. Definir rutas y nombres
 p <- super_bag[[2]]$plot_tukey001
+p <- p %>% plotly::config(displayModeBar = FALSE)
 
-# 2. Quitar el menú (modebar)
-p_sin_menu <- p %>% 
-  config(
-    displayModeBar = FALSE,
-    displaylogo = FALSE
+nombre_png <- "grafico_final.png"
+nombre_html <- "temp_render.html" # Nombre fijo para evitar líos de rutas
+
+# 3. Guardar el directorio actual para volver después
+dir_original <- getwd()
+
+# 4. Definir carpeta de trabajo temporal (dentro de tu proyecto actual)
+# Creamos una carpeta 'temp_export' para que Chrome no tenga problemas de acceso
+dir_temp_trabajo <- file.path(dir_original, "temp_export")
+if (!dir.exists(dir_temp_trabajo)) dir.create(dir_temp_trabajo)
+
+tryCatch({
+  # --- CAMBIO DE DIRECTORIO ---
+  setwd(dir_temp_trabajo)
+  
+  # A. Guardar el Widget en la carpeta actual
+  # Usamos selfcontained = TRUE para que no dependa de carpetas externas
+  htmlwidgets::saveWidget(p, nombre_html, selfcontained = TRUE)
+  
+  # B. Capturar el PNG
+  # Al estar en el mismo directorio, webshot accede directo al archivo local
+  webshot2::webshot(
+    url = nombre_html,
+    file = nombre_png,
+    vwidth = 1200,
+    vheight = 800,
+    delay = 3,         # Aumentamos un poco el delay por si el JS es pesado
+    zoom = 2
   )
+  
+  # C. Mover el PNG resultante a la carpeta original (opcional)
+  file.copy(nombre_png, file.path(dir_original, nombre_png), overwrite = TRUE)
+  
+  message("✅ PNG generado con éxito: ", nombre_png)
 
-# 3. Preparar carpeta y ruta
-png_dir <- "png"
-if (!dir.exists(png_dir)) dir.create(png_dir, recursive = TRUE)
-
-png_path_relative <- file.path(png_dir, "tukey_plot.png")
-png_path_absolute <- normalizePath(png_path_relative, mustWork = FALSE)
-
-# 4. Guardar como PNG con webshot2 (más estable en Quarto/Typst)
-webshot2::webshot(
-  url = htmltools::save_html(p_sin_menu, file = tempfile(fileext = ".html")),
-  file = png_path_absolute,
-  vwidth = 1600,      # ancho en píxeles
-  vheight = 900,      # alto en píxeles
-  delay = 2,          # espera 2 segundos para que cargue bien plotly
-  zoom = 2            # mejor calidad
-)
-
-# 5. Insertar la imagen en Typst (ruta relativa)
-cat(sprintf('\n\n![](%s){width=100%%}\n\n', png_path_relative))
+}, error = function(e) {
+  message("❌ Error durante el proceso: ", e$message)
+}, finally = {
+  # --- VOLVER AL DIRECTORIO ORIGINAL ---
+  setwd(dir_original)
+  
+  # Limpieza de la carpeta temporal (Opcional: puedes comentarlo si quieres ver qué pasó)
+  # unlink(dir_temp_trabajo, recursive = TRUE)
+})
 ```
 
 
+```{r}
+#| label: fig-tukey-001
+#| echo: false
+#| include: true
+#| fig-cap: "Análisis de Comparaciones Múltiples - Test de Tukey"
+#| out-width: "100%"
+#| fig-align: "center"
+
+# 1. Definir la ruta al PNG que generamos antes
+path_png <- "grafico_final.png" # O la ruta donde lo hayas guardado
+
+# 2. Verificar si el archivo existe antes de intentar incluirlo
+if (file.exists(path_png)) {
+  knitr::include_graphics(path_png)
+} else {
+  stop("Error: No se encuentra el archivo PNG para el reporte PDF.")
+}
+
+```
+
+
+
+
+
+# Frases Level 01
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+aver01 <- super_bag[[6]]$vector_text_pack01
+
+cat(aver01)
+```
+
+# Frases Level 02
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+aver02 <- super_bag[[6]]$vector_text_pack02
+
+cat(aver02)
+```
+
+
+# Selected Case
+```{r eval=TRUE, echo=FALSE}
+
+my_selected_row <- super_bag[[6]]$row_match_index
+
+```
+
+
+# DF case
+```{r eval=TRUE, echo=FALSE}
+
+
+fn_local_quarto_pretty_table_pdf(df = super_bag[[6]]$df_decision_cases_init, title = "Tabla de Resultados: ANOVA Master", 
+  font_size = 8)
+
+#super_bag[[6]]$row_match_index
+
+```
+
+# DF selected case
+```{r eval=TRUE, echo=FALSE}
+
+
+fn_local_quarto_pretty_table_pdf(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "Tabla de Resultados: ANOVA Master", 
+  font_size = 8)
+
+#super_bag[[6]]$row_match_index
+
+```
+
+# DF human
+```{r eval=TRUE, echo=FALSE}
+
+fn_local_quarto_pretty_table_pdf(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "Tabla de Resultados: ANOVA Master", 
+  font_size = 8)
+
+
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_general <- super_bag[[6]]$df_decision_cases_01_human[my_selected_row,"General_Decision"]
+
+cat(text_general)
+```
+
+# DF 02 - Requeriments
+```{r eval=TRUE, echo=FALSE}
+
+fn_local_quarto_pretty_table_pdf(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "Tabla de Resultados: ANOVA Master", 
+  font_size = 8)
+
+
+
+#super_bag[[6]]$row_match_index
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_requeriments <- super_bag[[6]]$df_decision_cases_02_model_requeriments[my_selected_row,"Requeriments_Decision"]
+cat(text_requeriments)
+```
+
+
+# DF 03 - Anova
+```{r eval=TRUE, echo=FALSE}
+fn_local_quarto_pretty_table_pdf(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "Tabla de Resultados: ANOVA Master", 
+  font_size = 8)
+
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_anova <- super_bag[[6]]$df_decision_cases_03_anova[my_selected_row,"Anova_Decision"]
+cat(text_anova)
+```
+
+
+# DF 04 - Tukey
+```{r eval=TRUE, echo=FALSE}
+fn_local_quarto_pretty_table_pdf(df = super_bag[[6]]$df_decision_cases_init[my_selected_row,], title = "Tabla de Resultados: ANOVA Master", 
+  font_size = 8)
+
+
+```
+
+```{r}
+#| eval: true
+#| echo: false
+#| results: asis
+
+
+text_tukey <-  super_bag[[6]]$df_decision_cases_04_tukey[my_selected_row,"Tukey_Decision"]
+cat(text_tukey)
+```
