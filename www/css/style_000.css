@@ -1,0 +1,11 @@
+/* style_000.css */
+
+/* 1. Cargar las variables primero (El ADN) */
+@import "style_00_variables.css";
+
+/* 2. Cargar el estilo de los módulos */
+@import "style_mod_07_00.css";
+
+/* Aquí puedes agregar futuros módulos:*/
+@import "style_mod_02_01_dataset.css";
+

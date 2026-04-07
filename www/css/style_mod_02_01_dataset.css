@@ -1,0 +1,118 @@
+/* ==========================================================================
+   MODULE: DATASET IMPORT (mod_02_01) - TOTAL DYNAMIC COLORS
+   ========================================================================== */
+
+/* --- 1. HEADER SELECTION --- */
+.selection-header {
+    padding: 15px;
+    border-radius: var(--rs-radius-sm);
+    font-weight: 800;
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 5px solid #444;
+    background: rgba(255, 255, 255, 0.03);
+    transition: var(--rs-transition);
+}
+
+.selection-header.active-selection {
+    border-left-color: var(--rs-primary) !important;
+    color: var(--rs-primary) !important;
+    background: rgba(0, 212, 255, 0.08) !important;
+}
+
+.selection-header.confirmed {
+    border-left-color: var(--rs-success) !important;
+    color: var(--rs-success) !important;
+    background: rgba(0, 188, 140, 0.08) !important;
+}
+
+.selection-header.waiting-mode {
+    border-left-color: var(--rs-warning) !important;
+    color: var(--rs-warning) !important;
+    background: rgba(243, 156, 18, 0.08) !important;
+}
+
+/* --- 2. LABELS DINÁMICOS --- */
+.section-label {
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 8px;
+    transition: var(--rs-transition);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Label en modo UNLOCK (Cian) */
+.lock-wrapper:not(.locked-disabled) .section-label {
+    color: var(--rs-primary) !important;
+}
+
+/* Label en modo LOCK (Verde) */
+.locked-disabled .section-label {
+    color: var(--rs-success) !important;
+}
+
+/* --- 3. DETALLE DEL CANDADO (Siempre Verde) --- */
+.status-closed {
+    color: var(--rs-success) !important; /* Texto (Locked) */
+    font-weight: 700;
+    font-size: 0.7rem;
+    margin-left: 8px;
+    text-transform: none;
+}
+
+.status-closed i {
+    color: var(--rs-success) !important; /* Icono candado */
+    margin-left: 4px;
+}
+
+/* --- 4. SELECTIZE INPUTS --- */
+.selectize-input {
+    background-color: #1a252f !important;
+    border: 1px solid #34495e !important;
+    color: white !important;
+    border-radius: var(--rs-radius-sm) !important;
+    padding: 10px 12px !important;
+    transition: var(--rs-transition);
+}
+
+/* Color del borde del input según estado */
+.lock-wrapper:not(.locked-disabled) .selectize-input {
+    border-color: rgba(0, 212, 255, 0.3) !important;
+}
+
+.locked-disabled .selectize-input {
+    border-color: var(--rs-success) !important;
+    background-color: #0b1218 !important;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.selectize-input.focus {
+    border-color: var(--rs-primary) !important;
+    box-shadow: 0 0 8px var(--rs-glow-primary) !important;
+}
+
+/* --- 5. LÓGICA DE BLOQUEO DE CONTENEDOR --- */
+.locked-disabled {
+    pointer-events: none;
+    /* Quitamos el filter saturate para que el verde brille bien */
+    transition: var(--rs-transition);
+}
+
+/* Estilo para los menús desplegables */
+.selectize-dropdown {
+    background-color: #1a252f !important;
+    color: white !important;
+    border: 1px solid var(--rs-primary) !important;
+}
+
+.selectize-dropdown .active {
+    background-color: var(--rs-primary) !important;
+    color: var(--rs-text-dark) !important;
+}

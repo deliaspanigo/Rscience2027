@@ -1,0 +1,14 @@
+/* style_00_variables.css */
+:root {
+    --rs-primary: #00d4ff;
+    --rs-success: #00bc8c;
+    --rs-warning: #f39c12;
+    --rs-bg-main: #0b1218;
+    --rs-bg-header: #16222c;
+    --rs-text-dark: #1a252f;
+    --rs-radius-lg: 12px;
+    --rs-radius-sm: 8px;
+    --rs-font-mono: 'Segoe UI Mono', 'Consolas', monospace;
+    --rs-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --rs-glow-primary: rgba(0, 212, 255, 0.3);
+}

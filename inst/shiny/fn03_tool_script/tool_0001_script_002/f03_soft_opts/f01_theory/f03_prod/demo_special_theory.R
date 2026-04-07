@@ -11,7 +11,7 @@ source(file = "mod_special_theory.R")
 
 # Ejecución limpia
 ui <- page_fluid(
-  theme = bs_theme(version = 5, bootswatch = "flatly"),
+  #theme = bs_theme(version = 5, bootswatch = "flatly"),
   mod_special_theory_ui("my_ns_special_theory") # Llamamos a la UI
 )
 

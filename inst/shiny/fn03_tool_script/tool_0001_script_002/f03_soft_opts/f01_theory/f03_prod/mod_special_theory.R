@@ -6,28 +6,26 @@ mod_special_theory_ui <- function(id) {
   ns <- NS(id)
   container_id <- ns("theory_container")
 
+  # 1. LOCALIZACIÓN DE RECURSOS (CSS, Imágenes, JS)
+  # Buscamos la carpeta www dentro del paquete instalado o en el directorio local
+  lib_www_path_relative <- system.file("www", package = "Rscience2027")
+
+  # Si estamos en desarrollo y el paquete no está instalado, usamos "www"
+  if (lib_www_path_relative == "") lib_www_path_relative <- "www"
+
+  lib_www_path_absolute <- normalizePath(lib_www_path_relative, mustWork = TRUE)
+
+  # Creamos el alias 'lib_www' para que el navegador acceda a las imágenes
+  addResourcePath("lib_www", lib_www_path_absolute)
+
+  # Ruta física para que R lea el CSS e inyecte el código
+  path_to_css <- file.path(lib_www_path_absolute, "styles.css")
+
   tagList(
     tags$head(
-      tags$style(HTML(paste0("
-        #", container_id, " .iframe-wrapper {
-          position: relative;
-          width: 100%;
-          height: 82vh;
-          border: 2px solid #adb5bd;
-          border-radius: 0 0 12px 12px; /* Redondeado solo abajo para unir con el tab */
-          overflow: hidden;
-          background: #ffffff;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        #", container_id, " iframe {
-          width: 100%;
-          height: 100%;
-          border: none;
-          display: block;
-        }
-        /* Eliminamos el padding del body del card para que el iframe ocupe todo */
-        #", container_id, " .card-body { padding: 0 !important; }
-      ")))
+      useShinyjs(),
+      # Inyectamos el CSS directamente desde el archivo físico
+      if (file.exists(path_to_css)) includeCSS(path_to_css)
     ),
 
     div(id = container_id,
@@ -92,7 +90,9 @@ mod_special_theory_server <- function(id) {
         tags$iframe(
           src = paste0(resource_prefix, "/", file_name),
           title = "RScience Theory Content",
-          allow = "fullscreen; chalkboard"
+          allow = "fullscreen; chalkboard",
+          # --- ESTO ES LO IMPORTANTE ---
+          style = "width: 100%; height: 800px; border: none; border-radius: 8px;"
         )
       } else {
         div(style = "padding: 40px; text-align: center;",

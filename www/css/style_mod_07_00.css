@@ -1,0 +1,93 @@
+/* ==========================================================================
+   MODULE: ENGINE CONTROL (mod_07_00)
+   ========================================================================== */
+
+/* --- 1. CONTENEDOR PRINCIPAL --- */
+.rs-control-card {
+    background: var(--rs-bg-header);
+    padding: 20px;
+    border-radius: var(--rs-radius-lg);
+    border: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+/* --- 2. GRUPO DE BOTONES (Estructura) --- */
+.rs-engine-selector .btn-group {
+    display: flex !important;
+    width: 100%;
+    gap: 0;
+}
+
+.rs-engine-selector .btn-group > .btn-engine-custom {
+    flex: 1;
+    padding: 12px 5px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    border: 1px solid #444 !important;
+    background-color: #222 !important;
+    color: #666 !important;
+    transition: var(--rs-transition);
+    border-radius: 0 !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Bordes redondeados exteriores */
+.rs-engine-selector .btn-group > .btn-engine-custom:nth-of-type(1) {
+    border-top-left-radius: var(--rs-radius-sm) !important;
+    border-bottom-left-radius: var(--rs-radius-sm) !important;
+}
+
+.rs-engine-selector .btn-group > .btn-engine-custom:nth-of-type(3) {
+    border-top-right-radius: var(--rs-radius-sm) !important;
+    border-bottom-right-radius: var(--rs-radius-sm) !important;
+}
+
+/* --- 3. COLORES DINÁMICOS (Estados Checked) --- */
+
+/* UNLOCK (Cian) */
+.rs-engine-selector .btn-group > .btn-check:checked + .btn-engine-custom:nth-of-type(1) {
+    background-color: var(--rs-primary) !important;
+    border-color: var(--rs-primary) !important;
+    color: var(--rs-text-dark) !important;
+    box-shadow: 0 0 12px var(--rs-glow-primary) !important;
+}
+
+/* LOCKED (Verde) */
+.rs-engine-selector .btn-group > .btn-check:checked + .btn-engine-custom:nth-of-type(2) {
+    background-color: var(--rs-success) !important;
+    border-color: var(--rs-success) !important;
+    color: var(--rs-text-dark) !important;
+    box-shadow: 0 0 12px rgba(0, 188, 140, 0.3) !important;
+}
+
+/* RESET (Naranja) */
+.rs-engine-selector .btn-group > .btn-check:checked + .btn-engine-custom:nth-of-type(3) {
+    background-color: var(--rs-warning) !important;
+    border-color: var(--rs-warning) !important;
+    color: var(--rs-text-dark) !important;
+}
+
+/* --- 4. DISPLAY DE ESTADO (Digital) --- */
+.rs-status-display {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: var(--rs-radius-sm);
+    text-align: center;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-family: var(--rs-font-mono);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
+    transition: var(--rs-transition);
+}
+
+/* Iconos dentro de botones */
+.rs-engine-selector .btn-group label i {
+    margin-right: 6px;
+}
