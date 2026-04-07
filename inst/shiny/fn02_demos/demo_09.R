@@ -12,8 +12,6 @@ library(shinyWidgets) # Necesario para el radioGroupButtons
 devtools::load_all()
 
 
-source(file =  system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts",
-                           "f01_theory", "f03_prod", "mod_special_theory.R", package = "Rscience2027"))
 
 
 

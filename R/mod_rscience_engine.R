@@ -6,6 +6,10 @@ mod_rscience_engine_ui <- function(id) {
   if (css_folder == "") css_folder <- "www/css"
   try(addResourcePath("RS-STYLES", normalizePath(css_folder)), silent = TRUE)
 
+  www_folder <- system.file("www", package = "Rscience2027")
+  if (www_folder == "") www_folder <- "www"
+  try(addResourcePath("WWW-FOLDER", normalizePath(www_folder)), silent = TRUE)
+
   tagList(
     tags$head(
       useShinyjs(),
@@ -20,7 +24,7 @@ mod_rscience_engine_ui <- function(id) {
       sidebar = sidebar(
         width = 320, id = ns("sidebar_panel"),
         div(class = "text-center", style = "padding: 20px 0 5px 0;",
-            img(src = "lib_www/Rscience_logo_sticker.png", style = "width: 180px;")
+            img(src = "WWW-FOLDER/Rscience_logo_sticker.png", style = "width: 180px;")
         ),
         div(class="nav-header",
             div(id=ns("dot1"), class="nav-dot-wrapper active", div(class="dot"), div(class="dot-label", "Setup")),

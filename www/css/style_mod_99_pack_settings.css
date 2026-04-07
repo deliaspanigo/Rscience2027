@@ -1,0 +1,136 @@
+/* ==========================================================================
+   RScience: Settings Pack v.1.5 (Engine Integrated - Dark Edition)
+   ========================================================================== */
+
+/* 1. CONTENEDOR Y TARJETA (Look Pizarra) */
+.rs-settings-pack .rs-card-wrapper {
+    position: relative;
+    background: #2c3e50 !important; /* Mismo que tu rs-table-container */
+    padding: 25px;
+    border-radius: 12px;
+    border: 2px solid rgba(0, 212, 255, 0.2) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    transition: var(--rs-transition);
+}
+
+/* 2. CABECERAS DE ESTADO (Match con Selection-Header) */
+.rs-settings-pack .rs-status-header {
+    padding: 15px;
+    border-radius: var(--rs-radius-sm);
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    margin-bottom: 20px;
+    border-left: 5px solid #444;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Estados Sincronizados con tus colores */
+.rs-settings-pack .status-confirmed {
+    border-left-color: var(--rs-success) !important;
+    color: var(--rs-success) !important;
+    background: rgba(0, 188, 140, 0.08) !important;
+}
+
+.rs-settings-pack .status-active {
+    border-left-color: var(--rs-primary) !important;
+    color: var(--rs-primary) !important;
+    background: rgba(0, 212, 255, 0.08) !important;
+}
+
+.rs-settings-pack .status-waiting {
+    border-left-color: var(--rs-warning) !important;
+    color: var(--rs-warning) !important;
+    background: rgba(243, 156, 18, 0.08) !important;
+}
+
+.rs-settings-pack .status-error {
+    border-left-color: var(--rs-error, #ff4d4d) !important;
+    color: var(--rs-error, #ff4d4d) !important;
+    background: rgba(255, 77, 77, 0.08) !important;
+}
+
+/* 3. SISTEMA DE BLOQUEO (Deep Freeze) */
+.rs-settings-pack .rs-locked-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(11, 18, 24, 0.6); /* Fondo ultra oscuro */
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    visibility: hidden;
+    opacity: 0;
+    transition: var(--rs-transition);
+}
+
+.rs-settings-pack .is-rs-locked .rs-locked-overlay {
+    visibility: visible;
+    opacity: 1;
+}
+
+.rs-settings-pack .rs-lock-icon {
+    font-size: 3rem;
+    color: var(--rs-success);
+    background: #1a252f;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid var(--rs-success);
+    box-shadow: 0 0 20px rgba(0, 188, 140, 0.3);
+}
+
+/* 4. BOTONES (Estilo RScience Neon) */
+.rs-settings-pack .btn-rs-pack {
+    border-radius: 6px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: var(--rs-transition) !important;
+}
+
+.rs-settings-pack .btn-success.btn-rs-pack {
+    background: transparent !important;
+    color: var(--rs-success) !important;
+    border: 2px solid var(--rs-success) !important;
+}
+
+.rs-settings-pack .btn-success.btn-rs-pack:hover {
+    background: var(--rs-success) !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px var(--rs-success) !important;
+}
+
+.rs-settings-pack .btn-warning.btn-rs-pack {
+    background: transparent !important;
+    color: var(--rs-warning) !important;
+    border: 2px solid var(--rs-warning) !important;
+}
+
+.rs-settings-pack .btn-primary.btn-rs-pack {
+    background: transparent !important;
+    color: var(--rs-primary) !important;
+    border: 2px solid var(--rs-primary) !important;
+}
+
+/* 5. SELECTIZE (Integrado al Dark Mode) */
+.rs-settings-pack .selectize-input {
+    background-color: #1a252f !important;
+    border: 1px solid #34495e !important;
+    color: white !important;
+}
+
+.rs-settings-pack .selectize-dropdown {
+    background-color: #1a252f !important;
+    border: 1px solid var(--rs-primary) !important;
+}

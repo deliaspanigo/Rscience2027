@@ -12,81 +12,61 @@ library(stringr)
 
 SUB_mod_var_selection_ui <- function(id) {
   ns <- NS(id)
-  scope_id <- paste0("#", ns("var_selector_container"))
 
-  # CSS optimizado para Orquestador (Z-index y estados de bloqueo)
-  css_custom <- paste0("
-    ", scope_id, " .card-container { overflow: visible !important; position: relative; }
-    .selectize-dropdown { z-index: 999999 !important; position: absolute !important; }
-
-    ", scope_id, " .locked-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(230, 230, 230, 0.5); z-index: 2000; border-radius: 15px;
-      display: flex; justify-content: center; align-items: center;
-      visibility: hidden; opacity: 0; transition: all 0.3s ease;
-    }
-    ", scope_id, " .is-locked .locked-overlay { visibility: visible; opacity: 1; }
-    ", scope_id, " .lock-icon { font-size: 5rem; color: #28a745; filter: drop-shadow(0 0 5px white); }
-
-    ", scope_id, " .selection-header { padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
-    ", scope_id, " .confirmed { background: #d4edda; color: #155724; border-left: 8px solid #28a745; }
-    ", scope_id, " .waiting { background: #e9ecef; color: #495057; border-left: 8px solid #adb5bd; }
-    ", scope_id, " .active-selection { background: #fff3cd; color: #856404; border-left: 8px solid #ffc107; }
-    ", scope_id, " .error-selection { background: #f8d7da; color: #721c24; border-left: 8px solid #dc3545; }
-
-    ", scope_id, " .btn-pill-xl { border-radius: 50px !important; padding: 10px 25px !important; font-weight: 700 !important; text-transform: uppercase; border: none !important; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    ", scope_id, " .action-row-right { display: flex; gap: 10px; justify-content: flex-end; margin-bottom: 20px; align-items: center; }
-  ")
+  # Registro dinámico de CSS (v.0.0.1)
+  css_folder <- system.file("www", "css", package = "Rscience2027")
+  if (css_folder == "") css_folder <- "www/css"
+  try(addResourcePath("RS-STYLES", normalizePath(css_folder)), silent = TRUE)
 
   tagList(
-    tags$head(tags$style(HTML(css_custom))),
-    useShinyjs(),
+    tags$head(
+      useShinyjs(),
+      tags$link(rel = "stylesheet", type = "text/css",
+                href = paste0("RS-STYLES/style_000.css?v=", as.numeric(Sys.time())))
+    ),
 
-    div(id = ns("var_selector_container"),
+    # CLASE MADRE: rs-settings-pack encapsula todo el módulo
+    div(class = "rs-settings-pack settings-container",
+
+        # Cabecera dinámica
         uiOutput(ns("status_header")),
-
-        div(class = "action-row-right",
-            actionButton(ns("btn_import"), span(icon("check"), "Accept Selection"), class = "btn-success btn-pill-xl"),
-            actionButton(ns("btn_edit"),   span(icon("edit"), "Edit"),   class = "btn-warning btn-pill-xl"),
-            actionButton(ns("btn_reset"),  span(icon("sync"), "Reset"),  class = "btn-primary btn-pill-xl")
+        br(),
+        # Fila de Acciones
+        div(class = "rs-action-row d-flex justify-content-end",
+            actionButton(ns("btn_import"), span(icon("check"), "Accept"), class = "btn-success btn-rs-pack"),
+            actionButton(ns("btn_edit"),   span(icon("edit"), "Edit"),   class = "btn-warning btn-rs-pack"),
+            actionButton(ns("btn_reset"),  span(icon("sync"), "Reset"),  class = "btn-primary btn-rs-pack")
         ),
+        br(),
+        # Contenedor de Inputs
+        div(id = ns("card_inputs_wrapper"), class = "rs-card-wrapper",
 
-        div(id = ns("card_inputs_wrapper"), class = "card-container",
-            div(class = "locked-overlay", div(class = "lock-icon", icon("lock"))),
-            div(style = "background: #ffffff; padding: 25px; border-radius: 15px; border: 1px solid #e0e0e0; box-shadow: 0 4px 15px rgba(0,0,0,0.08);",
-                fluidRow(
-                  column(4,
-                         # --- Dentro de SUB_mod_var_selection_ui ---
-                         selectizeInput(ns("var_rv"), "Response Variable (RV)",
-                                        choices = NULL,
-                                        selected = NULL, # Forzamos inicio vacío
-                                        options = list(
-                                          placeholder = 'Select RV...',
-                                          dropdownParent = 'body',
-                                          onInitialize = I('function() { this.setValue(""); }')
-                                        ))
-                  ),
-                  column(4,
-                         selectizeInput(ns("var_factor"), "Factor Variable (Factor)",
-                                        choices = NULL,
-                                        options = list(
-                                          placeholder = 'Select Factor...',
-                                          dropdownParent = 'body',
-                                          onInitialize = I('function() { this.setValue(""); }')
-                                        ))
-                  ),
-                  column(4,
-                         selectizeInput(ns("alpha_value"), "Significance Alpha",
-                                        choices = c("1% (0.01)" = 0.01, "5% (0.05)" = 0.05, "10% (0.10)" = 0.10),
-                                        selected = 0.05)
-                  )
-                ),
-                hr(),
-                DTOutput(ns("info_table"))
-            )
-        ),
+            # Overlay de bloqueo (Clase protegida)
+            div(class = "rs-locked-overlay",
+                div(class = "rs-lock-icon", icon("lock"))
+            ),
 
-        if (show_debug) div(style = "margin-top: 20px;", listviewer::jsoneditOutput(ns("debug_json"), height = "auto"))
+            # Formulario
+            fluidRow(
+              column(4,
+                     selectizeInput(ns("var_rv"), "Response Variable (RV)",
+                                    choices = NULL,
+                                    options = list(placeholder = 'Select RV...', dropdownParent = 'body'))
+              ),
+              column(4,
+                     selectizeInput(ns("var_factor"), "Factor Variable",
+                                    choices = NULL,
+                                    options = list(placeholder = 'Select Factor...', dropdownParent = 'body'))
+              ),
+              column(4,
+                     selectizeInput(ns("alpha_value"), "Alpha",
+                                    choices = c("1%" = 0.01, "5%" = 0.05, "10%" = 0.10),
+                                    selected = 0.05)
+              )
+            ),
+            hr(),
+            DTOutput(ns("info_table"))
+        )
     )
   )
 }
@@ -278,5 +258,4 @@ SUB_mod_var_selection_server <- function(id, df_input = mtcars, show_debug = FAL
   })
 }
 
-# Helper global
-`%||%` <- function(a, b) if (!is.null(a)) a else b
+
