@@ -3,29 +3,26 @@ mod_07_00_engine_control_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    div(class = "rs-control-card",
-        #h4("RScience Engine", style="text-align:center; color:#00d4ff; margin-bottom:20px;"),
+    # --- TRUCO: Forzar carga de Font Awesome ---
+    tags$div(style = "display:none;", icon("cogs")),
 
-        # 1. Agregamos la clase 'rs-engine-selector' para que el CSS sepa dónde buscar
+    div(class = "rs-control-card",
         div(class = "rs-btn-group-container rs-engine-selector",
             shinyWidgets::radioGroupButtons(
               inputId = ns("engine_mode"),
               label = NULL,
-              choices = c(
-                " <i class='fa fa-unlock-alt'></i>&nbsp; UNLOCK" = "unlock",
-                " <i class='fa fa-lock'></i>&nbsp; LOCKED"      = "lock",
-                " <i class='fa fa-sync'></i>&nbsp; RESET"       = "reset"
+              choiceNames = list(
+                HTML("<i class='fas fa-unlock-alt'></i>&nbsp; UNLOCK"),
+                HTML("<i class='fas fa-lock'></i>&nbsp; LOCK"),
+                HTML("<i class='fas fa-sync-alt'></i>&nbsp; RESET")
               ),
+              choiceValues = list("unlock", "lock", "reset"),
               selected = "unlock",
               justified = TRUE,
-              individual = FALSE,
-              # 2. IMPORTANTE: Cambiamos a 'engine-custom' para evitar conflictos con Bootstrap
               status = "engine-custom"
             )
         ),
-
         uiOutput(ns("internal_status_ui")),
-
         br(),
         listviewer::jsoneditOutput(ns("debug_json"), height = "auto")
     )
@@ -67,7 +64,7 @@ mod_07_00_engine_control_server <- function(id, show_debug = FALSE) {
 
       # Solo definimos el texto y la clase CSS
       config <- switch(mode,
-                       "unlock" = list(txt = "CONFIGURATION MODE",  cl = "status-unlock"),
+                       "unlock" = list(txt = "ENGINE UNLOCKED",  cl = "status-unlock"),
                        "lock"   = list(txt = "ENGINE LOCKED",       cl = "status-lock"),
                        "reset"  = list(txt = "RESETTING...",        cl = "status-reset"),
                        list(txt = "WAITING...", cl = "status-waiting")

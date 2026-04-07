@@ -2,25 +2,14 @@ library(shiny)
 library(bslib)
 library(shinyjs)
 
+library(shiny)
+library(DT)
+library(bslib)
+library(listviewer)
+library(shinyjs)
+library(shinyWidgets) # Necesario para el radioGroupButtons
 
-
-#devtools::load_all()
-
-# 1. CARGAR RECURSOS (Esto es lo que faltaba)
-# Buscamos la carpeta www del paquete
-lib_www_path <- system.file("www", "css", package = "Rscience2027")
-
-# Si estás en desarrollo local (sin el paquete instalado aún)
-if (lib_www_path == "") lib_www_path <- "www"
-
-# Si existe la carpeta, creamos la ruta y el path al CSS
-if (dir.exists(lib_www_path)) {
-  addResourcePath("lib_www", normalizePath(lib_www_path))
-  path_to_css <- file.path(lib_www_path, "style_000.css")
-} else {
-  path_to_css <- NULL
-}
-
+devtools::load_all()
 
 
 source(file =  system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts",
@@ -30,12 +19,8 @@ source(file =  system.file("shiny", "fn03_tool_script", "tool_0001_script_002", 
 
 
 
-library(shiny)
-library(DT)
-library(bslib)
-library(listviewer)
-library(shinyjs)
-library(shinyWidgets) # Necesario para el radioGroupButtons
+
+
 
 #devtools::load_all()
 
@@ -53,6 +38,7 @@ if (dir.exists(lib_www_path)) {
 } else {
   path_to_css <- NULL
 }
+
 
 # 2. UI DE LA APP
 ui <- fluidPage(
@@ -63,6 +49,9 @@ ui <- fluidPage(
 
   tags$head(
     useShinyjs(),
+
+    # IMPORTANTE: No usamos includeCSS.
+    # Usamos tags$link apuntando al recurso que definiste con addResourcePath
     if (!is.null(path_to_css)) {
       tags$link(rel = "stylesheet", type = "text/css", href = "lib_www/style_000.css")
     }

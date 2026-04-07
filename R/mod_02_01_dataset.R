@@ -17,7 +17,9 @@ mod_02_01_dataset_ui <- function(id) {
   tagList(
 
 
-    div(class = paste("container-fluid import-engine-container", ns("import-container")),
+    div(
+      id = ns("import_container"),             # El ID lleva ns() para Shiny/JS
+      class = "container-fluid import-engine-container", # La clase es ESTÁTICA para el CSS
         # FILA 0: HEADER
         div(class = "row", div(class = "col-12", uiOutput(ns("import_header")))),
         br(),
@@ -193,7 +195,7 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
       data_store$is_done <- FALSE
       data_store$is_locked <- FALSE
       data_store$error_msg <- NULL
-      data_store$df <- NULL  # Crucial para que renderDT se limpie
+      data_store$df <- data.frame()  # Crucial para que renderDT se limpie
 
       # Reseteamos la lista anidada de metadata explícitamente
       data_store$metadata <- list(

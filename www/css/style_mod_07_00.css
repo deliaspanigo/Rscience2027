@@ -74,49 +74,63 @@
     box-shadow: 0 0 20px rgba(243, 156, 18, 0.5) !important;
 }
 
-/* --- 4. DISPLAY DE ESTADO (Dinámico por Clase) --- */
+/* --- 4. DISPLAY DE ESTADO (Con efecto Push-Up) --- */
 .rs-status-display {
     margin-top: 15px;
-    padding: 12px;
+    height: 45px; /* Altura fija necesaria para el efecto ventana */
     border-radius: var(--rs-radius-sm);
-    text-align: center;
-    font-weight: 900;
-    font-size: 0.8rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    font-family: var(--rs-font-mono);
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden; /* Corta el texto que entra/sale */
+    position: relative;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-    transition: all 0.3s ease;
-    border: 2px solid #444; /* Borde base neutro */
+    transition: all 0.4s ease;
+    border: 3px solid #444;
+    font-family: var(--rs-font-mono);
 }
 
-/* Estado: UNLOCK (Cian) */
-.rs-status-display.status-unlock {
+/* El texto que se mueve */
+.rs-status-display span {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    font-weight: 900;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    /* Animación de entrada: dura 0.4s */
+    animation: engine-push-up 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes engine-push-up {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* --- COLORES DINÁMICOS Y FONDOS SÓLIDOS --- */
+/* (Cambié el fondo a sólido como pediste antes, para que resalte el movimiento) */
+
+.status-unlock {
+    background-color: var(--rs-primary) !important;
     border-color: var(--rs-primary) !important;
-    color: var(--rs-primary) !important;
-    background-color: rgba(0, 212, 255, 0.05) !important;
 }
+.status-unlock span { color: #000 !important; }
 
-/* Estado: LOCK (Verde) */
-.rs-status-display.status-lock {
+.status-lock {
+    background-color: var(--rs-success) !important;
     border-color: var(--rs-success) !important;
-    color: var(--rs-success) !important;
-    background-color: rgba(0, 188, 140, 0.08) !important;
 }
+.status-lock span { color: #000 !important; }
 
-/* Estado: RESET (Naranja) */
-.rs-status-display.status-reset {
+.status-reset {
+    background-color: var(--rs-warning) !important;
     border-color: var(--rs-warning) !important;
-    color: var(--rs-warning) !important;
-    background-color: rgba(243, 156, 18, 0.08) !important;
 }
-
-/* Estado: WAITING (Gris) */
-.rs-status-display.status-waiting {
-    border-color: #666 !important;
-    color: #666 !important;
-    background-color: transparent !important;
-}
+.status-reset span { color: #000 !important; }
