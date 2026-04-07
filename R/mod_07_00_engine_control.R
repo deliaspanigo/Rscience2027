@@ -12,9 +12,9 @@ mod_07_00_engine_control_ui <- function(id) {
               inputId = ns("engine_mode"),
               label = NULL,
               choices = c(
-                " <i class='fa fa-unlock-alt'></i> UNLOCK" = "unlock",
-                " <i class='fa fa-lock'></i> LOCKED" = "lock",
-                " <i class='fa fa-sync'></i> RESET" = "reset"
+                " <i class='fa fa-unlock-alt'></i>&nbsp; UNLOCK" = "unlock",
+                " <i class='fa fa-lock'></i>&nbsp; LOCKED"      = "lock",
+                " <i class='fa fa-sync'></i>&nbsp; RESET"       = "reset"
               ),
               selected = "unlock",
               justified = TRUE,
@@ -61,18 +61,19 @@ mod_07_00_engine_control_server <- function(id, show_debug = FALSE) {
     })
 
     # --- RENDER ESTATUS (Visual) ---
+    # --- RENDER ESTATUS (Visual) ---
     output$internal_status_ui <- renderUI({
       mode <- engine_status$mode
 
+      # Solo definimos el texto y la clase CSS
       config <- switch(mode,
-                       "unlock" = list(txt = "CONFIGURATION MODE",  col = "#00d4ff", bg = "rgba(0, 212, 255, 0.05)"),
-                       "lock"   = list(txt = "ENGINE LOCKED",       col = "#28a745", bg = "rgba(40, 167, 69, 0.08)"),
-                       "reset"  = list(txt = "RESETTING...",        col = "#f39c12", bg = "rgba(255, 71, 87, 0.08)"),
-                       list(txt = "WAITING...", col = "#aaa", bg = "transparent")
+                       "unlock" = list(txt = "CONFIGURATION MODE",  cl = "status-unlock"),
+                       "lock"   = list(txt = "ENGINE LOCKED",       cl = "status-lock"),
+                       "reset"  = list(txt = "RESETTING...",        cl = "status-reset"),
+                       list(txt = "WAITING...", cl = "status-waiting")
       )
 
-      div(class = "rs-status-display",
-          style = paste0("border: 1px solid ", config$col, "; color: ", config$col, "; background: ", config$bg),
+      div(class = paste("rs-status-display", config$cl),
           span(config$txt)
       )
     })

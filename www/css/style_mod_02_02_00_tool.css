@@ -2,6 +2,39 @@
    MODULE: RScience Tool Explorer (v.0.0.1) - Clean Version
    ========================================================================== */
 
+
+/* --- AJUSTE VERTICAL DEL CONTENEDOR --- */
+.tools-container {
+    display: flex;
+    flex-direction: column;
+    /* Ajusta este valor según cuánto quieras que ocupe en la pantalla */
+    min-height: 85vh;
+}
+
+/* --- EL ÁRBOL COMO ELEMENTO ELÁSTICO --- */
+.map-section {
+    flex: 1 1 auto; /* Esto obliga al árbol a expandir todo el espacio sobrante */
+    display: flex;
+    flex-direction: column;
+    min-height: 400px; /* Asegura un tamaño mínimo para que no se colapse */
+    position: relative;
+    transition: var(--rs-transition);
+}
+
+.map-wrapper {
+    flex: 1; /* Hace que el wrapper llene toda la altura de la sección */
+    background: #1a252f;
+    border: 2px solid #34495e;
+    border-radius: var(--rs-radius-sm);
+    overflow: auto; /* Permite scroll interno si el árbol es muy grande */
+    transition: var(--rs-transition);
+}
+
+/* Ajuste para que el widget del árbol dentro de mod_02_02_01 use el 100% */
+.map-wrapper > div {
+    height: 100% !important;
+}
+
 /* --- 1. CONFIGURACIÓN DEL ÁRBOL (MAP SECTION) --- */
 .map-section {
     position: relative;

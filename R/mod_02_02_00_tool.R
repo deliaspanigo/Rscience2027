@@ -10,18 +10,30 @@ mod_02_02_00_tool_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    # Contenedor principal con ID para control de estado (Cian/Verde)
-    div(id = ns("total_explorer_container"), class = paste("container-fluid", ns("tools-container")),
+    div(id = ns("total_explorer_container"), class = "container-fluid",
 
-        # 1. Cabecera Dinámica
-        div(class = "flex-shrink-0", uiOutput(ns("tools_header"))),
+        # 1. Cabecera (Se bloquea)
+        div(id = ns("header_section"), uiOutput(ns("tools_header"))),
 
-        br(),
+        div(class = "row g-3 align-items-center", style="margin-top:5px;",
+            # 2 y 3. Path y Banner (Se bloquean)
+            div(id = ns("info_section"), class = "col-md-7",
+                div(class = "path-display-area", uiOutput(ns("path_chips_ui"))),
+                uiOutput(ns("scripts_info_banner"))
+            ),
 
-        # Separador Superior
+            # ESTE NO SE BLOQUEA: El control del motor
+            div(class = "col-md-5",
+                div(class = "action-row-right",
+                    mod_07_00_engine_control_ui(ns("main_switch"))
+                )
+            )
+        ),
+
+        # Separador
         div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
 
-        # 4. El Árbol (Motor de Selección)
+        # 4. El Árbol (Se bloquea)
         div(class = "map-section",
             div(id = ns("tree_wrapper"), class = "map-wrapper",
                 mod_02_02_01_tree_ui(ns("inner_tree"))
@@ -31,20 +43,9 @@ mod_02_02_00_tool_ui <- function(id) {
         # Separador Inferior
         div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
 
-        # 2. Tree Path and Buttons
-        div(class = "row g-3 align-items-center flex-shrink-0", style="margin-top:5px;",
-            div(class = "col-md-7",
-                div(class = "path-display-area", uiOutput(ns("path_chips_ui")))
-            ),
-            div(class = "col-md-5",
-                div(class = "action-row-right",
-                    mod_07_00_engine_control_ui(ns("main_switch"))
-                )
-            )
-        ),
 
-        # 3. Banner de Información
-        uiOutput(ns("scripts_info_banner")),
+
+
 
         # 5. Debug Panel
         div(style = "margin-top: 10px; max-height: 200px; overflow-y: auto;",
@@ -72,28 +73,58 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
     }) %>% debounce(150)
 
     # --- OBSERVER DEL MOTOR ---
+    # --- OBSERVER DEL MOTOR (v.0.1.2) ---
     observeEvent(engine_state(), {
       state        <- engine_state()$mode
       current_node <- rlist_tree()$selected_node_name
-      main_id      <- "total_explorer_container"
+
+      # Definimos qué IDs queremos "congelar" cuando se bloquee el sistema
+      # Nota: NO incluyas aquí el ID del control del motor (main_switch)
+      sections_to_freeze <- c(
+        "header_section",
+        "info_section",
+        "tree_wrapper",
+        "path_chips_ui"
+      )
 
       if (state == "lock") {
+        # Verificamos que no esté en el Root (Rscience) para permitir el bloqueo
         if(!is.null(current_node) && current_node != "Rscience") {
-          # CAMBIO A VERDE Y BLOQUEO
-          shinyjs::addClass(id = main_id, class = "locked-disabled")
+
+          # 1. Aplicamos clase de bloqueo (pointer-events: none) a las secciones
+          lapply(sections_to_freeze, function(x) {
+            shinyjs::addClass(id = x, class = "locked-disabled")
+          })
+
+          # 2. Aplicamos estética verde específica al mapa
           shinyjs::addClass(id = "tree_wrapper", class = "locked-tree-mode")
+
           is_locked(TRUE)
           is_done(TRUE)
+
         } else {
+          # Si intenta bloquear en el Root, lo rebotamos
           showNotification("Please select a specific tool before locking.", type = "warning")
+
+          # Pequeño delay para que el usuario vea el cambio y volvemos a 'unlock'
           shinyjs::delay(200, {
-            shinyWidgets::updateRadioGroupButtons(session, "main_switch-engine_mode", selected = "unlock")
+            shinyWidgets::updateRadioGroupButtons(
+              session = session,
+              inputId = "main_switch-engine_mode",
+              selected = "unlock"
+            )
           })
         }
       } else {
-        # RETORNO A CIAN (Unlock / Reset)
-        shinyjs::removeClass(id = main_id, class = "locked-disabled")
+        # RETORNO A CIAN / UNLOCK
+        # 1. Quitamos el bloqueo de clics
+        lapply(sections_to_freeze, function(x) {
+          shinyjs::removeClass(id = x, class = "locked-disabled")
+        })
+
+        # 2. Quitamos la estética verde del mapa
         shinyjs::removeClass(id = "tree_wrapper", class = "locked-tree-mode")
+
         is_locked(FALSE)
         is_done(FALSE)
       }

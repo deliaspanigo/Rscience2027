@@ -96,7 +96,7 @@ rscience_engine_ui <- function(id) {
           id = ns("main_navset"),
           # Setup Panels
           nav_panel_hidden("c_data", mod_02_01_dataset_ui(ns("my_ns_dataset"))),
-          nav_panel_hidden("c_tool", card(card_body("Configuración de Herramientas..."))),
+          nav_panel_hidden("c_tool", mod_02_02_00_tool_ui(id = ns("my_ns_tool"))),
           nav_panel_hidden("c_script", card(card_body("Editor de Scripts..."))),
           nav_panel_hidden("c_settings", card(card_body("Ajustes del Sistema..."))),
           nav_panel_hidden("c_play", card(card_body("Consola de Procesamiento..."))),
@@ -162,6 +162,9 @@ rscience_engine_server <- function(id) {
 
     # Servidor del módulo de teoría
     mod_02_01_dataset_server("my_ns_dataset")
+    resultado_final <- mod_02_02_00_tool_server(id = "my_ns_tool", show_debug = F)
+
+
     mod_special_theory_server("theory_internal")
   })
 }

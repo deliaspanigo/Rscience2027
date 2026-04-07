@@ -1,13 +1,9 @@
-/* ==========================================================================
-   MODULE: ENGINE CONTROL (mod_07_00)
-   ========================================================================== */
-
 /* --- 1. CONTENEDOR PRINCIPAL --- */
 .rs-control-card {
     background: var(--rs-bg-header);
     padding: 20px;
     border-radius: var(--rs-radius-lg);
-    border: 1px solid rgba(0, 212, 255, 0.1);
+    border: 2px solid rgba(0, 212, 255, 0.2); /* Un poco más de presencia al borde de la card */
 }
 
 /* --- 2. GRUPO DE BOTONES (Estructura) --- */
@@ -15,79 +11,112 @@
     display: flex !important;
     width: 100%;
     gap: 0;
+    border-radius: var(--rs-radius-sm);
+    overflow: hidden; /* Asegura que el contenido no desborde los radios */
 }
 
 .rs-engine-selector .btn-group > .btn-engine-custom {
     flex: 1;
-    padding: 12px 5px !important;
-    font-size: 0.8rem !important;
-    font-weight: 700 !important;
+    padding: 14px 5px !important; /* Un poco más de aire vertical */
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
     text-transform: uppercase;
-    border: 1px solid #444 !important;
-    background-color: #222 !important;
-    color: #666 !important;
-    transition: var(--rs-transition);
+    background-color: #080808 !important; /* Fondo más profundo */
+    transition: all 0.2s ease-in-out;
     border-radius: 0 !important;
     display: flex;
     justify-content: center;
     align-items: center;
+    /* BORDE BASE GRUESO (3px) */
+    border: 3px solid transparent !important;
 }
 
-/* Bordes redondeados exteriores */
+/* --- 3. COLORES Y BORDES DINÁMICOS --- */
+
+/* UNLOCK (Cian) */
 .rs-engine-selector .btn-group > .btn-engine-custom:nth-of-type(1) {
+    color: var(--rs-primary) !important;
+    border: 3px solid var(--rs-primary) !important;
+    border-right-width: 1.5px !important; /* Mitad del borde para la unión */
     border-top-left-radius: var(--rs-radius-sm) !important;
     border-bottom-left-radius: var(--rs-radius-sm) !important;
 }
-
-.rs-engine-selector .btn-group > .btn-engine-custom:nth-of-type(3) {
-    border-top-right-radius: var(--rs-radius-sm) !important;
-    border-bottom-right-radius: var(--rs-radius-sm) !important;
-}
-
-/* --- 3. COLORES DINÁMICOS (Estados Checked) --- */
-
-/* UNLOCK (Cian) */
 .rs-engine-selector .btn-group > .btn-check:checked + .btn-engine-custom:nth-of-type(1) {
     background-color: var(--rs-primary) !important;
-    border-color: var(--rs-primary) !important;
-    color: var(--rs-text-dark) !important;
-    box-shadow: 0 0 12px var(--rs-glow-primary) !important;
+    color: #000 !important;
+    box-shadow: 0 0 20px var(--rs-glow-primary) !important;
 }
 
 /* LOCKED (Verde) */
+.rs-engine-selector .btn-group > .btn-engine-custom:nth-of-type(2) {
+    color: var(--rs-success) !important;
+    border: 3px solid var(--rs-success) !important;
+    border-left-width: 1.5px !important; /* Unión izquierda */
+    border-right-width: 1.5px !important; /* Unión derecha */
+}
 .rs-engine-selector .btn-group > .btn-check:checked + .btn-engine-custom:nth-of-type(2) {
     background-color: var(--rs-success) !important;
-    border-color: var(--rs-success) !important;
-    color: var(--rs-text-dark) !important;
-    box-shadow: 0 0 12px rgba(0, 188, 140, 0.3) !important;
+    color: #000 !important;
+    box-shadow: 0 0 20px rgba(0, 188, 140, 0.5) !important;
 }
 
 /* RESET (Naranja) */
+.rs-engine-selector .btn-group > .btn-engine-custom:nth-of-type(3) {
+    color: var(--rs-warning) !important;
+    border: 3px solid var(--rs-warning) !important;
+    border-left-width: 1.5px !important; /* Unión izquierda */
+    border-top-right-radius: var(--rs-radius-sm) !important;
+    border-bottom-right-radius: var(--rs-radius-sm) !important;
+}
 .rs-engine-selector .btn-group > .btn-check:checked + .btn-engine-custom:nth-of-type(3) {
     background-color: var(--rs-warning) !important;
-    border-color: var(--rs-warning) !important;
-    color: var(--rs-text-dark) !important;
+    color: #000 !important;
+    box-shadow: 0 0 20px rgba(243, 156, 18, 0.5) !important;
 }
 
-/* --- 4. DISPLAY DE ESTADO (Digital) --- */
+/* --- 4. DISPLAY DE ESTADO (Dinámico por Clase) --- */
 .rs-status-display {
     margin-top: 15px;
-    padding: 10px;
+    padding: 12px;
     border-radius: var(--rs-radius-sm);
     text-align: center;
-    font-weight: 800;
-    font-size: 0.75rem;
-    letter-spacing: 1.5px;
+    font-weight: 900;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
     text-transform: uppercase;
     font-family: var(--rs-font-mono);
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
-    transition: var(--rs-transition);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    transition: all 0.3s ease;
+    border: 2px solid #444; /* Borde base neutro */
 }
 
-/* Iconos dentro de botones */
-.rs-engine-selector .btn-group label i {
-    margin-right: 6px;
+/* Estado: UNLOCK (Cian) */
+.rs-status-display.status-unlock {
+    border-color: var(--rs-primary) !important;
+    color: var(--rs-primary) !important;
+    background-color: rgba(0, 212, 255, 0.05) !important;
+}
+
+/* Estado: LOCK (Verde) */
+.rs-status-display.status-lock {
+    border-color: var(--rs-success) !important;
+    color: var(--rs-success) !important;
+    background-color: rgba(0, 188, 140, 0.08) !important;
+}
+
+/* Estado: RESET (Naranja) */
+.rs-status-display.status-reset {
+    border-color: var(--rs-warning) !important;
+    color: var(--rs-warning) !important;
+    background-color: rgba(243, 156, 18, 0.08) !important;
+}
+
+/* Estado: WAITING (Gris) */
+.rs-status-display.status-waiting {
+    border-color: #666 !important;
+    color: #666 !important;
+    background-color: transparent !important;
 }

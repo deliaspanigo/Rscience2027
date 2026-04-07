@@ -18,14 +18,18 @@ mod_02_02_01_tree_ui <- function(id) {
     tags$head(
       tags$script(src = "https://cdn.jsdelivr.net/npm/d3@6/dist/d3.min.js"),
       tags$style(HTML(paste0("
-        #", module_id, " {
-          height: 100%; width: 100%;
-          background-color: #000;
-          display: flex;
-          overflow: hidden;
-          font-family: 'Segoe UI', sans-serif;
-          position: relative;
-        }
+      #", module_id, " {
+        /* CAMBIO: En lugar de 100%, usamos 80vh (80% del alto de la pantalla) */
+        height: 85vh;
+        min-height: 600px; /* Para que no se colapse en pantallas chicas */
+        width: 100%;
+        background-color: #000;
+        display: flex;
+        overflow: hidden;
+        font-family: 'Segoe UI', sans-serif;
+        position: relative;
+        border: 1px solid #1a1a1a;
+      }
 
         #", module_id, " .viewport-area {
           flex-grow: 1;
@@ -98,11 +102,9 @@ mod_02_02_01_tree_ui <- function(id) {
       ")))
     ),
 
-    div(style = "max-height: 500px; overflow-y: auto;",
-        listviewer::jsoneditOutput(ns("debug_json"), height = "auto")
-    ),
+
     div(id = module_id,
-        tags$button("☰ MENU", class = "toggle-sidebar-btn", onclick = "toggleSidebar()"),
+        tags$button("☰", class = "toggle-sidebar-btn", onclick = "toggleSidebar()"),
 
         div(class = "viewport-area",
             div(id = "tree-container", style="width:100%; height:100%;")
@@ -132,6 +134,10 @@ mod_02_02_01_tree_ui <- function(id) {
             )
         )
     ),
+    div(style = "max-height: 500px; overflow-y: auto;",
+        listviewer::jsoneditOutput(ns("debug_json"), height = "auto")
+    ),
+
     uiOutput(ns("js_injector"))
   )
 }
