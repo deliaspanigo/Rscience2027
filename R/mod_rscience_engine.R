@@ -1,12 +1,25 @@
-# ==============================================================================
-# MÓDULO UI: ENTORNO AUTOCONTENIDO
-# ==============================================================================
 mod_rscience_engine_ui <- function(id) {
   ns <- NS(id)
 
-  # Localización de CSS
-  #path_to_css <- system.file("www", "styles.css", package = "Rscience2027")
+  # 1. Definir la ruta a la carpeta que contiene TODOS los .css
+  # Apuntamos a la carpeta 'css', no al archivo individual
+  css_folder <- system.file("www", "css", package = "Rscience2027")
+  if (css_folder == "") css_folder <- "www/css" # Desarrollo local
 
+  # 2. Registrar el prefijo 'RS-STYLES' para esa carpeta
+  # Esto le dice a Shiny: "Si alguien pide RS-STYLES/archivo.css, búscalo en css_folder"
+  try(addResourcePath("RS-STYLES", normalizePath(css_folder)), silent = TRUE)
+
+  tagList(
+    tags$head(
+      useShinyjs(),
+      # 3. Llamamos al archivo maestro usando el prefijo registrado
+      tags$link(
+        rel = "stylesheet",
+        type = "text/css",
+        href = paste0("RS-STYLES/style_000.css?v=", as.numeric(Sys.time()))
+      )
+    ),
   page_sidebar(
     theme = bs_theme(version = 5, bg = "#0b1218", fg = "#ffffff", primary = "#00d4ff"),
 
@@ -83,6 +96,7 @@ mod_rscience_engine_ui <- function(id) {
           nav_panel_hidden("c_faqs", card(card_body("Preguntas Frecuentes...")))
         )
     )
+  )
   )
 }
 

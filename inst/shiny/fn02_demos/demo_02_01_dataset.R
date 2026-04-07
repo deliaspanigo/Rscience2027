@@ -7,20 +7,20 @@ library(shinyWidgets) # Necesario para el radioGroupButtons
 
 devtools::load_all()
 
-# 1. CARGAR RECURSOS (Esto es lo que faltaba)
-# Buscamos la carpeta www del paquete
-lib_www_path <- system.file("www", "css", package = "Rscience2027")
-
-# Si estás en desarrollo local (sin el paquete instalado aún)
-if (lib_www_path == "") lib_www_path <- "www"
-
-# Si existe la carpeta, creamos la ruta y el path al CSS
-if (dir.exists(lib_www_path)) {
-  addResourcePath("lib_www", normalizePath(lib_www_path))
-  path_to_css <- file.path(lib_www_path, "style_000.css")
-} else {
-  path_to_css <- NULL
-}
+# # 1. CARGAR RECURSOS (Esto es lo que faltaba)
+# # Buscamos la carpeta www del paquete
+# lib_www_path <- system.file("www", "css", package = "Rscience2027")
+#
+# # Si estás en desarrollo local (sin el paquete instalado aún)
+# if (lib_www_path == "") lib_www_path <- "www"
+#
+# # Si existe la carpeta, creamos la ruta y el path al CSS
+# if (dir.exists(lib_www_path)) {
+#   addResourcePath("lib_www", normalizePath(lib_www_path))
+#   path_to_css <- file.path(lib_www_path, "style_000.css")
+# } else {
+#   path_to_css <- NULL
+# }
 
 # 2. UI DE LA APP
 ui <- fluidPage(
@@ -29,12 +29,12 @@ ui <- fluidPage(
   # Estilo crítico para que la página no tenga scroll propio
   #tags$style("body, html { overflow: hidden; height: 100%; margin: 0; padding: 0; }"),
 
-  tags$head(
-    useShinyjs(),
-    if (!is.null(path_to_css)) {
-      tags$link(rel = "stylesheet", type = "text/css", href = "lib_www/style_000.css")
-    }
-  ),
+  # tags$head(
+  #   useShinyjs(),
+  #   if (!is.null(path_to_css)) {
+  #     tags$link(rel = "stylesheet", type = "text/css", href = "lib_www/style_000.css")
+  #   }
+  # ),
 
   # El h2 y el módulo
   #div(style = "height: 100vh; display: flex; flex-direction: column;",
