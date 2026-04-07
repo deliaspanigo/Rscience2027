@@ -8,7 +8,7 @@ mod_07_00_engine_control_ui <- function(id) {
 
         # 1. Agregamos la clase 'rs-engine-selector' para que el CSS sepa dónde buscar
         div(class = "rs-btn-group-container rs-engine-selector",
-            radioGroupButtons(
+            shinyWidgets::radioGroupButtons(
               inputId = ns("engine_mode"),
               label = NULL,
               choices = c(
@@ -55,7 +55,7 @@ mod_07_00_engine_control_server <- function(id, show_debug = FALSE) {
       if(input$engine_mode == "reset") {
         showNotification("Flushing RScience Engine...", type = "warning")
         shinyjs::delay(1000, {
-          updateRadioGroupButtons(session, "engine_mode", selected = "unlock")
+          shinyWidgets::updateRadioGroupButtons(session, "engine_mode", selected = "unlock")
         })
       }
     })

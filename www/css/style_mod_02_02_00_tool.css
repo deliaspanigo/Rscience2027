@@ -1,0 +1,162 @@
+/* ==========================================================================
+   MODULE: RScience Tool Explorer (v.0.0.1) - Clean Version
+   ========================================================================== */
+
+/* --- 1. CONFIGURACIÓN DEL ÁRBOL (MAP SECTION) --- */
+.map-section {
+    position: relative;
+    transition: var(--rs-transition);
+}
+
+.map-wrapper {
+    background: #1a252f;
+    border: 2px solid #34495e;
+    border-radius: var(--rs-radius-sm);
+    overflow: hidden;
+    transition: var(--rs-transition);
+}
+
+/* --- 2. CONTENEDOR DEL PATH (DISPLAY AREA) --- */
+.path-display-area {
+    background-color: #1a252f !important;
+    border: 1px solid rgba(0, 212, 255, 0.2) !important;
+    border-radius: var(--rs-radius-sm) !important;
+    padding: 12px 18px !important;
+    min-height: 55px !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.4) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.path-display-area:hover {
+    border-color: var(--rs-primary) !important;
+    box-shadow: inset 0 2px 10px rgba(0, 212, 255, 0.1) !important;
+}
+
+/* --- 3. ESTILO DE CHIPS (PÍLDORAS) --- */
+.path-chip {
+    background: rgba(0, 212, 255, 0.1) !important;
+    color: var(--rs-primary) !important;
+    padding: 4px 14px !important;
+    border-radius: 50px !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    border: 1px solid var(--rs-primary) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    box-shadow: 0 0 5px rgba(0, 212, 255, 0.2) !important;
+    animation: fadeInChip 0.4s ease forwards;
+}
+
+/* Resalte del último elemento (Herramienta actual) */
+.path-chip:last-child {
+    background: var(--rs-primary) !important;
+    color: #000 !important;
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.4) !important;
+}
+
+/* Separador Breadcrumb */
+.path-chip:not(:last-child)::after {
+    content: "❯";
+    margin-left: 10px;
+    opacity: 0.3;
+    font-size: 0.6rem;
+}
+
+/* --- 4. LÓGICA DE BLOQUEO (ESTADO CONFIRMED / VERDE) --- */
+
+/* Aplicable cuando el padre tiene .locked-tree-mode o .locked-disabled */
+.locked-tree-mode, .locked-disabled {
+    pointer-events: none !important;
+}
+
+/* Cambio de color en contenedores */
+.locked-tree-mode .map-wrapper,
+.locked-disabled .path-display-area {
+    border-color: var(--rs-success) !important;
+    background-color: #0b1218 !important;
+    opacity: 0.7;
+}
+
+/* Cambio de color en chips */
+.locked-tree-mode .path-chip,
+.locked-disabled .path-chip {
+    background: rgba(40, 167, 69, 0.1) !important;
+    color: var(--rs-success) !important;
+    border-color: var(--rs-success) !important;
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.2) !important;
+}
+
+/* El último chip confirmado en verde sólido */
+.locked-tree-mode .path-chip:last-child,
+.locked-disabled .path-chip:last-child {
+    background: var(--rs-success) !important;
+    color: #ffffff !important;
+}
+
+/* Badge dinámico de confirmación sobre el árbol */
+.locked-tree-mode .map-section::before {
+    content: "CONFIRMED TOOL";
+    position: absolute;
+    top: 10px; right: 20px; z-index: 10;
+    color: var(--rs-success);
+    font-size: 0.65rem; font-weight: 800;
+    background: rgba(0, 188, 140, 0.1);
+    padding: 2px 8px; border-radius: 4px;
+    border: 1px solid var(--rs-success);
+}
+
+/* --- 5. ANIMACIONES --- */
+@keyframes fadeInChip {
+    from { opacity: 0; transform: translateX(-5px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+
+
+/* --- ESTADO POR DEFECTO (CIAN) --- */
+.path-display-area {
+    border: 1px solid rgba(0, 212, 255, 0.3) !important;
+    transition: all 0.4s ease !important;
+}
+
+.path-chip {
+    border: 1px solid var(--rs-primary) !important;
+    color: var(--rs-primary) !important;
+    background: rgba(0, 212, 255, 0.1) !important;
+}
+
+.path-chip:last-child {
+    background: var(--rs-primary) !important;
+    color: #000 !important;
+}
+
+/* --- ESTADO BLOQUEADO (VERDE) --- */
+/* Cuando el contenedor padre tiene .locked-disabled */
+.locked-disabled .path-display-area {
+    border-color: var(--rs-success) !important;
+    background-color: #0b1218 !important; /* Fondo más oscuro */
+}
+
+.locked-disabled .path-chip {
+    border-color: var(--rs-success) !important;
+    color: var(--rs-success) !important;
+    background: rgba(40, 167, 69, 0.1) !important;
+}
+
+.locked-disabled .path-chip:last-child {
+    background: var(--rs-success) !important;
+    color: #fff !important;
+}
+
+/* BLOQUEO DEL ÁRBOL */
+.locked-disabled .map-wrapper {
+    pointer-events: none !important;
+    opacity: 0.7;
+    border-color: var(--rs-success) !important;
+}
