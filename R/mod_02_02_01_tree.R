@@ -20,8 +20,8 @@ mod_02_02_01_tree_ui <- function(id) {
       tags$style(HTML(paste0("
       #", module_id, " {
         /* CAMBIO: En lugar de 100%, usamos 80vh (80% del alto de la pantalla) */
-        height: 85vh;
-        min-height: 600px; /* Para que no se colapse en pantallas chicas */
+        height: 50vh;
+        min-height: 500px; /* Para que no se colapse en pantallas chicas */
         width: 100%;
         background-color: #000;
         display: flex;

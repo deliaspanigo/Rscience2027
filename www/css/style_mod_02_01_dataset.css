@@ -1,5 +1,5 @@
 /* ==========================================================================
-   MODULE: DATASET IMPORT (mod_02_01) - TOTAL DYNAMIC COLORS
+   MODULE: DATASET IMPORT (mod_02_01) - RScience Edition
    ========================================================================== */
 
 /* --- 1. HEADER SELECTION --- */
@@ -47,19 +47,17 @@
     align-items: center;
 }
 
-/* Label en modo UNLOCK (Cian) */
 .lock-wrapper:not(.locked-disabled) .section-label {
     color: var(--rs-primary) !important;
 }
 
-/* Label en modo LOCK (Verde) */
 .locked-disabled .section-label {
     color: var(--rs-success) !important;
 }
 
-/* --- 3. DETALLE DEL CANDADO (Siempre Verde) --- */
+/* --- 3. DETALLE DEL CANDADO --- */
 .status-closed {
-    color: var(--rs-success) !important; /* Texto (Locked) */
+    color: var(--rs-success) !important;
     font-weight: 700;
     font-size: 0.7rem;
     margin-left: 8px;
@@ -67,7 +65,7 @@
 }
 
 .status-closed i {
-    color: var(--rs-success) !important; /* Icono candado */
+    color: var(--rs-success) !important;
     margin-left: 4px;
 }
 
@@ -81,7 +79,6 @@
     transition: var(--rs-transition);
 }
 
-/* Color del borde del input según estado */
 .lock-wrapper:not(.locked-disabled) .selectize-input {
     border-color: rgba(0, 212, 255, 0.3) !important;
 }
@@ -98,14 +95,11 @@
     box-shadow: 0 0 8px var(--rs-glow-primary) !important;
 }
 
-/* --- 5. LÓGICA DE BLOQUEO DE CONTENEDOR --- */
 .locked-disabled {
     pointer-events: none;
-    /* Quitamos el filter saturate para que el verde brille bien */
     transition: var(--rs-transition);
 }
 
-/* Estilo para los menús desplegables */
 .selectize-dropdown {
     background-color: #1a252f !important;
     color: white !important;
@@ -114,5 +108,75 @@
 
 .selectize-dropdown .active {
     background-color: var(--rs-primary) !important;
-    color: var(--rs-text-dark) !important;
+    color: #000 !important;
+}
+
+/* ==========================================================================
+   NUEVO: DATATABLES (DT) - VERSIÓN CLARA (PIZARRA)
+   ========================================================================== */
+
+/* Contenedor principal de la tabla (Gris azulado claro) */
+.rs-table-container {
+    width: 100%;
+    background: #2c3e50 !important; /* Tono pizarra más claro */
+    border: 2px solid rgba(0, 212, 255, 0.3) !important;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* Estilo de la tabla interna */
+table.dataTable {
+    background-color: transparent !important;
+    color: #f8fafc !important;
+    border: none !important;
+}
+
+/* Cabeceras de columna */
+table.dataTable thead th {
+    background-color: rgba(0, 212, 255, 0.15) !important;
+    color: #ffffff !important;
+    border-bottom: 3px solid var(--rs-primary, #00d4ff) !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 12px !important;
+}
+
+/* Celdas y Filas */
+table.dataTable tbody td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 10px !important;
+}
+
+/* Filas cebra (Striped) más visibles */
+table.dataTable.stripe tbody tr.odd {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+table.dataTable tbody tr:hover {
+    background-color: rgba(0, 212, 255, 0.2) !important;
+    color: #fff !important;
+}
+
+/* Buscador y Paginación */
+.dataTables_filter input {
+    background-color: #34495e !important;
+    border: 1px solid rgba(0, 212, 255, 0.4) !important;
+    color: white !important;
+    border-radius: 5px;
+}
+
+.dataTables_info, .dataTables_paginate {
+    color: #cbd5e1 !important;
+    font-size: 0.8rem;
+    padding-top: 10px;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background: var(--rs-primary, #00d4ff) !important;
+    color: #000 !important;
+    border: 1px solid var(--rs-primary) !important;
+    font-weight: bold;
 }

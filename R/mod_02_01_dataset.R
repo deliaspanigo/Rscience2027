@@ -36,8 +36,8 @@ mod_02_01_dataset_ui <- function(id) {
 
     div(
       id = ns("import_container"),             # El ID lleva ns() para Shiny/JS
-      class = "container-fluid import-engine-container", # La clase es ESTÁTICA para el CSS
-        # FILA 0: HEADER
+      class = "import-engine-container", # Usamos solo tu clase personalizada
+      # FILA 0: HEADER
         div(class = "row", div(class = "col-12", uiOutput(ns("import_header")))),
         br(),
 
@@ -75,16 +75,20 @@ mod_02_01_dataset_ui <- function(id) {
 
         # FILA 2: PREVIEW Y DEBUG
         uiOutput(ns("dataset_info_ui")),
-        div(class = "row g-0",
-            div(class = "col-12",
-                div(class = "section-label mb-3", icon("table"), " Data Preview"),
-                div(style = "width: 100%; background: white; border-radius: 12px; border: 1px solid #eee; padding: 10px;",
-                    DTOutput(ns("preview"))
-                ),
-                br(),
-                listviewer::jsoneditOutput(ns("debug_json"), height = "500px")
-            )
-        )
+      # --- FILA 2: PREVIEW Y DEBUG ---
+      # --- FILA 2: PREVIEW Y DEBUG ---
+      uiOutput(ns("dataset_info_ui")),
+      div(class = "row g-0",
+          div(class = "col-12",
+              div(class = "section-label mb-3", icon("table"), " Data Preview"),
+              # AGREGAMOS LA CLASE 'rs-table-container' Y QUITAMOS LOS ESTILOS INLINE
+              div(class = "rs-table-container",
+                  DTOutput(ns("preview"))
+              ),
+              br(),
+              listviewer::jsoneditOutput(ns("debug_json"), height = "500px")
+          )
+      )
     )
   )
 }
@@ -253,11 +257,11 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
     output$import_header <- renderUI({
       state <- engine_state()$mode
       if (state == "lock" && data_store$is_done) {
-        div(class = "selection-header confirmed", span(icon("lock"), " DATASET IMPORTED"), span(class="header-id", "LOCK"))
+        div(class = "selection-header confirmed", span("DATASET - ", icon("lock"), " - IMPORTED AND LOCKED"), span(class="header-id", "LOCK"))
       } else if (state == "unlock") {
-        div(class = "selection-header active-selection", span(icon("lock-open"), " READY FOR SELECTION"), span(class="header-id", "UNLOCK"))
+        div(class = "selection-header active-selection", span("DATASET - ", icon("lock-open"), " - READY FOR SELECTION"), span(class="header-id", "UNLOCK"))
       } else {
-        div(class = "selection-header waiting-mode", span(icon("bolt"), " WAITING..."))
+        div(class = "selection-header waiting-mode", span("DATASET - ", icon("bolt"), " - WAITING..."))
       }
     })
 
@@ -308,7 +312,16 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
 
     output$preview <- renderDT({
       req(data_store$df)
-      datatable(data_store$df, options = list(scrollX = TRUE, pageLength = 5))
+      datatable(
+        data_store$df,
+        options = list(
+          scrollX = TRUE,
+          scrollY = "400px",  # <--- ESTO LIMITA EL ALTO DE LA TABLA INTERNA
+          scrollCollapse = TRUE,
+          pageLength = 5,
+          dom = 'ftpi' # f:filter, t:table, p:pagination, i:info (quitamos la 'l' de length para ahorrar espacio)
+        )
+      )
     })
 
     output$debug_json <- listviewer::renderJsonedit({

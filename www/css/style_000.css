@@ -1,15 +1,113 @@
-/* style_000.css */
+/* ==========================================================================
+   RScience Engine - Master Style Sheet
+   ========================================================================== */
 
-/* 1. Cargar las variables primero (El ADN) */
+/* --- 1. IMPORTACIÓN DE MÓDULOS --- */
 @import "style_00_variables.css";
-
-/* 2. Cargar el estilo de los módulos */
 @import "style_mod_07_00.css";
-
-/* Aquí puedes agregar futuros módulos:*/
 @import "style_mod_02_01_dataset.css";
-
-
 @import "style_mod_02_02_00_tool.css";
+@import "style_mod_09_00_rscience.css";
 
-@import "style_mod_09_00_rscience.css"; /* <--- ESTA LÍNEA ES CLAVE */
+/* --- 2. RESET ESTRUCTURAL (ELIMINA EL DOBLE SCROLL) --- */
+html, body {
+    height: 100vh !important;
+    overflow: hidden !important; /* Prohíbe scroll en la ventana del navegador */
+    margin: 0;
+    padding: 0;
+}
+
+/* Forzar que el contenedor principal de bslib no se desborde */
+.bslib-sidebar-layout,
+.bslib-sidebar-layout .main {
+    height: 100vh !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- 3. CONTENEDORES MAESTROS --- */
+
+/* El contenedor que pediste al 98% de la pantalla */
+.rs-main-layout-container {
+    height: 98vh !important;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    background: transparent;
+    box-sizing: border-box;
+}
+
+/* EL VIEWPORT: El único lugar con permiso de scroll de toda la App */
+.rs-content-viewport {
+    flex-grow: 1;
+    display: block;
+    height: 100%;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 15px 25px !important;
+    box-sizing: border-box;
+}
+
+/* Personalización estética del scrollbar (Cian) */
+.rs-content-viewport::-webkit-scrollbar {
+    width: 7px;
+}
+.rs-content-viewport::-webkit-scrollbar-thumb {
+    background: #00d4ff;
+    border-radius: 10px;
+}
+
+/* --- 4. LIMPIEZA DE MÓDULOS ANIDADOS Y BOOTSTRAP --- */
+
+/* Evita que las filas de Bootstrap empujen el contenido hacia afuera */
+.import-engine-container .row,
+.rs-content-viewport .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Contenedor del módulo de importación */
+.import-engine-container {
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: hidden;
+}
+
+/* Matar márgenes automáticos de Shiny que generan espacios fantasmas */
+.shiny-bound-output {
+    margin-bottom: 0 !important;
+}
+
+/* Corrección de saltos de línea (br) que ocupan demasiado espacio */
+.import-engine-container br {
+    content: "";
+    display: block;
+    margin: 8px 0;
+}
+
+/* --- 5. CONTROL DE ELEMENTOS DINÁMICOS (TABLAS Y DEBUG) --- */
+
+/* Contenedor de Datatables (DT) */
+.rs-table-container {
+    max-height: 450px;       /* Evita que la tabla estire el módulo al infinito */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0 !important;
+    max-width: 100%;
+}
+
+/* Ajuste para el visor de JSON (Debug) */
+#main_switch-debug_json,
+.listviewer-jsonedit {
+    max-height: 250px !important;
+    height: auto !important;
+}
+
+/* Estilo para que las tarjetas de los módulos no se peguen al borde superior */
+.navset-hidden {
+    margin-top: 5px;
+}

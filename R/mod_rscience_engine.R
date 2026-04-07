@@ -1,102 +1,73 @@
 mod_rscience_engine_ui <- function(id) {
   ns <- NS(id)
 
-  # 1. Definir la ruta a la carpeta que contiene TODOS los .css
-  # Apuntamos a la carpeta 'css', no al archivo individual
+  # Registro de recursos CSS
   css_folder <- system.file("www", "css", package = "Rscience2027")
-  if (css_folder == "") css_folder <- "www/css" # Desarrollo local
-
-  # 2. Registrar el prefijo 'RS-STYLES' para esa carpeta
-  # Esto le dice a Shiny: "Si alguien pide RS-STYLES/archivo.css, búscalo en css_folder"
+  if (css_folder == "") css_folder <- "www/css"
   try(addResourcePath("RS-STYLES", normalizePath(css_folder)), silent = TRUE)
 
   tagList(
     tags$head(
       useShinyjs(),
-      # 3. Llamamos al archivo maestro usando el prefijo registrado
-      tags$link(
-        rel = "stylesheet",
-        type = "text/css",
-        href = paste0("RS-STYLES/style_000.css?v=", as.numeric(Sys.time()))
-      )
+      tags$link(rel = "stylesheet", type = "text/css",
+                href = paste0("RS-STYLES/style_000.css?v=", as.numeric(Sys.time())))
     ),
-  page_sidebar(
-    theme = bs_theme(version = 5, bg = "#0b1218", fg = "#ffffff", primary = "#00d4ff"),
 
-    #theme = bs_theme(version = 5, bg = "#0b1218", fg = "#fff", primary = "#00d4ff"),
+    page_sidebar(
+      theme = bs_theme(version = 5, bg = "#0b1218", fg = "#ffffff", primary = "#00d4ff"),
 
-    # tags$head(
-    #   useShinyjs(),
-    #   if (!is.null(path_to_css)) {
-    #     tags$link(rel = "stylesheet", type = "text/css", href = "lib_www/style_000.css")
-    #   }
-    # ),
-
-    sidebar = sidebar(
-      width = 320, id = ns("sidebar_panel"),
-
-      div(class = "text-center", style = "padding: 20px 0 5px 0;",
-          img(src = "lib_www/Rscience_logo_sticker.png", style = "width: 180px;")
+      # --- SIDEBAR ---
+      sidebar = sidebar(
+        width = 320, id = ns("sidebar_panel"),
+        div(class = "text-center", style = "padding: 20px 0 5px 0;",
+            img(src = "lib_www/Rscience_logo_sticker.png", style = "width: 180px;")
+        ),
+        div(class="nav-header",
+            div(id=ns("dot1"), class="nav-dot-wrapper active", div(class="dot"), div(class="dot-label", "Setup")),
+            div(id=ns("dot2"), class="nav-dot-wrapper", div(class="dot"), div(class="dot-label", "Out")),
+            div(id=ns("dot3"), class="nav-dot-wrapper", div(class="dot"), div(class="dot-label", "Extra"))
+        ),
+        div(class="sidebar-viewport",
+            div(id=ns("track"), class="slider-track",
+                div(class="pack-group",
+                    div(id=ns("c_data"), class="phase-card active", icon("database"), span(" Dataset")),
+                    div(id=ns("c_tool"), class="phase-card", icon("gear"), span(" Tool Engine")),
+                    div(id=ns("c_script"), class="phase-card", icon("code"), span(" Script Engine")),
+                    div(id=ns("c_settings"), class="phase-card", icon("sliders"), span(" Settings")),
+                    div(id=ns("c_play"), class="phase-card", icon("play"), span(" Processing"))
+                ),
+                div(class="pack-group",
+                    div(id=ns("c_out"), class="phase-card", icon("desktop"), span(" Visualizer"))
+                ),
+                div(class="pack-group",
+                    div(id=ns("c_theory"), class="phase-card", icon("book"), span(" Theory")),
+                    div(id=ns("c_bibliography"), class="phase-card", icon("list"), span(" Bibliography")),
+                    div(id=ns("c_cite"), class="phase-card", icon("quote-left"), span(" Cite")),
+                    div(id=ns("c_faqs"), class="phase-card", icon("question-circle"), span(" FAQ's"))
+                )
+            )
+        )
       ),
 
-      # --- SELECTOR DE PACKS (DOTS) ---
-      div(class="nav-header",
-          div(id=ns("dot1"), class="nav-dot-wrapper active", div(class="dot"), div(class="dot-label", "Setup")),
-          div(id=ns("dot2"), class="nav-dot-wrapper", div(class="dot"), div(class="dot-label", "Out")),
-          div(id=ns("dot3"), class="nav-dot-wrapper", div(class="dot"), div(class="dot-label", "Extra"))
-      ),
-
-      # --- SLIDER DE TARJETAS (TODAS LAS CARDS) ---
-      div(class="sidebar-viewport",
-          div(id=ns("track"), class="slider-track",
-              # PACK 01: SETUP
-              div(class="pack-group",
-                  div(id=ns("c_data"), class="phase-card active", icon("database"), span(" Dataset")),
-                  div(id=ns("c_tool"), class="phase-card", icon("gear"), span(" Tool Engine")),
-                  div(id=ns("c_script"), class="phase-card", icon("code"), span(" Script Engine")),
-                  div(id=ns("c_settings"), class="phase-card", icon("sliders"), span(" Settings")),
-                  div(id=ns("c_play"), class="phase-card", icon("play"), span(" Processing"))
-              ),
-              # PACK 02: OUTPUT
-              div(class="pack-group",
-                  div(id=ns("c_out"), class="phase-card", icon("desktop"), span(" Visualizer"))
-              ),
-              # PACK 03: EXTRA / THEORY
-              div(class="pack-group",
-                  div(id=ns("c_theory"), class="phase-card", icon("book"), span(" Theory")),
-                  div(id=ns("c_bibliography"), class="phase-card", icon("list"), span(" Bibliography")),
-                  div(id=ns("c_cite"), class="phase-card", icon("quote-left"), span(" Cite")),
-                  div(id=ns("c_faqs"), class="phase-card", icon("question-circle"), span(" FAQ's"))
+      # --- ÁREA PRINCIPAL (100% ALTO) ---
+      div(class = "rs-main-layout-container",
+          div(class = "rs-content-viewport",
+              navset_hidden(
+                id = ns("main_navset"),
+                nav_panel_hidden("c_data", mod_02_01_dataset_ui(ns("my_ns_dataset"))),
+                nav_panel_hidden("c_tool", mod_02_02_00_tool_ui(id = ns("my_ns_tool"))),
+                nav_panel_hidden("c_script", card(card_body("Editor..."))),
+                nav_panel_hidden("c_settings", card(card_body("Ajustes..."))),
+                nav_panel_hidden("c_play", card(card_body("Consola..."))),
+                nav_panel_hidden("c_out", card(card_body("Visualizador..."))),
+                nav_panel_hidden("c_theory", mod_special_theory_ui(ns("theory_internal"))),
+                nav_panel_hidden("c_bibliography", card(card_body("Biblio..."))),
+                nav_panel_hidden("c_cite", card(card_body("Cita..."))),
+                nav_panel_hidden("c_faqs", card(card_body("FAQ...")))
               )
           )
       )
-    ),
-
-    # --- ÁREA DE TRABAJO PRINCIPAL ---
-    div(style="padding: 20px;",
-        h1(textOutput(ns("title")), class="work-title"),
-        hr(style="opacity:0.2; width: 80px; border-top: 4px solid #00d4ff;"),
-
-        navset_hidden(
-          id = ns("main_navset"),
-          # Setup Panels
-          nav_panel_hidden("c_data", mod_02_01_dataset_ui(ns("my_ns_dataset"))),
-          nav_panel_hidden("c_tool", mod_02_02_00_tool_ui(id = ns("my_ns_tool"))),
-          nav_panel_hidden("c_script", card(card_body("Editor de Scripts..."))),
-          nav_panel_hidden("c_settings", card(card_body("Ajustes del Sistema..."))),
-          nav_panel_hidden("c_play", card(card_body("Consola de Procesamiento..."))),
-
-          # Output Panels
-          nav_panel_hidden("c_out", card(card_body("Visualizador de Resultados..."))),
-
-          # Extra Panels
-          nav_panel_hidden("c_theory", mod_special_theory_ui(ns("theory_internal"))),
-          nav_panel_hidden("c_bibliography", card(card_body("Referencias Bibliográficas..."))),
-          nav_panel_hidden("c_cite", card(card_body("Información de Cita..."))),
-          nav_panel_hidden("c_faqs", card(card_body("Preguntas Frecuentes...")))
-        )
     )
-  )
   )
 }
 
