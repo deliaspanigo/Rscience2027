@@ -57,7 +57,7 @@ mod_rscience_engine_ui <- function(id) {
                 nav_panel_hidden("c_data",   mod_02_01_dataset_ui(id = ns("my_ns_dataset"))),
                 nav_panel_hidden("c_tool",   mod_02_02_00_tool_ui(id = ns("my_ns_tool"))),
                 nav_panel_hidden("c_script", mod_02_03_00_script_ui(id=ns("my_ns_script"))),
-                nav_panel_hidden("c_settings", card(card_body("Ajustes..."))),
+                nav_panel_hidden("c_settings", mod_04_00_collector02_settings_ui(id = ns("my_ns_collector02_settings"))),
                 nav_panel_hidden("c_play", card(card_body("Consola..."))),
                 nav_panel_hidden("c_out", card(card_body("Visualizador..."))),
                 nav_panel_hidden("c_theory",  mod_03_A_theory_ui(ns("txt_1"))),
@@ -156,7 +156,22 @@ mod_rscience_engine_server <- function(id) {
 
     ############################################################################
 
+    folder_path_collector02 <- reactive({
+      req(folder_path_collector01())
+      aver <- folder_path_collector01()
+      print("AAA")
+      print(aver)
+      print("BBB")
+      aver
+    })
 
-    mod_special_theory_server("theory_internal")
+    # 1.4. Ejecución del módulo
+    rlist_settings <- mod_04_00_collector02_settings_server(
+      id = "my_ns_collector02_settings",
+      df_input = reactive(mtcars), # Asegúrate de que esto sea reactivo
+      folder_path_tool_script = folder_path_collector02,
+      show_debug = FALSE
+    )
+
   })
 }
