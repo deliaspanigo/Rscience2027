@@ -42,6 +42,7 @@ mod_03_00_collector01_server_UNIVERSAL <- function(id, folder_path_tool_script) 
       req(path_r())
       base_p <- path_r()
 
+      print(base_p)
       # Definición de rutas internas según estructura RScience
       paths <- list(
         theory       = file.path(base_p, "f03_soft_opts", "f01_theory",       "f03_prod", "mod_special_theory.R"),

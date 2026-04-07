@@ -54,15 +54,15 @@ mod_rscience_engine_ui <- function(id) {
           div(class = "rs-content-viewport",
               navset_hidden(
                 id = ns("main_navset"),
-                nav_panel_hidden("c_data", mod_02_01_dataset_ui(ns("my_ns_dataset"))),
-                nav_panel_hidden("c_tool", mod_02_02_00_tool_ui(id = ns("my_ns_tool"))),
-                nav_panel_hidden("c_script", card(card_body("Editor..."))),
+                nav_panel_hidden("c_data",   mod_02_01_dataset_ui(id = ns("my_ns_dataset"))),
+                nav_panel_hidden("c_tool",   mod_02_02_00_tool_ui(id = ns("my_ns_tool"))),
+                nav_panel_hidden("c_script", mod_02_03_00_script_ui(id=ns("my_ns_script"))),
                 nav_panel_hidden("c_settings", card(card_body("Ajustes..."))),
                 nav_panel_hidden("c_play", card(card_body("Consola..."))),
                 nav_panel_hidden("c_out", card(card_body("Visualizador..."))),
-                nav_panel_hidden("c_theory", mod_special_theory_ui(ns("theory_internal"))),
-                nav_panel_hidden("c_bibliography", card(card_body("Biblio..."))),
-                nav_panel_hidden("c_cite", card(card_body("Cita..."))),
+                nav_panel_hidden("c_theory",  mod_03_A_theory_ui(ns("txt_1"))),
+                nav_panel_hidden("c_bibliography",mod_03_B_bibliography_ui(ns("txt_2"))),
+                nav_panel_hidden("c_cite", mod_03_C_cite_ui(ns("txt_3"))),
                 nav_panel_hidden("c_faqs", card(card_body("FAQ...")))
               )
           )
@@ -125,6 +125,37 @@ mod_rscience_engine_server <- function(id) {
 
     # Server del módulo de tool
     rlist_tool <- mod_02_02_00_tool_server(id = "my_ns_tool", show_debug = FALSE) # SIN ns()
+
+    # 1.3. Script
+    rlist_script <-   mod_02_03_00_script_server(id="my_ns_script",
+                                               vector_str_folder_tool_script = reactive(c("tool_0001_script_001", "tool_0001_script_002")),
+                                               show_debug = T) # Llamamos a la UI
+
+    ############################################################################
+
+    # Colector 01 - Theory - Bibliographt - Cite
+    folder_path_collector01 <- reactive({
+      # 1. Accedemos al contenido del reactivo del módulo script
+      datos_script <- rlist_script()
+
+      # 2. Extraemos el path de la metadata (solo si está lock)
+      # Usamos el nombre exacto de la lista: "folder_path"
+      the_path <- datos_script$metadata$folder_path
+
+      # Debug en consola
+      if(!is.null(the_path)) {
+        print(paste(">>> Ruta detectada en Engine:", the_path))
+      }
+
+      return(the_path)
+    })
+
+    mod_03_A_theory_server(id = "txt_1", folder_path_tool_script = folder_path_collector01)
+    mod_03_B_bibliography_server(id = "txt_2", folder_path_tool_script = folder_path_collector01)
+    mod_03_C_cite_server(id = "txt_3", folder_path_tool_script = folder_path_collector01)
+
+    ############################################################################
+
 
     mod_special_theory_server("theory_internal")
   })
