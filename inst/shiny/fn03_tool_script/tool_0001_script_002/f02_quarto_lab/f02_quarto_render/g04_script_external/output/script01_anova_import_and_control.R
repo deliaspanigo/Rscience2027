@@ -1,0 +1,358 @@
+---
+title: "Rscience - Anova - script01 - Anova - Import and control"
+format: 
+  html:
+#    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+---
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+  library("htmlwidgets")
+  library("knitr")
+
+
+# General config
+options(width = 500)
+
+```
+
+
+## Section 01 - Libraries
+Lo primero que haremos siempre será cargar las librerias necesarias para obtener 
+la totalidad de las tablas, gráficos y test estadísticos.
+```{r eval=TRUE, echo=TRUE, message=FALSE, warning=FALSE}
+# # # # # Section 01 - Libraries ---------------------------------------------
+  library("stats")     # General Linear Models
+  library("agricolae") # Tukey test
+  library("plotly")    # Advanced graphical functions
+  library("dplyr")     # Developing with %>%
+  library("stringr")   # Strings replacement
+  library("readxl")
+  library("openxlsx")
+```
+
+
+## Section 02 - Import dataset
+Importamos el archivo con el cual trabajaremos, y visualizamos las 5 primeras 
+filas del dataset para verificar que todo está en orden.
+```{r eval=FALSE, echo=TRUE}
+# # # # # Section 02 - Import dataset ----------------------------------------
+  my_dataset <- get('mtcars')
+  head(x = my_dataset, n = 5)
+```
+
+
+```{r eval=TRUE, echo=FALSE}
+# El internal
+# # # # # Section 02 - Import dataset ----------------------------------------
+  my_dataset <- get('mtcars')
+  head(x = my_dataset, n = 5)
+```
+
+
+## Section 03 - User inputs
+Esta sección comprende la última sección sobre la cual el operador deberá detallan 
+algún tipo de información. Todas las secciones sucesivas del script correrán automáticamente 
+de acuerdo a los valores detallados en la sección 01, 02 y 03.
+Debemos detallar el nombre del factor y de la variable respuesta en tal como 
+aparecen en nuestro dataset y un valor de alfa (entre 0 y 1, como número).
+La novedad radida en que el script solicita también que se detalle en un vector 
+con todos los niveles del factor en el orden en el cual el usuario desea que los niveles 
+aparezcan en el informe, y un segundo vector para detallar un color por cada nivel del factor.
+```{r eval=TRUE, echo=TRUE}
+# # # # # Section 03 - Settings ----------------------------------------------
+  var_name_rv     <- "mpg"
+  var_name_rv
+
+  var_name_factor <- "cyl"
+  var_name_factor
+
+  alpha_value     <-  0.05
+  alpha_value
+
+  vector_order_levels_new <- c('8', '4', '6')
+  vector_order_levels_new
+  
+  vector_color_levels_new <- c('#FF0000', '#00FF00', '#0000FF')
+  names(vector_color_levels_new) <- vector_order_levels_new
+  vector_color_levels_new
+  
+
+```
+
+
+## Section 04 - Showing alpha and confidence values
+Elegido el valor de alfa, implica inmediatamente un valor de confianza.  
+Manifestamos ambos valores en una tabla.
+```{r eval=TRUE, echo=TRUE}
+# # # # # Section 04 - Dataframe for alpha and confidence values ----------------------------
+  confidence_value <- 1 - alpha_value
+  
+  df_alpha_confidence <- data.frame(
+    "order" = 1:2,
+    "detail" = c("alpha value", "confidence value"),
+    "probability" = c(alpha_value, confidence_value),
+    "percentaje" =  paste0(c(alpha_value, confidence_value)*100, "%")
+  )
+  df_alpha_confidence
+
+```  
+
+## Section 05 - Showing selected variables and roles  
+Armamos un dataframe que detalla el nombre de las variables seleccionadas, el número de columna (util para R), 
+su posición en letra (útil para trabajar en Excel), el nombre de cada variable y el rol que le fue asignado
+dentro del modelo a utilizar.
+```{r eval=TRUE, echo=TRUE}
+# # # # # Section 05 - Selected variables and roles  -------------------------
+  vector_all_var_names <- colnames(my_dataset)
+  vector_name_selected_vars <- c(var_name_rv, var_name_factor)
+  vector_rol_vars <- c("RV", "FACTOR")
+  
+
+  df_selected_vars <- data.frame(
+    "order" = 1:length(vector_name_selected_vars),
+    "var_name" = vector_name_selected_vars,
+    "var_number" = match(vector_name_selected_vars, vector_all_var_names),
+    "var_letter" = openxlsx::int2col(match(vector_name_selected_vars, vector_all_var_names)),
+    "var_role" = vector_rol_vars,
+    "doble_reference" = paste0(vector_rol_vars, "(", vector_name_selected_vars, ")")
+  )
+  df_selected_vars
+```
+  
+## Section 06 - Creating my_minidataset
+Del total de filas y columnas que puede tener el dataset, solo ingresarán a las 
+tablas, gráficos y test estadísticos las filas con datos completas para las columnas seleccionadas.
+Creamos entonces un objeto dataframe con estas características para luego utilizarlo en el resto del script.
+Los niveles del factor se manifiestan en R por defecto en orden alfabético. Detallaremos entonces una sentencia para que R tome los niveles del factor en el orden en que fueron detallados en la Sección 03 por el operador.
+Luego, visualizamos las primeras 5 filas del nuestro my_minidataset.
+```{r eval=TRUE, echo=TRUE}
+# # # # # Section 06 - my_minidataset ------------------------------------------------
+  # Only selected variabless. 
+  # Only completed rows. 
+  # Factor columns as factor object in R.
+  my_minidataset <- na.omit(my_dataset[vector_name_selected_vars])
+  my_minidataset[,var_name_factor] <- as.factor(as.character(my_minidataset[,var_name_factor]))
+  
+  head(x = my_minidataset, n = 5)
+```  
+
+Por defecto en R los niveles del factor son en orden alfabetico.
+```{r eval=TRUE, echo=TRUE}
+  vector_order_levels_original <- levels(my_minidataset[,var_name_factor])
+  vector_order_levels_original
+```
+
+Vamos entonces a cambiar los niveles del factor para que los tome en el orden que nosostros queriamos.
+Primero hacemos un control para ver que no sobra ni falta ningun nivel entre la version original y la nueva version para los niveles del factor.
+
+```{r eval=TRUE, echo=TRUE}
+str_phrase_true  <- "Levels OK."
+str_phrase_false <- "Sobran niveles del factor. Verificar la informacion detallada."
+check_levels <- setequal(vector_order_levels_original, vector_order_levels_new)
+str_phrase_selected <- ifelse(test = check_levels, yes = str_phrase_true, no = str_phrase_false)
+str_phrase_selected
+```
+
+```{r eval=TRUE, echo=TRUE}
+if(!check_levels) knitr::knit_exit()
+```
+
+```{r eval=TRUE, echo=TRUE}
+# # # # # Section 06 - my_minidataset ------------------------------------------------
+  # Only selected variabless. 
+  # Only completed rows. 
+  # Factor columns as factor object in R.
+  my_minidataset[,var_name_factor] <- factor(
+  x = my_minidataset[,var_name_factor],       # La variable original de factor
+  levels = vector_order_levels_new  # El orden de los niveles que calculamos en el Paso 2
+)
+  
+  head(x = my_minidataset, n = 5)
+```  
+
+```{r eval=TRUE, echo=TRUE}
+
+levels(my_minidataset[,var_name_factor])
+```
+
+```{r eval=TRUE, echo=TRUE}
+# # # # # Section 06 - my_minidataset ------------------------------------------------
+  # Only selected variabless. 
+  # Only completed rows. 
+  # Factor columns as factor object in R.
+  dt_rows_my_dataset_ok <- rowSums(!is.na(my_dataset[vector_name_selected_vars])) == ncol(my_minidataset)
+  vector_id_my_dataset <- c(1:nrow(my_dataset))[dt_rows_my_dataset_ok]
+  vector_id_my_minidataset <- 1:nrow(my_minidataset)
+  my_minidataset$id_dataset <- vector_id_my_dataset
+  my_minidataset$id_minidataset <- vector_id_my_minidataset
+
+  my_minidataset$color <- vector_color_levels_new[as.numeric(my_minidataset[, var_name_factor])]
+  
+  head(x = my_minidataset, n = 5)
+```  
+
+## Section 07 - Showing 'n' (Control point)
+Antes de ingresar a las tablas, gráficos y test estadísticos, realizaremos un control 
+que nos permitirá no caer en los errores catastróficos más comunes a la hora de utilizar este test.
+El operador (usted) antes de ingresar al test estadístico debe verificar 3 cosas:
+Punto 01) El "n" del dataset y del my_minidataset con correctos.
+Punto 02) El valor mínimo y máximo de cada nivel del factor son correctos dentro del marco de su experiencia.  
+Punto 03) El orden de los niveles del factor se manifiesta en el orden preciso que usted los detallo.
+Punto 04) Verificar que en el objeto my_minidataset la variable respuesta sea numérica y el factor sea tipo
+factor.
+
+Para ello visualizaremos 3 tablas.
+En esta primera tabla verificamos el punto 01. Seremos concientes de que el "n" 
+real de nuestro análisis es la cantidad de filas de nuestro my_minidataset.
+```{r eval=TRUE, echo=TRUE}
+  # # # # # Section 07 - Control on my_minidataset ------------------------------------------------
+
+  # # # my_dataset and my_minidataset reps
+  # Our 'n' is from my_minidataset
+  df_show_n <- data.frame(
+    "object" = c("my_dataset", "my_minidataset"),
+    "n_col" = c(ncol(my_dataset), ncol(my_minidataset)),
+    "n_row" = c(nrow(my_dataset), nrow(my_minidataset))
+  )
+  df_show_n
+```
+Se existiera una diferencia en el "n" entre nuestro dataset y nuestro my_minidataset 
+sería debido a que en las columnas seleccionadas para el análisis existen celda vacías.  
+
+
+## Section 08 - Showing data types (Control point)
+En la tercera tabla, verificamos el punto 04. 
+Responde al tipo de dato dentro del dataframe my_minidataset la variable respuesta 
+debe ser de tipo numérica y el factor del tipo factor.
+
+```{r eval=TRUE, echo=TRUE}
+
+check_rv <- is.numeric(my_minidataset[,var_name_rv])
+check_rv
+```
+
+```{r eval=TRUE, echo=TRUE}
+
+check_factor <- is.factor(my_minidataset[,var_name_factor])
+check_factor
+```
+
+```{r eval=TRUE, echo=TRUE}
+  # # # Anova control
+  # 'VR' must be numeric and 'FACTOR must be factor.
+  df_control_my_minidataset <- data.frame(
+    "order" = 1:nrow(df_selected_vars),
+    "var_name" = df_selected_vars$"var_name",
+    "var_role" = df_selected_vars$"var_role",
+    "control" = c("is.numeric()", "is.factor()"),
+    "verify" = c(check_rv, check_factor)
+  )
+  df_control_my_minidataset
+  
+```  
+
+
+## Section 09 - Showing levels details (Control point)
+La segunda tabla nos otorga el valor mínimo y máximo para cada nivel del factor, y 
+podremos realizar aquí el punto 02 y 03.
+Los niveles del factor debieran aparecer en el orden en que usted los ha detallado en la sección 03.  
+El operador debe visualizar los valores mínimos y máximos de cada nivel del factor.
+Si es posible, el operador debe verificar que no hay valores por fuera del rango 
+esperado para el átra de trabajo.  
+```{r eval=TRUE, echo=TRUE}
+  
+  # # # Factor info
+  # Default order for levels its alphabetic order.
+  df_factor_info <- data.frame(
+    "order" = 1:nlevels(my_minidataset[,var_name_factor]),
+    "level" = levels(my_minidataset[,var_name_factor]),
+    "n" = as.vector(table(my_minidataset[,var_name_factor])),
+    "min" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], min),
+    "max" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], max),
+    "mean" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], mean),
+    "color" = vector_color_levels_new
+  )
+  
+  rownames(df_factor_info) <- 1:nrow(df_factor_info)
+  df_factor_info
+  
+```  
+  
+
+
+```{r eval=TRUE, echo=TRUE}
+
+plot_control001 <- plotly::plot_ly() 
+
+plot_control001 <- plot_control001 %>%
+  plotly::add_trace(
+    data = my_minidataset,
+    type = "scatter",
+    mode = "markers",
+    x = ~get(var_name_factor),
+    y = ~get(var_name_rv),
+    color = ~get(var_name_factor),
+    colors = vector_color_levels_new, #~get("color"),
+    marker = list(size = 15, opacity = 0.6),
+    
+    # === HOVER PERSONALIZADO SIN COLUMNA EXTRA ===
+    customdata = ~paste0(
+      "<b>Level:</b> ", .data[[var_name_factor]], "<br>",
+      "<b>Value:</b> ", round(.data[[var_name_rv]], 2), "<br>",
+      "<b>ID Dataset:</b> ", id_dataset, "<br>",
+      "<b>ID Minidataset:</b> ", id_minidataset
+    ),
+    
+    hovertemplate = "%{customdata}<extra></extra>"
+  ) 
+
+plot_control001 <- plot_control001 %>%
+  plotly::layout(
+    title = "Plot Control 001 - Scatterplot",
+    font = list(size = 20),
+    margin = list(t = 100),
+    xaxis = list(zeroline = FALSE, title = var_name_factor),
+    yaxis = list(zeroline = FALSE, title = var_name_rv)
+  )
+
+
+plot_control001 <- plotly::plotly_build(plot_control001)
+
+plot_control001
+
+``` 
+
+      
+
+
+## Section 10 - Saving objects from this script
+```{r eval=TRUE, echo=TRUE}
+
+# 1. Identificar objetos esenciales para CADA reporte
+
+vector_all_obj <- ls(envir = .GlobalEnv)
+
+# Excluir los que NO quieres guardar
+vector_exclusion <- c("")
+vector_save_obj <- setdiff(vector_all_obj, vector_exclusion)
+
+# Guardar todo excepto los excluidos
+save(list = vector_save_obj, file = "R_obj_env_file01_anova_import_and_control.RData")
+
+
+``` 
+

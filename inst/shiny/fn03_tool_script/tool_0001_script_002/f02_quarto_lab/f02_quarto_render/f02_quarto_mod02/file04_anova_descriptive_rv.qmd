@@ -1,0 +1,594 @@
+---
+title: "Rscience - Anova - script03 - Anova - Model"
+format: 
+  html:
+#    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+---
+
+```{r}
+#| eval: true
+#| echo: true
+#| message: false
+#| warning: false
+library(dplyr)
+library(plotly)
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+  library("htmlwidgets")
+  library("knitr")
+
+
+# General config
+options(width = 500)
+
+```
+
+```{r eval=TRUE, echo=FALSE}
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
+
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
+
+
+```{r eval=TRUE, echo=TRUE} 
+# load("R_obj_env_script01_anova_import_and_control.RData")
+# vector_all_obj_init <- ls(envir = .GlobalEnv)
+
+# 1. Definir la ruta del archivo
+path_rdata_file01 <- "R_obj_env_file01_anova_import_and_control.RData"
+path_rdata_file02 <- "R_obj_env_file02_anova_full_test.RData"
+
+
+# 4. Convertir el entorno a una lista
+list_obj_file01 <- fn_load_env_RData_hidden(path_rdata = path_rdata_file01)
+list_obj_file02 <- fn_load_env_RData_hidden(path_rdata = path_rdata_file02)
+
+
+
+```
+
+```{r eval=TRUE, echo=TRUE} 
+# From Script01
+var_name_rv <- list_obj_file01$var_name_rv
+var_name_factor <- list_obj_file01$var_name_factor
+my_minidataset <-  list_obj_file01$my_minidataset 
+df_factor_info <- list_obj_file01$df_factor_info
+vector_color_levels_new <- list_obj_file01$vector_color_levels_new
+alpha_value <- list_obj_file01$alpha_value
+my_minidataset <- list_obj_file01$my_minidataset
+vector_order_levels_new <- list_obj_file01$vector_order_levels_new
+
+# From Script02
+my_minidataset_ext <- list_obj_file02$my_minidataset_ext
+df_model_error <- list_obj_file02$df_model_error
+df_tukey_table_classroom <- list_obj_file02$df_tukey_table_classroom
+```
+
+```{r eval=TRUE, echo=TRUE} 
+
+rm(list_obj_file01)
+rm(list_obj_file02)
+vector_all_obj_init <- ls(envir = .GlobalEnv)
+#vector_all_obj_init <- ""
+```
+
+## Medidas de posición de la variable respuesta para cada nivel del factor.
+```{r eval=TRUE, echo=TRUE} 
+  # # # # # Section 10 - Partitioned Measures (VR)--------------------------------
+  # # # Partitioned Measures of Position (VR)
+  df_rv_position_levels <- data.frame(
+    "order_level"  = 1:nlevels(my_minidataset[,var_name_factor]),
+    "level" = levels(my_minidataset[,var_name_factor]),
+    "n"            = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], length),
+    "variable"     = rep(var_name_rv, nlevels(my_minidataset[,var_name_factor])),
+    "min"          = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], min),
+    "mean"         = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], mean),
+    "Q1"           = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], quantile, 0.25),
+    "median"       = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], median),
+    "Q3"           = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], quantile, 0.75),
+    "max"          = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], max),
+    stringsAsFactors = FALSE
+  )
+  df_rv_position_levels[,"level"] <- factor(
+    x = df_rv_position_levels[,"level"],       # La variable original de factor
+    levels = df_rv_position_levels[,"level"]  # El orden de los niveles que calculamos en el Paso 2
+  )
+  rownames(df_rv_position_levels) <- NULL
+  df_rv_position_levels
+```  
+
+## Medidas de dispersión para la variable respuesta por cada nivel del factor.
+```{r eval=TRUE, echo=TRUE} 
+
+  # # # Partitioned Measures of Dispersion (VR)
+  df_rv_dispersion_levels <- data.frame(
+    "order_level"  = 1:nlevels(my_minidataset[,var_name_factor]),
+    "level" = levels(my_minidataset[,var_name_factor]),
+    "n"            = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], length),
+    "variable"     = rep(var_name_rv, nlevels(my_minidataset[,var_name_factor])),
+    "range"        = NA,
+    "variance"     = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], var),
+    "standard_deviation" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], sd),
+    "standard_error" = NA,
+    "IQR" = NA,
+    "vc" = NA,
+    "pvc" = NA,
+    stringsAsFactors = FALSE
+  )
+  df_rv_dispersion_levels$"range" <- df_rv_position_levels$"max" - df_rv_position_levels$"min"
+  df_rv_dispersion_levels$"standard_error" <- df_rv_dispersion_levels$"standard_deviation"/sqrt(df_rv_dispersion_levels$"n")
+  df_rv_dispersion_levels$"IQR" <- df_rv_position_levels$"Q3" - df_rv_position_levels$"Q1"
+  df_rv_dispersion_levels$"cv"  <- df_rv_dispersion_levels$"standard_deviation" / df_rv_position_levels$"mean"
+  df_rv_dispersion_levels$"pcv" <- paste0(df_rv_dispersion_levels$"cv"*100, "%")
+  #   
+  df_rv_dispersion_levels[,"level"] <- factor(
+        x = df_rv_dispersion_levels[,"level"],       # La variable original de factor
+        levels = df_rv_dispersion_levels[,"level"]  # El orden de los niveles que calculamos en el Paso 2
+  )
+  rownames(df_rv_dispersion_levels) <- NULL
+  df_rv_dispersion_levels
+```    
+  
+  
+## Medidas de posición general de la variable respuesta.
+```{r eval=TRUE, echo=TRUE}   
+  # # # General Measures of Position (VR)
+  df_rv_position_general <- data.frame(
+    "variable"  = var_name_rv,
+    "n"         = length(my_minidataset[,var_name_rv]),
+    "min"       = min(my_minidataset[,var_name_rv]),
+    "mean"      = mean(my_minidataset[,var_name_rv]),
+    "Q1"        = quantile(my_minidataset[,var_name_rv], 0.25),
+    "median"    = median(my_minidataset[,var_name_rv]),
+    "Q3"        = quantile(my_minidataset[,var_name_rv], 0.75),
+    "max"       = max(my_minidataset[,var_name_rv]),
+    stringsAsFactors = FALSE
+  )
+  rownames(df_rv_position_general) <- NULL
+
+  df_rv_position_general
+```  
+  
+
+## Medidas de dispersión general de la variable respuesta.
+```{r eval=TRUE, echo=TRUE}   
+  # # # General Measures of Dispersion (VR)
+  df_rv_dispersion_general <- data.frame(
+    "variable"           = var_name_rv, 
+    "n"                  = length(my_minidataset[,var_name_rv]),
+    "range"              = NA,
+    "variance"           = var(my_minidataset[,var_name_rv]),
+    "standard_deviation" = sd(my_minidataset[,var_name_rv]),
+    "standard_error"    = NA,
+    "IQR"               = NA,
+    "cv"                = NA,
+    "pcv"               = NA,
+    stringsAsFactors = FALSE
+  )
+
+  df_rv_dispersion_general$"range" <- df_rv_position_general$"max" - df_rv_position_general$"min"
+  df_rv_dispersion_general$"standard_error" <- df_rv_dispersion_general$"standard_deviation"/sqrt(df_rv_dispersion_general$"n")
+  df_rv_dispersion_general$"IQR" <- df_rv_position_general$"Q3" - df_rv_position_general$"Q1"
+  df_rv_dispersion_general$"cv"  <- df_rv_dispersion_general$"standard_deviation" / df_rv_position_general$"mean"
+  df_rv_dispersion_general$"pcv" <- paste0(df_rv_dispersion_general$"cv"*100, "%")
+
+  rownames(df_rv_dispersion_general) <- NULL
+  df_rv_dispersion_general
+```  
+  
+  
+
+  
+
+  
+## Tabla Resumen
+```{r eval=TRUE, echo=TRUE}    
+
+  
+  # # # # # Section 13 - Special table to plots ----------------------------------
+  
+  # # # Table for plot001
+  df_table_factor_plot001 <- data.frame(
+    "order" = df_factor_info$order,
+    "level" = df_factor_info$level,
+    "n" = df_factor_info$n,
+    "mean" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], mean),
+    "min" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], min),
+    "max" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], max),
+    "sd" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], sd),
+    "var" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], var)
+  )
+  
+  df_table_factor_plot002 <- data.frame(
+    "order" = df_factor_info$order,
+    "level" = df_factor_info$level,
+    "n" = df_factor_info$n,
+    "mean" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], mean),
+    "model_error_sd" = df_model_error$model_error_sd
+  )
+  df_table_factor_plot002["lower_limit"] <- df_table_factor_plot002$mean - df_table_factor_plot002$model_error_sd
+  df_table_factor_plot002["upper_limmit"] <- df_table_factor_plot002$mean + df_table_factor_plot002$model_error_sd
+  df_table_factor_plot002["color"] <- df_factor_info$color
+df_table_factor_plot002[,"level"] <- factor(
+  x = df_table_factor_plot002[,"level"],       # La variable original de factor
+  levels = df_table_factor_plot002[,"level"]  # El orden de los niveles que calculamos en el Paso 2
+)
+  df_table_factor_plot002
+  
+  
+  
+  df_table_factor_plot003 <- data.frame(
+    "order" = df_factor_info$order,
+    "level" = df_factor_info$level,
+    "n" = df_factor_info$n,
+    "mean" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], mean),
+    "model_error_se" = df_model_error$model_error_se
+  )
+  df_table_factor_plot003["lower_limit"] <- df_table_factor_plot003$mean - df_table_factor_plot003$model_error_se
+  df_table_factor_plot003["upper_limmit"] <- df_table_factor_plot003$mean + df_table_factor_plot003$model_error_se
+  df_table_factor_plot003["color"] <- df_factor_info$color
+  df_table_factor_plot003
+  df_table_factor_plot003[,"level"] <- factor(
+  x = df_table_factor_plot003[,"level"],       # La variable original de factor
+  levels = df_table_factor_plot003[,"level"]  # El orden de los niveles que calculamos en el Paso 2
+)
+  
+  
+  # # # Table for plot004
+  df_table_factor_plot004 <- df_rv_position_levels
+  df_table_factor_plot004["color"] <- df_factor_info$color
+  
+  # # # Table for plot005
+  df_table_factor_plot005 <- df_table_factor_plot004
+  
+  # # # Table for plot006
+  df_table_factor_plot006 <- df_table_factor_plot004
+  
+  
+  df_table_factor_plot007 <- df_table_factor_plot003
+  correct_pos_letters <- order(df_tukey_table_classroom$level)
+  vector_letters <- df_tukey_table_classroom$group[correct_pos_letters]
+  df_table_factor_plot007["group"] <- vector_letters
+  
+
+```
+
+
+
+## Factor - Plot 001
+```{r eval=TRUE, echo=TRUE}    
+
+ 
+ 
+  #############################################################
+  # # # Create a new plot...
+  plot_factor001 <- plotly::plot_ly()
+  
+  # # # Plot001 - Scatter plot for VR and FACTOR on my_minidataset *****************
+  plot_factor001 <- plotly::add_trace(p = plot_factor001,
+                                      type = "scatter",
+                                      mode = "markers",
+                                      x = my_minidataset[,var_name_factor],
+                                      y = my_minidataset[,var_name_rv],
+                                      color = my_minidataset[,var_name_factor],
+                                      colors = df_factor_info$color,
+                                      marker = list(size = 15, opacity = 0.7))
+  
+  # # # Title and settings...
+  plot_factor001 <-   plotly::layout(p = plot_factor001,
+                                     title = "Plot 001 - Scatterplot",
+                                     font = list(size = 20),
+                                     margin = list(t = 100))
+  
+  
+  # # # Without zerolines
+  plot_factor001 <-   plotly::layout(p = plot_factor001,
+                                     xaxis = list(zeroline = FALSE),
+                                     yaxis = list(zeroline = FALSE))
+  
+  plot_factor001 <- plotly::plotly_build(plot_factor001)
+  
+  
+  # # # Plot output
+  plot_factor001
+```  
+
+
+## Factor - Plot 002
+```{r eval=TRUE, echo=TRUE}    
+
+  ##############################################################################
+  
+  # # # Create a new plot...
+  plot_factor002 <- plot_ly()
+  
+  
+  # # # Adding errors...
+  plot_factor002 <-   add_trace(p = plot_factor002,
+                                type = "scatter",
+                                mode = "markers",
+                                x = df_table_factor_plot002$level,
+                                y = df_table_factor_plot002$mean,
+                                color = df_table_factor_plot002$level,
+                                colors = df_table_factor_plot002$color,
+                                marker = list(symbol = "line-ew-open",
+                                              size = 50,
+                                              opacity = 1,
+                                              line = list(width = 5)),
+                                error_y = list(type = "data", array = df_table_factor_plot002$model_error_sd)
+  )
+  
+  
+  # # # Title and settings...
+  plot_factor002 <- plotly::layout(p = plot_factor002,
+                                   title = "Plot 002 - Mean and model standard deviation",
+                                   font = list(size = 20),
+                                   margin = list(t = 100))
+  
+  # # # Without zerolines
+  plot_factor002 <-plotly::layout(p = plot_factor002,
+                                  xaxis = list(zeroline = FALSE),
+                                  yaxis = list(zeroline = FALSE))
+  
+  plot_factor002 <- plotly::plotly_build(plot_factor002)
+  
+  # # # Plot output
+  plot_factor002
+  
+```  
+
+
+## Factor - Plot 003
+```{r eval=TRUE, echo=TRUE}  
+  
+  
+  # # # Create a new plot...
+  plot_factor003 <- plotly::plot_ly()
+  
+  
+  # # # Adding errors...
+  plot_factor003 <-   plotly::add_trace(p = plot_factor003,
+                                        type = "scatter",
+                                        mode = "markers",
+                                        x = df_table_factor_plot003$level,
+                                        y = df_table_factor_plot003$mean,
+                                        color = df_table_factor_plot003$level,
+                                        colors = df_table_factor_plot003$color,
+                                        marker = list(symbol = "line-ew-open",
+                                                      size = 50,
+                                                      opacity = 1,
+                                                      line = list(width = 5)),
+                                        error_y = list(type = "data", array = df_table_factor_plot003$model_error_se)
+  )
+  
+  
+  # # # Title and settings...
+  plot_factor003 <- plotly::layout(p = plot_factor003,
+                                   title = "Plot 003 - Mean y model standard error",
+                                   font = list(size = 20),
+                                   margin = list(t = 100))
+  
+  # # # Without zerolines
+  plot_factor003 <-plotly::layout(p = plot_factor003,
+                                  xaxis = list(zeroline = FALSE),
+                                  yaxis = list(zeroline = FALSE))
+  
+  plot_factor003 <- plotly::plotly_build(plot_factor003)
+  
+  # # # Plot output
+  plot_factor003
+  
+```  
+
+
+## Factor - Plot 004
+```{r eval=TRUE, echo=TRUE}  
+  
+  
+  # # # New plotly...
+  plot_factor004 <- plotly::plot_ly()
+  
+  # # # Boxplot and info...
+  plot_factor004 <- plotly::add_trace(p = plot_factor004,
+                                      type = "box",
+                                      x = df_table_factor_plot004$level ,
+                                      color = df_table_factor_plot004$level,
+                                      colors = df_table_factor_plot004$color,
+                                      lowerfence = df_table_factor_plot004$min,
+                                      q1 = df_table_factor_plot004$Q1,
+                                      median = df_table_factor_plot004$median,
+                                      q3 = df_table_factor_plot004$Q3,
+                                      upperfence = df_table_factor_plot004$max,
+                                      boxmean = TRUE,
+                                      boxpoints = FALSE,
+                                      line = list(color = "black", width = 3)
+  )
+  
+  # # # Title and settings...
+  plot_factor004 <- plotly::layout(p = plot_factor004,
+                                   title = "Plot 004 - Boxplot and means",
+                                   font = list(size = 20),
+                                   margin = list(t = 100))
+  
+  
+  # # # Without zerolines...
+  plot_factor004 <- plotly::layout(p = plot_factor004,
+                                   xaxis = list(zeroline = FALSE),
+                                   yaxis = list(zeroline = FALSE))
+  
+  
+  plot_factor004 <- plotly::plotly_build(plot_factor004)
+  
+  # # # Output plot004_anova...
+  plot_factor004
+  
+```  
+
+
+## Factor - Plot 005
+```{r eval=TRUE, echo=TRUE}  
+  
+  all_levels <- vector_order_levels_new
+  n_levels <- length(all_levels)
+  all_color <- vector_color_levels_new
+  
+  
+  
+  plot_factor005 <- plot_ly()
+  
+  # Violinplot
+  for (k in 1:n_levels){
+    
+    # Selected values
+    selected_level <- all_levels[k]
+    selected_color <- all_color[k]
+    dt_filas <- my_minidataset[,var_name_factor] == selected_level
+    
+    # Plotting selected violinplot
+    plot_factor005 <- plot_factor005 %>%
+      add_trace(x = my_minidataset[,var_name_factor][dt_filas],
+                y = my_minidataset[,var_name_rv][dt_filas],
+                type = "violin",
+                name = paste0("violin", k),
+                points = "all",
+                marker = list(color = selected_color),
+                line = list(color = selected_color),
+                fillcolor = I(selected_color)
+                
+      )
+    
+    
+  }
+  
+  
+  
+  
+  # Boxplot
+  plot_factor005 <- plotly::add_trace(p = plot_factor005,
+                                      type = "box",
+                                      name = "boxplot",
+                                      x = df_table_factor_plot005$level ,
+                                      color = df_table_factor_plot005$level ,
+                                      colors = df_table_factor_plot005$color,
+                                      lowerfence = df_table_factor_plot005$min,
+                                      q1 = df_table_factor_plot005$Q1,
+                                      median = df_table_factor_plot005$median,
+                                      q3 = df_table_factor_plot005$Q3,
+                                      upperfence = df_table_factor_plot005$max,
+                                      boxmean = TRUE,
+                                      boxpoints = TRUE,
+                                      fillcolor = df_table_factor_plot005$color,
+                                      line = list(color = "black", width = 3),
+                                      opacity = 0.5,
+                                      width = 0.2)
+  
+  
+  # # # Title and settings...
+  plot_factor005 <- plotly::layout(p = plot_factor005,
+                                   title = "Plot 005 - Violinplot",
+                                   font = list(size = 20),
+                                   margin = list(t = 100))
+  
+  
+  # # # Without zerolines...
+  plot_factor005 <- plotly::layout(p = plot_factor005,
+                                   xaxis = list(zeroline = FALSE),
+                                   yaxis = list(zeroline = FALSE))
+  
+  plot_factor005 <- plotly::plotly_build(plot_factor005)
+  
+  # # # Output plot003_anova...
+  plot_factor005
+  
+```  
+
+
+## Factor - Plot 006
+```{r eval=TRUE, echo=TRUE}  
+  
+  
+  # #library(plotly)
+  all_levels <- vector_order_levels_new
+  n_levels <- length(all_levels)
+  all_color <- vector_color_levels_new
+  
+  
+  
+  plot_factor006 <- plot_ly()
+  
+  # Violinplot
+  for (k in 1:n_levels){
+    
+    # Selected values
+    selected_level <- all_levels[k]
+    selected_color <- all_color[k]
+    dt_filas <- my_minidataset[,var_name_factor] == selected_level
+    
+    # Plotting selected violinplot
+    plot_factor006 <- plot_factor006 %>%
+      add_trace(y = my_minidataset[,var_name_factor][dt_filas],
+                x = my_minidataset[,var_name_rv][dt_filas],
+                type = "violin",
+                orientation = 'h',
+                name = paste0("violin", k),
+                side = "positive",
+                points = "all",
+                marker = list(color = selected_color),
+                line = list(color = selected_color),
+                fillcolor = I(selected_color)
+                
+      )
+    
+    
+  }
+  
+  
+  plot_factor006 <- plotly::plotly_build(plot_factor006)
+  
+  plot_factor006
+  
+  
+
+  
+
+  
+```
+
+
+
+```{r eval=TRUE, echo=TRUE} 
+
+vector_all_obj_end <- ls(envir = .GlobalEnv)
+
+# Excluir los que NO quieres guardar
+vector_exclusion <- vector_all_obj_init
+vector_save_obj <- setdiff(vector_all_obj_end, vector_exclusion)
+
+# Guardar todo excepto los excluidos
+save(list = vector_save_obj, file = "R_obj_env_file04_anova_descriptive_rv.RData")
+
+```
+

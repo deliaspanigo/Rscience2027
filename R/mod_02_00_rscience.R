@@ -13,18 +13,7 @@ source(file =  system.file("shiny", "fn03_tool_script", "tool_0001_script_002", 
 
 source(file =  system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts",
                            "f04_settings", "f03_prod", "mod_special_settings.R", package = "Rscience2027"))
-# path_tool <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts", "f04_settings",
-#                          package = "Rscience2027")
-#
-# # Para cargar el pack_module.R específicamente:
-# source(file.path(path_tool, "mod_04_00_collector02_settings.R"))
-#
-# path_tool02 <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", "f03_soft_opts", "f04_settings", "sub_module",
-#                            package = "Rscience2027")
-#
-# # Para cargar el pack_module.R específicamente:
-# source(file.path(path_tool02, "sm01_var_selection.R"))
-# source(file.path(path_tool02, "sm02_levels.R"))
+
 
 
 mod_02_00_rscience_ui <- function(id) {
@@ -119,7 +108,37 @@ mod_02_00_rscience_ui <- function(id) {
         0% { opacity: 1; }
         50% { opacity: 0.4; }
         100% { opacity: 1; }
-}
+        }
+
+        /* Selector ultra-específico para no afectar a otros inputs */
+        #", wrapper_id, " aside.sidebar .sidebar-content .form-check.form-switch .form-check-input {
+          cursor: pointer;
+          /* Fondo Azul Oscuro por defecto (OFF) */
+          background-color: #2c3e50 !important;
+          /* Círculo NARANJA (Inactivo: #fd7e14) */
+          background-image: url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'><circle r='3' fill='%23fd7e14'/></svg>\") !important;
+          transition: background-color 0.25s ease, background-position 0.25s ease, border-color 0.25s ease !important;
+
+        }
+
+                /* Estado ACTIVO: Fondo Azul Oscuro y Círculo VERDE */
+        #", wrapper_id, " aside.sidebar .sidebar-content .form-check.form-switch .form-check-input:checked {
+          /* Mantenemos el fondo Azul Oscuro */
+          background-color: #2c3e50 !important;
+          border-color: #2c3e50 !important;
+          /* Círculo VERDE (Activo: #28a745) */
+          background-image: url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'><circle r='3' fill='%2328a745'/></svg>\") !important;
+        }
+
+        /* Círculo GRIS: Forzamos la ruta completa para ganar prioridad */
+        #", wrapper_id, " aside.sidebar .sidebar-content .form-check.form-switch .form-check-input:disabled {
+          opacity: 0.8 !important;
+          cursor: not-allowed !important;
+          background-color: #2c3e50 !important;
+          border-color: #555555 !important;
+          /* Círculo GRIS (#999999) */
+          background-image: url(\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'><circle r='3' fill='%23999999'/></svg>\") !important;
+        }
       ")))
     ),
 
@@ -145,6 +164,7 @@ mod_02_00_rscience_ui <- function(id) {
                   input_switch(ns("sw_dataset"), label = tags$span(id = ns("label_dataset"), "Dataset Selection"), value = TRUE),
                   input_switch(ns("sw_tool"),    label = tags$span(id = ns("label_tool"),    "Tool Engine")     , value = FALSE),
                   input_switch(ns("sw_script"),    label = tags$span(id = ns("label_script"),    "Script Engine")     , value = FALSE),
+                  input_switch(ns("sw_settings"),    label = tags$span(id = ns("label_settings"),    "Settings")     , value = FALSE),
                   hr(),
                   #######################################################################################
                   div(class = "section-title", "2. Information Phase"),
@@ -154,7 +174,6 @@ mod_02_00_rscience_ui <- function(id) {
                   hr(),
                   #######################################################################################
                   div(class = "section-title", "3. Data Analysis Phase"),
-                  input_switch(ns("sw_settings"),    label = tags$span(id = ns("label_settings"),    "Settings")     , value = FALSE),
                   input_switch(ns("sw_shiny"), "Shiny Outputs", value = FALSE),
                   input_switch(ns("sw_asesor"), "Automatic Statistic Asesor (ASA)", value = FALSE),
                   #######################################################################################

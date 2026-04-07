@@ -1,0 +1,24 @@
+project:
+  type: website
+  output-dir: _site  # Aquí se guardará el sitio listo para ver
+
+website:
+  title: "RScience Engine v.0.0.1"
+  navbar:
+    background: primary
+    left:
+      - href: index.qmd        # Tu página de inicio
+        text: Index
+      - href: file01_anova_import_and_control.qmd        # Tu página de inicio
+        text: Setup
+      - href: file02_anova_full_test.qmd       # Tu segundo archivo
+        text: Theory
+      - href: file03_anova_model.qmd   # Tu tercer archivo
+        text: Out
+
+format:
+  html:
+    theme: darkly             # Un tema oscuro que pegue con tu CSS
+    toc: true                 # ¡ESTO activa el Table of Content independiente!
+    toc-location: right       # Lo pone a la derecha en cada página
+    number-sections: true     # Opcional: enumera tus secciones

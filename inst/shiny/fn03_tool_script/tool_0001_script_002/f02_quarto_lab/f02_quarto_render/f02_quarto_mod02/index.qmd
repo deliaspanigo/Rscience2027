@@ -1,0 +1,58 @@
+---
+title: "RScience Engine v.0.0.1"
+---
+
+::: {.panel-tabset}
+
+# Import & Control {#setup}
+```{r, echo=FALSE, results='asis'}
+# Carga el archivo ignorando su YAML original
+res <- knitr::knit_child('file01_anova_import_and_control.qmd', quiet = TRUE)
+cat(res, sep = '\n')
+rm(list = ls())
+```
+
+
+
+# Anova Full Test {#anova}
+```{r, echo=FALSE, results='asis'}
+# Carga el archivo ignorando su YAML original
+res <- knitr::knit_child('file02_anova_full_test.qmd', quiet = TRUE)
+cat(res, sep = '\n')
+rm(list = ls())
+```
+
+# Model {#model}
+```{r, echo=FALSE, results='asis'}
+# Carga el archivo ignorando su YAML original
+res <- knitr::knit_child('file03_anova_model.qmd', quiet = TRUE)
+cat(res, sep = '\n')
+rm(list = ls())
+```
+
+
+# Descriptive RV {#descriptive_rv}
+```{r, echo=FALSE, results='asis'}
+# Carga el archivo ignorando su YAML original
+res <- knitr::knit_child('file04_anova_descriptive_rv.qmd', quiet = TRUE)
+cat(res, sep = '\n')
+rm(list = ls())
+```
+
+# Descriptive Residuals {#descriptive_residuals}
+```{r, echo=FALSE, results='asis'}
+# Carga el archivo ignorando su YAML original
+res <- knitr::knit_child('file05_anova_descriptive_residuals.qmd', quiet = TRUE)
+cat(res, sep = '\n')
+rm(list = ls())
+```
+
+
+# ASA {#asa}
+```{r, echo=FALSE, results='asis'}
+# Carga el archivo ignorando su YAML original
+res <- knitr::knit_child('file06_anova_asa.qmd', quiet = TRUE)
+cat(res, sep = '\n')
+rm(list = ls())
+```
+:::

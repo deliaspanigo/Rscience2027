@@ -2400,46 +2400,8 @@ character(0)</code></pre>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>vector_all_file_path_from_folder</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1] &quot;./file01_save_html_and_png.qmd&quot;                  
- [2] &quot;./file01_save_html_and_png.rmarkdown&quot;            
- [3] &quot;./output_plotly_html/html/plot_control001.html&quot;  
- [4] &quot;./output_plotly_html/html/plot_factor001.html&quot;   
- [5] &quot;./output_plotly_html/html/plot_factor002.html&quot;   
- [6] &quot;./output_plotly_html/html/plot_factor003.html&quot;   
- [7] &quot;./output_plotly_html/html/plot_factor004.html&quot;   
- [8] &quot;./output_plotly_html/html/plot_factor005.html&quot;   
- [9] &quot;./output_plotly_html/html/plot_factor006.html&quot;   
-[10] &quot;./output_plotly_html/html/plot_model001.html&quot;    
-[11] &quot;./output_plotly_html/html/plot_residuals001.html&quot;
-[12] &quot;./output_plotly_html/html/plot_residuals002.html&quot;
-[13] &quot;./output_plotly_html/html/plot_residuals003.html&quot;
-[14] &quot;./output_plotly_html/html/plot_residuals004.html&quot;
-[15] &quot;./output_plotly_html/html/plot_residuals005.html&quot;
-[16] &quot;./output_plotly_html/html/plot_residuals006.html&quot;
-[17] &quot;./output_plotly_html/html/plot_residuals007.html&quot;
-[18] &quot;./output_plotly_html/html/plot_residuals008.html&quot;
-[19] &quot;./output_plotly_html/html/plot_residuals009.html&quot;
-[20] &quot;./output_plotly_html/html/plot_residuals010.html&quot;
-[21] &quot;./output_plotly_html/html/plot_tukey001.html&quot;    
-[22] &quot;./output_plotly_html/png/plot_control001.png&quot;    
-[23] &quot;./output_plotly_html/png/plot_factor001.png&quot;     
-[24] &quot;./output_plotly_html/png/plot_factor002.png&quot;     
-[25] &quot;./output_plotly_html/png/plot_factor003.png&quot;     
-[26] &quot;./output_plotly_html/png/plot_factor004.png&quot;     
-[27] &quot;./output_plotly_html/png/plot_factor005.png&quot;     
-[28] &quot;./output_plotly_html/png/plot_factor006.png&quot;     
-[29] &quot;./output_plotly_html/png/plot_model001.png&quot;      
-[30] &quot;./output_plotly_html/png/plot_residuals001.png&quot;  
-[31] &quot;./output_plotly_html/png/plot_residuals002.png&quot;  
-[32] &quot;./output_plotly_html/png/plot_residuals003.png&quot;  
-[33] &quot;./output_plotly_html/png/plot_residuals004.png&quot;  
-[34] &quot;./output_plotly_html/png/plot_residuals005.png&quot;  
-[35] &quot;./output_plotly_html/png/plot_residuals006.png&quot;  
-[36] &quot;./output_plotly_html/png/plot_residuals007.png&quot;  
-[37] &quot;./output_plotly_html/png/plot_residuals008.png&quot;  
-[38] &quot;./output_plotly_html/png/plot_residuals009.png&quot;  
-[39] &quot;./output_plotly_html/png/plot_residuals010.png&quot;  
-[40] &quot;./output_plotly_html/png/plot_tukey001.png&quot;      </code></pre>
+<pre><code>[1] &quot;./file01_save_html_and_png.qmd&quot;      
+[2] &quot;./file01_save_html_and_png.rmarkdown&quot;</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -2476,66 +2438,26 @@ character(0)</code></pre>
 <span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>df_plot_html <span class="ot">&lt;-</span>  <span class="fu">fn_local_gen_df_file_info</span>(<span class="at">vector_file_name =</span> vector_html_file_name )</span>
 <span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>df_plot_html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>               file_name file_exists
-1    plot_control001.png        TRUE
-2      plot_tukey001.png        TRUE
-3      plot_model001.png        TRUE
-4     plot_factor001.png        TRUE
-5     plot_factor002.png        TRUE
-6     plot_factor003.png        TRUE
-7     plot_factor004.png        TRUE
-8     plot_factor005.png        TRUE
-9     plot_factor006.png        TRUE
-10 plot_residuals001.png        TRUE
-11 plot_residuals002.png        TRUE
-12 plot_residuals003.png        TRUE
-13 plot_residuals004.png        TRUE
-14 plot_residuals010.png        TRUE
-15 plot_residuals005.png        TRUE
-16 plot_residuals006.png        TRUE
-17 plot_residuals007.png        TRUE
-18 plot_residuals008.png        TRUE
-19 plot_residuals009.png        TRUE
-                                    path_relative
-1    ./output_plotly_html/png/plot_control001.png
-2      ./output_plotly_html/png/plot_tukey001.png
-3      ./output_plotly_html/png/plot_model001.png
-4     ./output_plotly_html/png/plot_factor001.png
-5     ./output_plotly_html/png/plot_factor002.png
-6     ./output_plotly_html/png/plot_factor003.png
-7     ./output_plotly_html/png/plot_factor004.png
-8     ./output_plotly_html/png/plot_factor005.png
-9     ./output_plotly_html/png/plot_factor006.png
-10 ./output_plotly_html/png/plot_residuals001.png
-11 ./output_plotly_html/png/plot_residuals002.png
-12 ./output_plotly_html/png/plot_residuals003.png
-13 ./output_plotly_html/png/plot_residuals004.png
-14 ./output_plotly_html/png/plot_residuals010.png
-15 ./output_plotly_html/png/plot_residuals005.png
-16 ./output_plotly_html/png/plot_residuals006.png
-17 ./output_plotly_html/png/plot_residuals007.png
-18 ./output_plotly_html/png/plot_residuals008.png
-19 ./output_plotly_html/png/plot_residuals009.png
-                                                                                                                                                                           path_absolute
-1    /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_control001.png
-2      /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_tukey001.png
-3      /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_model001.png
-4     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor001.png
-5     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor002.png
-6     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor003.png
-7     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor004.png
-8     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor005.png
-9     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor006.png
-10 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals001.png
-11 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals002.png
-12 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals003.png
-13 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals004.png
-14 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals010.png
-15 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals005.png
-16 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals006.png
-17 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals007.png
-18 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals008.png
-19 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals009.png</code></pre>
+<pre><code>               file_name file_exists path_relative path_absolute
+1    plot_control001.png       FALSE            NA            NA
+2      plot_tukey001.png       FALSE            NA            NA
+3      plot_model001.png       FALSE            NA            NA
+4     plot_factor001.png       FALSE            NA            NA
+5     plot_factor002.png       FALSE            NA            NA
+6     plot_factor003.png       FALSE            NA            NA
+7     plot_factor004.png       FALSE            NA            NA
+8     plot_factor005.png       FALSE            NA            NA
+9     plot_factor006.png       FALSE            NA            NA
+10 plot_residuals001.png       FALSE            NA            NA
+11 plot_residuals002.png       FALSE            NA            NA
+12 plot_residuals003.png       FALSE            NA            NA
+13 plot_residuals004.png       FALSE            NA            NA
+14 plot_residuals010.png       FALSE            NA            NA
+15 plot_residuals005.png       FALSE            NA            NA
+16 plot_residuals006.png       FALSE            NA            NA
+17 plot_residuals007.png       FALSE            NA            NA
+18 plot_residuals008.png       FALSE            NA            NA
+19 plot_residuals009.png       FALSE            NA            NA</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -2544,71 +2466,34 @@ character(0)</code></pre>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>df_plot_png <span class="ot">&lt;-</span>  <span class="fu">fn_local_gen_df_file_info</span>(<span class="at">vector_file_name =</span> vector_png_file_name )</span>
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>df_plot_png</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>               file_name file_exists
-1    plot_control001.png        TRUE
-2      plot_tukey001.png        TRUE
-3      plot_model001.png        TRUE
-4     plot_factor001.png        TRUE
-5     plot_factor002.png        TRUE
-6     plot_factor003.png        TRUE
-7     plot_factor004.png        TRUE
-8     plot_factor005.png        TRUE
-9     plot_factor006.png        TRUE
-10 plot_residuals001.png        TRUE
-11 plot_residuals002.png        TRUE
-12 plot_residuals003.png        TRUE
-13 plot_residuals004.png        TRUE
-14 plot_residuals010.png        TRUE
-15 plot_residuals005.png        TRUE
-16 plot_residuals006.png        TRUE
-17 plot_residuals007.png        TRUE
-18 plot_residuals008.png        TRUE
-19 plot_residuals009.png        TRUE
-                                    path_relative
-1    ./output_plotly_html/png/plot_control001.png
-2      ./output_plotly_html/png/plot_tukey001.png
-3      ./output_plotly_html/png/plot_model001.png
-4     ./output_plotly_html/png/plot_factor001.png
-5     ./output_plotly_html/png/plot_factor002.png
-6     ./output_plotly_html/png/plot_factor003.png
-7     ./output_plotly_html/png/plot_factor004.png
-8     ./output_plotly_html/png/plot_factor005.png
-9     ./output_plotly_html/png/plot_factor006.png
-10 ./output_plotly_html/png/plot_residuals001.png
-11 ./output_plotly_html/png/plot_residuals002.png
-12 ./output_plotly_html/png/plot_residuals003.png
-13 ./output_plotly_html/png/plot_residuals004.png
-14 ./output_plotly_html/png/plot_residuals010.png
-15 ./output_plotly_html/png/plot_residuals005.png
-16 ./output_plotly_html/png/plot_residuals006.png
-17 ./output_plotly_html/png/plot_residuals007.png
-18 ./output_plotly_html/png/plot_residuals008.png
-19 ./output_plotly_html/png/plot_residuals009.png
-                                                                                                                                                                           path_absolute
-1    /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_control001.png
-2      /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_tukey001.png
-3      /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_model001.png
-4     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor001.png
-5     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor002.png
-6     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor003.png
-7     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor004.png
-8     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor005.png
-9     /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_factor006.png
-10 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals001.png
-11 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals002.png
-12 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals003.png
-13 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals004.png
-14 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals010.png
-15 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals005.png
-16 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals006.png
-17 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals007.png
-18 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals008.png
-19 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_lab/f02_quarto_render/f07_save_plots/output_plotly_html/png/plot_residuals009.png</code></pre>
+<pre><code>               file_name file_exists path_relative path_absolute
+1    plot_control001.png       FALSE            NA            NA
+2      plot_tukey001.png       FALSE            NA            NA
+3      plot_model001.png       FALSE            NA            NA
+4     plot_factor001.png       FALSE            NA            NA
+5     plot_factor002.png       FALSE            NA            NA
+6     plot_factor003.png       FALSE            NA            NA
+7     plot_factor004.png       FALSE            NA            NA
+8     plot_factor005.png       FALSE            NA            NA
+9     plot_factor006.png       FALSE            NA            NA
+10 plot_residuals001.png       FALSE            NA            NA
+11 plot_residuals002.png       FALSE            NA            NA
+12 plot_residuals003.png       FALSE            NA            NA
+13 plot_residuals004.png       FALSE            NA            NA
+14 plot_residuals010.png       FALSE            NA            NA
+15 plot_residuals005.png       FALSE            NA            NA
+16 plot_residuals006.png       FALSE            NA            NA
+17 plot_residuals007.png       FALSE            NA            NA
+18 plot_residuals008.png       FALSE            NA            NA
+19 plot_residuals009.png       FALSE            NA            NA</code></pre>
 </div>
 </div>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>NULL</code></pre>
+<pre><code>Iniciando procesamiento de pltly hacia html y png</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Procesamiento terminado</code></pre>
 </div>
 </div>
 

@@ -1,0 +1,83 @@
+project:
+  type: website
+
+title: "RScience Engine v.0.0.1"
+subtitle: "Sistema Automatizado de Análisis Estadístico"
+author: "David Elías Panigo"
+lang: es
+date: last-modified
+
+execute:
+  echo: true
+  warning: false
+  error: false
+
+knitr:
+  opts_chunk:
+    collapse: false
+    comment: ""
+
+format:
+  html:
+    theme: darkly
+    
+    # --- CONFIGURACIÓN DE GRID (Para ancho máximo) ---
+    grid:
+      body-width: 2500px    # Esto fuerza la expansión total
+      margin-width: 100px   # Márgenes laterales mínimos
+      gutter-width: 1.5rem
+    
+    toc: false
+    number-sections: true
+    smooth-scroll: true
+    
+    # --- CSS PERSONALIZADO ---
+    include-after-body:
+      text: |
+        <style>
+        /* Asegura que el contenedor principal use todo el ancho definido en el grid */
+        .quarto-container, .page-columns, main.content {
+          max-width: 98% !important; 
+          width: 98% !important;
+        }
+
+        /* Formato para Títulos ## */
+        h2 {
+          color: #00bc8c !important; 
+          border-bottom: 2px solid #375a7f; 
+          padding-bottom: 10px;
+          margin-top: 40px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        /* Estilo para la pestaña activa */
+        .nav-tabs .nav-link.active {
+          background-color: #375a7f !important; 
+          border-bottom: 3px solid #00bc8c !important; 
+          color: white !important;
+          font-weight: bold;
+        }
+
+        /* Estilo para pestañas no seleccionadas */
+        .nav-tabs .nav-link {
+          color: #adb5bd;
+          border: none;
+        }
+        </style>
+
+    mainfont: "Segoe UI"
+    fontsize: "1.1em"
+    
+    code-copy: true
+    code-line-numbers: true
+    code-link: true
+    
+    page-layout: full
+    title-block-banner: true
+    title-block-banner-color: "#1a1a1a"
+    
+    embed-resources: true
+    df-print: paged
+    fig-align: center
+    fig-cap-location: bottom
