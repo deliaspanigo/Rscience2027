@@ -49,7 +49,7 @@ mod_rscience_engine_ui <- function(id) {
                     div(id=ns("c_theory"), class="phase-card", icon("book"), span(" Theory")),
                     div(id=ns("c_bibliography"), class="phase-card", icon("list"), span(" Bibliography")),
                     div(id=ns("c_cite"), class="phase-card", icon("quote-left"), span(" Cite")),
-                    div(id=ns("c_faqs"), class="phase-card", icon("question-circle"), span(" FAQ's"))
+                    div(id=ns("c_faqs"), class="phase-card", icon("question-circle"), span(" FAQs"))
                 )
             )
         )

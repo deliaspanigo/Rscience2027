@@ -50,7 +50,7 @@ server <- function(input, output, session) {
 
   # Llamamos al server del módulo
   # Guardamos el retorno en un reactivo por si queremos usar los datos en la app
-  datos_importados <- mod_02_01_dataset_server(id = "demo_dataset", show_debug = F)
+  datos_importados <- mod_02_01_dataset_server(id = "demo_dataset", show_debug = T)
 
   # Ejemplo de cómo acceder a los datos desde fuera del módulo
   observe({

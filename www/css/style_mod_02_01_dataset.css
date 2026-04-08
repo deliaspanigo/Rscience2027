@@ -2,6 +2,12 @@
    MODULE: DATASET IMPORT (mod_02_01) - RScience Edition
    ========================================================================== */
 
+.import-engine-container {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+}
+
 /* --- 1. HEADER SELECTION --- */
 .selection-header {
     padding: 15px;
