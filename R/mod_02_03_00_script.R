@@ -64,7 +64,7 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
       tmp_list <- list()
       for (tool_name in folders) {
         folder_path <- file.path(base_path, tool_name)
-        file_path <- file.path(folder_path, "f01_script_info", "mod_special_script_info.R")
+        file_path <- file.path(folder_path, "f01_shiny_show", "p00_script_info", "mod_special_script_info.R")
 
         if (file.exists(file_path)) {
           local_env <- new.env(parent = .GlobalEnv)

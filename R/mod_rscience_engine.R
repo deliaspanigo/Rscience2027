@@ -38,7 +38,9 @@ mod_rscience_engine_ui <- function(id) {
                     div(id=ns("c_tool"), class="phase-card", icon("gear"), span(" Tool Engine")),
                     div(id=ns("c_script"), class="phase-card", icon("code"), span(" Script Engine")),
                     div(id=ns("c_settings"), class="phase-card", icon("sliders"), span(" Settings")),
-                    div(id=ns("c_play"), class="phase-card", icon("play"), span(" Processing"))
+                    div(id=ns("c_play"), class="phase-card", icon("play"), span(" Processing")),
+                    br(),
+                    div(id=ns("c_DEBUG"), class="phase-card", icon("play"), span(" DEBUG"))
                 ),
                 div(class="pack-group",
                     div(id=ns("c_out"), class="phase-card", icon("desktop"), span(" Visualizer"))
@@ -63,10 +65,11 @@ mod_rscience_engine_ui <- function(id) {
                 nav_panel_hidden("c_script", mod_02_03_00_script_ui(id=ns("my_ns_script"))),
                 nav_panel_hidden("c_settings", mod_04_00_collector02_settings_ui(id = ns("my_ns_collector02_settings"))),
                 nav_panel_hidden("c_play", card(card_body("Consola..."))),
+                nav_panel_hidden("c_DEBUG",   uiOutput(ns("show_debug"))),
                 nav_panel_hidden("c_out", card(card_body("Visualizador..."))),
                 nav_panel_hidden("c_theory",  mod_03_A_theory_ui(ns("txt_1"))),
                 nav_panel_hidden("c_bibliography",mod_03_B_bibliography_ui(ns("txt_2"))),
-                nav_panel_hidden("c_cite", mod_03_C_cite_ui(ns("txt_3"))),
+                nav_panel_hidden("c_cite",mod_03_C_cite_ui(ns("txt_3"))),
                 nav_panel_hidden("c_faqs", card(card_body("FAQ...")))
               )
           )
@@ -75,12 +78,24 @@ mod_rscience_engine_ui <- function(id) {
   )
 }
 
-mod_rscience_engine_server <- function(id) {
+mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_general = F) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    internal_show_debug_tab     <- reactive( if(is.function(show_debug_tab)) show_debug_tab() else show_debug_tab)
+    internal_show_debug_general <- reactive( if(is.function(show_debug_general)) show_debug_general() else show_debug_general)
+
+    observe({
+      if (!isTRUE(internal_show_debug_tab)) {
+        # Ocultamos la tarjeta del sidebar usando shinyjs
+        shinyjs::hide("c_DEBUG")
+      } else {
+        shinyjs::show("c_DEBUG")
+      }
+    })
+
     # Listado maestro de todas las tarjetas para los listeners
-    all_cards <- c("c_data", "c_tool", "c_script", "c_settings", "c_play",
+    all_cards <- c("c_data", "c_tool", "c_script", "c_settings", "c_play", "c_DEBUG",
                    "c_out", "c_theory", "c_bibliography", "c_cite", "c_faqs")
 
     # 1. Lógica de Cambio de Pestaña y Brillo
@@ -125,15 +140,15 @@ mod_rscience_engine_server <- function(id) {
     #mod_02_01_dataset_server(id = ns("my_ns_dataset"))
     #resultado_final <- mod_02_02_00_tool_server(id = "my_ns_tool", show_debug = F)
     # Server del módulo de dataset
-    rlist_dataset <- mod_02_01_dataset_server(id = "my_ns_dataset") # SIN ns()
+    rlist_dataset <- mod_02_01_dataset_server(id = "my_ns_dataset", show_debug = internal_show_debug_general()) # SIN ns()
 
     # Server del módulo de tool
-    rlist_tool <- mod_02_02_00_tool_server(id = "my_ns_tool", show_debug = FALSE) # SIN ns()
+    rlist_tool <- mod_02_02_00_tool_server(id = "my_ns_tool", show_debug = internal_show_debug_general()) # SIN ns()
 
     # 1.3. Script
     rlist_script <-   mod_02_03_00_script_server(id="my_ns_script",
                                                vector_str_folder_tool_script = reactive(c("tool_0001_script_001", "tool_0001_script_002")),
-                                               show_debug = T) # Llamamos a la UI
+                                               show_debug = internal_show_debug_general()) # Llamamos a la UI
 
     ############################################################################
 
@@ -154,9 +169,12 @@ mod_rscience_engine_server <- function(id) {
       return(the_path)
     })
 
-    mod_03_A_theory_server(id = "txt_1", folder_path_tool_script = folder_path_collector01)
-    mod_03_B_bibliography_server(id = "txt_2", folder_path_tool_script = folder_path_collector01)
-    mod_03_C_cite_server(id = "txt_3", folder_path_tool_script = folder_path_collector01)
+    rlist_theory <-       mod_03_A_theory_server(id = "txt_1", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
+    rlist_bibliography <- mod_03_B_bibliography_server(id = "txt_2", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
+    rlist_cite <-         mod_03_C_cite_server(id = "txt_3", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
+
+    #mod_03_B_bibliography_server(id = "txt_2", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
+    #mod_03_C_cite_server(id = "txt_3", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
 
     ############################################################################
 
@@ -174,8 +192,23 @@ mod_rscience_engine_server <- function(id) {
       id = "my_ns_collector02_settings",
       df_input = reactive(mtcars), # Asegúrate de que esto sea reactivo
       folder_path_tool_script = folder_path_collector02,
-      show_debug = FALSE
+      show_debug = internal_show_debug_general()
     )
+
+
+    output$show_debug <- renderUI({
+
+      navset_card_tab(
+        title = "RScience Engine v.0.0.1",
+
+        nav_panel(
+          title = "Theory",
+          icon = icon("book"),
+          mod_03_A_theory_DEBUG_ui(id=ns("txt_1"))
+        )
+      )
+
+    })
 
   })
 }

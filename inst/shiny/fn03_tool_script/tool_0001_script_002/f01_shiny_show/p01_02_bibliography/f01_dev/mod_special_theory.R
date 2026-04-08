@@ -1,10 +1,12 @@
 library(shiny)
 library(bslib)
 
+library(shiny)
+library(bslib)
 
-mod_special_bibliography_ui <- function(id) {
+mod_special_theory_ui <- function(id) {
   ns <- NS(id)
-  container_id <- ns("bibliography_container")
+  container_id <- ns("theory_container")
 
   tagList(
     tags$head(
@@ -37,7 +39,7 @@ mod_special_bibliography_ui <- function(id) {
 
           # Pestaña Principal de Teoría
           nav_panel(
-            title = "Bibliography Content",
+            title = "Theory Content",
             card_body(
               div(class = "iframe-wrapper",
                   uiOutput(ns("iframe_handler")))
@@ -66,19 +68,19 @@ mod_special_bibliography_ui <- function(id) {
 
 
 
-mod_special_bibliography_server <- function(id) {
+mod_special_theory_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # --- 1. RUTA MULTIPLATAFORMA ---
     # Construcción robusta de la ruta interna del paquete
-    rel_path <- file.path("quarto", "tool_0001_anova_1_way", "f02_bibliography", "file01")
-    file_name <- "bibliography.html"
+    rel_path <- file.path("quarto", "tool_0001_anova_1_way", "f01_theory", "file01")
+    file_name <- "theory_anova.html"
 
     full_path <- system.file(rel_path, file_name, package = "Rscience2027")
 
     # --- 2. RECURSO SEGURO ---
-    resource_prefix <- paste0("bibliography_core_", id)
+    resource_prefix <- paste0("theory_core_", id)
 
     if (full_path != "") {
       # Forzamos barras '/' para compatibilidad con el navegador (web-standard)
@@ -102,6 +104,6 @@ mod_special_bibliography_server <- function(id) {
       }
     })
 
-    message("Bibliography Module [", id, "] initialized. Path: ", full_path)
+    message("Theory Module [", id, "] initialized. Path: ", full_path)
   })
 }
