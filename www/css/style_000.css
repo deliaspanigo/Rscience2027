@@ -12,10 +12,11 @@
 
 /* --- 2. RESET ESTRUCTURAL (ELIMINA EL DOBLE SCROLL) --- */
 html, body {
-    height: 100vh !important;
-    overflow: hidden !important; /* Prohíbe scroll en la ventana del navegador */
-    margin: 0;
-    padding: 0;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important; /* Permite scroll vertical siempre */
+    overflow-x: hidden !important; /* Evita scroll horizontal molesto */
+    background-color: #0b1218; /* Asegura el color de fondo en toda la extensión */
 }
 
 /* Forzar que el contenedor principal de bslib no se desborde */

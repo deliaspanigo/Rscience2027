@@ -1,15 +1,19 @@
 /* ==========================================================================
-   MODULE: DATASET IMPORT (mod_02_01) - RScience Edition
+   MODULE: DATASET IMPORT (mod_02_01) - RScience Scoped Edition
+   Aislamiento total y Variables Centralizadas
    ========================================================================== */
 
-.import-engine-container {
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
+/* --- 0. CONTENEDOR RAÍZ Y SCROLL --- */
+.rs-mod-dataset-container {
+    display: block !important;
+    height: auto !important;
+    min-height: 100px;
+    overflow: visible !important; /* Fix crucial para el scroll de la página */
+    padding-bottom: 60px;
 }
 
-/* --- 1. HEADER SELECTION --- */
-.selection-header {
+/* --- 1. HEADERS DINÁMICOS --- */
+.rs-mod-dataset-container .selection-header {
     padding: 15px;
     border-radius: var(--rs-radius-sm);
     font-weight: 800;
@@ -22,278 +26,236 @@
     transition: var(--rs-transition);
 }
 
-.selection-header.active-selection {
+/* Header Cyan (Unlock) */
+.rs-mod-dataset-container .selection-header.active-selection {
     border-left-color: var(--rs-primary) !important;
     color: var(--rs-primary) !important;
     background: rgba(0, 212, 255, 0.08) !important;
 }
 
-.selection-header.confirmed {
+/* Header Verde (Locked) */
+.rs-mod-dataset-container .selection-header.confirmed {
     border-left-color: var(--rs-success) !important;
     color: var(--rs-success) !important;
-    background: rgba(0, 188, 140, 0.08) !important;
+    background: rgba(0, 188, 140, 0.1) !important;
 }
 
-.selection-header.waiting-mode {
+/* Header Warning (Waiting) */
+.rs-mod-dataset-container .selection-header.waiting-mode {
     border-left-color: var(--rs-warning) !important;
     color: var(--rs-warning) !important;
     background: rgba(243, 156, 18, 0.08) !important;
 }
 
-/* --- 2. LABELS DINÁMICOS --- */
-.section-label {
+/* --- 2. LABELS (CIAN -> VERDE) --- */
+.rs-mod-dataset-container .section-label {
     font-size: 0.75rem !important;
     font-weight: 800 !important;
     text-transform: uppercase;
     letter-spacing: 1.2px;
     margin-bottom: 8px;
-    transition: var(--rs-transition);
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.lock-wrapper:not(.locked-disabled) .section-label {
+    justify-content: flex-start !important;
+    gap: 8px;
     color: var(--rs-primary) !important;
+    transition: var(--rs-transition);
 }
 
-.locked-disabled .section-label {
+/* Solo los labels cambian a verde cuando el contenedor está locked */
+.rs-mod-dataset-container .locked-disabled .section-label {
     color: var(--rs-success) !important;
 }
 
-/* --- 3. DETALLE DEL CANDADO --- */
-.status-closed {
+/* --- 3. SELECTIZE & INPUTS --- */
+.rs-mod-dataset-container .selectize-control {
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+.rs-mod-dataset-container .selectize-input,
+.rs-mod-dataset-container .form-control {
+    background-color: var(--rs-text-dark) !important;
+    border: 3px solid rgba(0, 212, 255, 0.3) !important;
+    color: #ffffff !important;
+    border-radius: var(--rs-radius-sm) !important;
+    padding: 10px 12px !important;
+    transition: var(--rs-transition);
+    box-shadow: none !important;
+}
+
+/* Focus: Brillo basado en variable de Glow */
+.rs-mod-dataset-container .selectize-input.focus,
+.rs-mod-dataset-container .form-control:focus {
+    border-color: var(--rs-primary) !important;
+    box-shadow: 0 0 10px var(--rs-glow-primary) !important;
+    outline: none !important;
+}
+
+/* --- 4. FILE INPUT (BROWSE BUTTON) --- */
+.rs-mod-dataset-container .btn-file {
+    background-color: var(--rs-text-dark) !important;
+    border: 1px solid var(--rs-primary) !important;
+    color: var(--rs-primary) !important;
+    font-weight: 700;
+    border-radius: 0 var(--rs-radius-sm) var(--rs-radius-sm) 0 !important;
+}
+
+/* --- 5. COMPORTAMIENTO LÓGICO DE "LOCKED" --- */
+.rs-mod-dataset-container .locked-disabled {
+    pointer-events: none !important;
+}
+
+/* En Locked: Inputs fondo main, texto blanco legible, borde verde sutil */
+.rs-mod-dataset-container .locked-disabled .selectize-input,
+.rs-mod-dataset-container .locked-disabled .form-control {
+    background-color: var(--rs-bg-main) !important;
+    border-color: rgba(0, 188, 140, 0.4) !important;
+    color: #ffffff !important;
+    opacity: 0.9;
+}
+
+/* El botón de archivo sí cambia a verde para feedback visual */
+.rs-mod-dataset-container .locked-disabled .btn-file {
+    border-color: var(--rs-success) !important;
+    color: var(--rs-success) !important;
+}
+
+/* --- 6. DATATABLES (DT) --- */
+.rs-mod-dataset-container .rs-table-wrapper {
+    width: 100%;
+    background: var(--rs-bg-header) !important;
+    border: 3px solid rgba(0, 212, 255, 0.2);
+    border-radius: var(--rs-radius-lg);
+    padding: 15px;
+    margin-top: 10px;
+    overflow-x: auto !important;
+}
+
+.rs-mod-dataset-container table.dataTable thead th {
+    background-color: rgba(0, 212, 255, 0.1) !important;
+    color: var(--rs-primary) !important;
+    border-bottom: 2px solid var(--rs-primary) !important;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+/* --- 7. PROGRESS BAR --- */
+.rs-mod-dataset-container .progress {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    border: 3px solid var(--rs-primary) !important;
+    height: 18px !important;
+    border-radius: 10px;
+}
+
+.rs-mod-dataset-container .progress-bar {
+    background-color: var(--rs-primary) !important;
+    box-shadow: 0 0 10px var(--rs-glow-primary);
+}
+
+.rs-mod-dataset-container .locked-disabled .progress {
+    border-color: var(--rs-success) !important;
+}
+
+.rs-mod-dataset-container .locked-disabled .progress-bar {
+    background-color: var(--rs-success) !important;
+}
+
+/* --- 8. STATUS ICON (CANDADO) --- */
+.rs-mod-dataset-container .status-closed {
     color: var(--rs-success) !important;
     font-weight: 700;
     font-size: 0.7rem;
     margin-left: 8px;
-    text-transform: none;
 }
 
-.status-closed i {
-    color: var(--rs-success) !important;
-    margin-left: 4px;
-}
 
-/* --- 4. SELECTIZE INPUTS --- */
-.selectize-input {
-    background-color: #1a252f !important;
-    border: 1px solid #34495e !important;
-    color: white !important;
-    border-radius: var(--rs-radius-sm) !important;
-    padding: 10px 12px !important;
+/* --- RS-MINIMAL BAR --- */
+.rs-minimal-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 30px;
+    padding: 10px 20px;
+    background: var(--rs-bg-header);
+    border-radius: var(--rs-radius-sm);
+    margin-bottom: 20px;
+    font-family: var(--rs-font-mono);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     transition: var(--rs-transition);
 }
 
-.lock-wrapper:not(.locked-disabled) .selectize-input {
-    border-color: rgba(0, 212, 255, 0.3) !important;
+.status-segment {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 250px;
 }
 
-.locked-disabled .selectize-input {
-    border-color: var(--rs-success) !important;
-    background-color: #0b1218 !important;
-    opacity: 0.6;
-    pointer-events: none;
+.info-segment {
+    display: flex;
+    gap: 8px;
+    font-size: 0.85rem;
 }
 
-.selectize-input.focus {
-    border-color: var(--rs-primary) !important;
-    box-shadow: 0 0 8px var(--rs-glow-primary) !important;
+.info-label {
+    color: rgba(255, 255, 255, 0.5); /* Blanco tenue */
+    font-weight: 800;
 }
 
-.locked-disabled {
-    pointer-events: none;
+.info-val {
+    color: white;
+}
+
+/* --- INDICADOR LED --- */
+.led-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
     transition: var(--rs-transition);
 }
 
-.selectize-dropdown {
-    background-color: #1a252f !important;
-    color: white !important;
-    border: 1px solid var(--rs-primary) !important;
+/* --- ESTADO: WAITING (Blanco / Animado) --- */
+.rs-status-waiting {
+    border-color: var(--rs-primary);
 }
 
-.selectize-dropdown .active {
-    background-color: var(--rs-primary) !important;
-    color: #000 !important;
+.rs-status-waiting .led-indicator {
+    background-color: var(--rs-primary);
+    box-shadow: 0 0 10px var(--rs-primary);
+    animation: led-pulse-white 1.5s infinite;
 }
 
-/* ==========================================================================
-   NUEVO: DATATABLES (DT) - VERSIÓN CLARA (PIZARRA)
-   ========================================================================== */
-
-/* Contenedor principal de la tabla (Gris azulado claro) */
-.rs-table-container {
-    width: 100%;
-    background: #2c3e50 !important; /* Tono pizarra más claro */
-    border: 2px solid rgba(0, 212, 255, 0.3) !important;
-    border-radius: 12px;
-    padding: 15px;
-    margin-top: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+.rs-status-waiting .status-text {
+    color: var(--rs-primary);
+    font-weight: 600;
+    letter-spacing: 1px;
 }
 
-/* Estilo de la tabla interna */
-table.dataTable {
-    background-color: transparent !important;
-    color: #f8fafc !important;
-    border: none !important;
-}
-
-/* Cabeceras de columna */
-table.dataTable thead th {
-    background-color: rgba(0, 212, 255, 0.15) !important;
-    color: #ffffff !important;
-    border-bottom: 3px solid var(--rs-primary, #00d4ff) !important;
-    font-weight: 800 !important;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    padding: 12px !important;
-}
-
-/* Celdas y Filas */
-table.dataTable tbody td {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-    padding: 10px !important;
-}
-
-/* Filas cebra (Striped) más visibles */
-table.dataTable.stripe tbody tr.odd {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-table.dataTable tbody tr:hover {
-    background-color: rgba(0, 212, 255, 0.2) !important;
-    color: #fff !important;
-}
-
-/* Buscador y Paginación */
-.dataTables_filter input {
-    background-color: #34495e !important;
-    border: 1px solid rgba(0, 212, 255, 0.4) !important;
-    color: white !important;
-    border-radius: 5px;
-}
-
-.dataTables_info, .dataTables_paginate {
-    color: #cbd5e1 !important;
-    font-size: 0.8rem;
-    padding-top: 10px;
-}
-
-.dataTables_paginate .paginate_button.current {
-    background: var(--rs-primary, #00d4ff) !important;
-    color: #000 !important;
-    border: 1px solid var(--rs-primary) !important;
-    font-weight: bold;
-}
-
-
-
-/* --- DIAGNÓSTICO: BARRA DE CARGA ROJA --- */
-
-/* 1. FUERZA BRUTA: Rojo Neón por defecto */
-.import-engine-container .progress-bar {
-    background-color: var(--rs-primary) !important; /* Rojo puro */
-    background-image: none !important;
-    box-shadow: 0 0 15px var(--rs-primary) !important;
-    color: white !important;
-}
-
-/* 2. El carril de fondo también lo ponemos oscuro para que resalte el rojo */
-.import-engine-container .progress {
-    background-color: rgba(0, 212, 255, 0.4) !important;
-    border: 2px solid var(--rs-primary) !important;
-    height: 20px !important; /* La hacemos más gruesa para verla bien */
-}
-
-/* 3. SOLO SI FUNCIONA EL ROJO: El cambio a Verde al bloquear */
-.locked-disabled .progress-bar {
-    background-color: var(--rs-success) !important;
-    box-shadow: 0 0 15px var(--rs-success) !important;
-}
-
-.locked-disabled .progress {
+/* --- ESTADO: LOCKED (Verde) --- */
+.rs-status-locked {
     border-color: var(--rs-success) !important;
+    background: rgba(0, 188, 140, 0.05) !important;
 }
 
-
-
-/* ==========================================================================
-   FILE INPUT: BORDERS & BUTTONS (RScience Sync)
-   ========================================================================== */
-
-/* 1. ESTADO POR DEFECTO (Cyan) */
-.lock-wrapper:not(.locked-disabled) .btn-file {
-    background-color: #1a252f !important;
-    border: 1px solid rgba(0, 212, 255, 0.5) !important;
-    color: var(--rs-primary) !important;
+.rs-status-locked .led-indicator {
+    background-color: var(--rs-success);
+    box-shadow: 0 0 12px var(--rs-success);
+    animation: none; /* Se queda encendido fijo */
 }
 
-.lock-wrapper:not(.locked-disabled) .form-control {
-    background-color: #1a252f !important;
-    border: 1px solid rgba(0, 212, 255, 0.3) !important;
-    color: white !important;
-}
-
-/* Hover en estado Cyan */
-.lock-wrapper:not(.locked-disabled) .btn-file:hover {
-    border-color: var(--rs-primary) !important;
-    box-shadow: 0 0 8px var(--rs-glow-primary) !important;
-}
-
-/* 2. ESTADO BLOQUEADO (Verde Success) */
-.locked-disabled .btn-file {
-    background-color: #0b1218 !important;
-    border: 1px solid var(--rs-success) !important;
+.rs-status-locked .status-text,
+.rs-status-locked .info-label,
+.rs-status-locked .info-val {
     color: var(--rs-success) !important;
-    opacity: 0.7;
 }
 
-.locked-disabled .form-control {
-    background-color: #0b1218 !important;
-    border: 1px solid var(--rs-success) !important;
-    color: var(--rs-success) !important;
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-/* 3. BARRA DE CARGA (Asegurando el Rojo de prueba) */
-.import-engine-container .progress-bar {
-    background-color: var(--rs-primary) !important; /* Mantenemos el rojo para probar si linkea */
-    background-image: none !important;
-    box-shadow: 0 0 15px var(--rs-primary) !important;
-}
-
-.locked-disabled .progress-bar {
-    background-color: var(--rs-success) !important;
-    box-shadow: 0 0 15px var(--rs-success) !important;
+/* --- ANIMACIÓN DE PULSO --- */
+@keyframes led-pulse-white {
+    0% { opacity: 0.3; box-shadow: 0 0 0px var(--rs-primary); }
+    50% { opacity: 1; box-shadow: 0 0 12px var(--rs-primary); }
+    100% { opacity: 0.3; box-shadow: 0 0 0pxvar(--rs-primary); }
 }
 
 
-/* ==========================================================================
-   FILE INPUT: TEXT COLOR (Filename detail)
-   ========================================================================== */
 
-/* 1. Color del texto cuando el archivo está seleccionado (Estado UNLOCK) */
-.lock-wrapper:not(.locked-disabled) .form-control {
-    color: #ffffff !important; /* Blanco puro para que resalte sobre el fondo oscuro */
-
-}
-
-/* Color del texto cuando el archivo está bloqueado (Estado LOCK) */
-.locked-disabled .form-control {
-    color: #ffffff !important; /* Blanco puro para que resalte sobre el fondo oscuro */
-
-}
-
-/* 2. Controlar el color del "Placeholder" (el texto que dice 'No file selected') */
-.form-control::placeholder {
-    color: rgba(255, 255, 255, 0.4) !important;
-}
-
-/* 3. El texto dentro del botón 'Browse...' (por si quieres cambiarlo también) */
-.btn-file {
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-}

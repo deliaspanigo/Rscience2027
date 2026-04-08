@@ -12,32 +12,11 @@ library("bslib")
 mod_02_01_dataset_ui <- function(id) {
   ns <- NS(id)
 
-  # # Gestión de recursos (CSS)
-  # lib_www_path <- system.file("www", "css", package = "Rscience2027")
-  # if (lib_www_path == "") lib_www_path <- "www"
-  #
-  # if (dir.exists(lib_www_path)) {
-  #   addResourcePath("lib_www", normalizePath(lib_www_path))
-  #   path_to_css <- file.path(lib_www_path, "style_000.css")
-  # } else {
-  #   path_to_css <- NULL
-  # }
-
   tagList(
-    # tags$head(
-    #   useShinyjs(),
-    #   if (!is.null(path_to_css)) {
-    #     tags$link(rel = "stylesheet", type = "text/css", href = "lib_www/style_000.css")
-    #   },
-    #   # Force body scroll in case of page_fixed conflicts
-    #   tags$style("html, body { overflow-y: auto !important; min-height: 100vh; }")
-    # ),
-
-    # CONTENEDOR PRINCIPAL CON SCROLL
+    # CLASE RAÍZ ÚNICA PARA AISLAMIENTO TOTAL
     div(
       id = ns("import_container"),
-      class = "import-engine-container",
-      style = "height: auto; min-height: 100vh; overflow-y: visible; padding-bottom: 100px;",
+      class = "rs-mod-dataset-container",
 
       # FILA 0: HEADER
       div(class = "row",
@@ -47,7 +26,6 @@ mod_02_01_dataset_ui <- function(id) {
 
       # FILA 1: PANEL DE CONTROL
       div(class = "row g-4 align-items-start",
-          # Columna de Entradas
           div(class = "col-md-8",
               div(id = ns("main_input_col"), class = "lock-wrapper",
                   div(class = "row g-3",
@@ -60,16 +38,16 @@ mod_02_01_dataset_ui <- function(id) {
                                       width = "100%")
                       ),
                       div(class = "col-md-8",
-                          div(id = ns("label_selection"), class = "section-label", "Data Selection"),
+                          #div(id = ns("label_selection"), class = "section-label", "Data Selection"),
                           div(id = ns("div_menu01"), uiOutput(ns("menu01_local_file"))),
                           div(id = ns("div_menu02"), uiOutput(ns("menu02_RData")))
                       )
                   ),
                   div(id = ns("div_options"), uiOutput(ns("options_ui")))
+
               )
           ),
 
-          # Columna de Acciones (Engine Control)
           div(class = "col-md-4",
               div(class = "action-row-right",
                   mod_07_00_engine_control_ui(ns("main_switch"))
@@ -77,37 +55,40 @@ mod_02_01_dataset_ui <- function(id) {
           )
       ),
 
+
+
       div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
 
-      # FILA 2: PREVIEW Y DEBUG
-      uiOutput(ns("dataset_info_ui")),
-
+      uiOutput(ns("import_summary")),
+      # FILA 2: PREVIEW
       div(class = "row",
           div(class = "col-12",
               div(class = "section-label mb-3", icon("table"), " Data Preview"),
+              div(class = "rs-table-wrapper", # Clase específica para la tabla,
 
-              # Tabla con su propio contenedor
-              div(class = "rs-table-container",
                   DTOutput(ns("preview"))
               ),
-
               uiOutput(ns("show_debug_internal"))
-
-              # Area de Debug con altura automática para no bloquear el scroll
-
           )
       )
     )
   )
 }
 
-# ==============================================================================
-# IMPORT MODULE SERVER - v.0.1.0 (COMPLETED WITH NESTED METADATA)
-# ==============================================================================
+
+mod_02_01_dataset_DEBUG_ui <-  function(id) {
+
+  ns <- NS(id)
+
+  tagList(
+    uiOutput(ns("show_debug_external"))
+  )
+
+}
 # ==============================================================================
 # IMPORT MODULE SERVER - v.0.1.0 (CORRECTED)
 # ==============================================================================
-mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
+mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -116,11 +97,13 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
 
 
     # Invocamos el Engine Control y recibimos su estado reactivo (mode y last_update)
-    engine_state <- mod_07_00_engine_control_server("main_switch", show_debug = internal_show_debug())
+    engine_state <- mod_07_00_engine_control_server("main_switch", show_debug = internal_show_debug)
 
     # --- REACTIVE VALUES ---
     list_default <- list(
       "details" = "*** RScience - Import Engine ***",
+      "my_sys_time" = Sys.time(),
+      click_count_count = 0,
       "is_done" = FALSE,
       "is_locked" = FALSE,
       "error_msg" = NULL,
@@ -182,6 +165,7 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
     observeEvent(engine_state(), {
       state <- engine_state()$mode
 
+      data_store$click_count <- data_store$click_count + 1
       if (state == "lock") {
         # Acción: Intentar importar
         import_logic()
@@ -191,7 +175,7 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
             data_store$is_locked <- FALSE
 
             showNotification("Selection is not completed... Status Unlock", type = "warning")
-            reset_all()
+            reset_data_store()
             shinyjs::delay(1000, {
               shinyWidgets::updateRadioGroupButtons(
                 session = session,
@@ -291,14 +275,55 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
     # (Aquí irían los renders de menu01, menu02 y options_ui que ya tenías)
     output$menu01_local_file <- renderUI({
       req(input$source_dataset == 'local_file')
-      fileInput(ns("file_input"), NULL, buttonLabel = "Browse...", width = "100%")
+
+      tagList(
+        div(id = ns("label_selection"), class = "section-label", "Data Selection"),
+        fileInput(ns("file_input"), NULL, buttonLabel = "Browse...", width = "100%")
+      )
     })
 
+
+
+    # Ejemplo para el selector de R_dataset
     output$menu02_RData <- renderUI({
       req(input$source_dataset == 'R_dataset')
-      selectizeInput(ns("selected_R_dataset"), NULL, choices = c("(Select)"="", "mtcars","iris","airquality"), width = "100%")
+
+      tagList(
+        div(id = ns("label_selection"), class = "section-label", "Data Selection"),
+        selectInput(ns("selected_R_dataset"), NULL,
+                    choices = c("(Select source first)" = "", "mtcars", "iris", "airquality"),
+                    width = "100%")
+      )
     })
 
+
+    # --- INFO DE DATASET IMPORTADO ---
+    output$import_summary <- renderUI({
+      has_data <- !is.null(data_store$df) && data_store$is_done
+
+      # Clase principal: cambia de 'waiting' (blanco/glow) a 'locked' (verde)
+      state_class <- if(has_data) "rs-status-locked" else "rs-status-waiting"
+
+      div(class = paste("rs-minimal-bar", state_class),
+          # Segmento 1: LED + Texto de Estado
+          div(class = "status-segment",
+              div(class = "led-indicator"),
+              span(class = "status-text", if(has_data) "DATASET CONFIRMED" else "AWAITING CONFIRMATION...")),
+
+          # Segmento 2: Info (Sola fila)
+          div(class = "info-segment",
+              span(class = "info-label", "FILE:"),
+              span(class = "info-val", if(has_data) data_store$metadata$name_mod else "---")),
+
+          div(class = "info-segment",
+              span(class = "info-label", "ROWS:"),
+              span(class = "info-val", if(has_data) data_store$metadata$rows else "0")),
+
+          div(class = "info-segment",
+              span(class = "info-label", "COLS:"),
+              span(class = "info-val", if(has_data) data_store$metadata$cols else "0"))
+      )
+    })
 
     # --- RENDERIZADO DE OPCIONES DINÁMICAS (Sheet, Sep, etc.) ---
     output$options_ui <- renderUI({
@@ -321,7 +346,7 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
             div(class = "col-12",
                 # ID AÑADIDO: label_sep
                 div(id = ns("label_sep"), class = "section-label", "Delimiter / Separator"),
-                selectizeInput(ns("sep"), NULL,
+                selectInput(ns("sep"), NULL,
                                choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab (\t)" = "\t"),
                                selected = ",", width = "100%")
             )
@@ -347,7 +372,7 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
     ########3
     # 4. DEBUG RENDERS
     output$debug_internal <- listviewer::renderJsonedit({
-      req(show_debug)
+      req(internal_show_debug())
       # Solo devolvemos la lista. El estilo se lo das al contenedor en la UI.
       listviewer::jsonedit(
         listdata = reactiveValuesToList(data_store),
@@ -359,7 +384,7 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
       req(internal_show_debug())
       div(class = "debug-section",
           style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
-          div(class = "section-label", icon("bug"), " Engine Debug"),
+          div(class = "section-label", style = "justify-content: flex-start !important; gap: 8px;", icon("bug"), " Internal Debug - Dataset"),
           listviewer::jsoneditOutput(ns("debug_internal"), height = "auto")
       )
     })
@@ -370,8 +395,26 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
 
     output$show_debug_external <- renderUI({
       div(style = "background: #1a1a1a; padding: 15px; border-radius: 8px;",
-          h5("DEBUG External - Dataset", style="color: #00d4ff;"),
-          listviewer::jsoneditOutput(ns("debug_external"), height = "500px")
+          # Título (Header)
+
+
+          # Contenedor de dos columnas
+          div(class = "row",
+              # Columna Izquierda: Visor JSON
+              div(class = "col-md-8",
+                  div(class = "section-label",
+                      style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 15px;",
+                      icon("bug"), " External Debug - Dataset"),
+                  listviewer::jsoneditOutput(ns("debug_external"), height = "500px")
+              ),
+
+              # Columna Derecha: Controles de Engine
+              div(class = "col-md-4",
+                  div(style = "border-left: 1px solid #333; padding-left: 15px; height: 100%;",
+                      mod_07_00_engine_control_DEBUG_ui(id = ns("main_switch"))
+                  )
+              )
+          )
       )
     })
 

@@ -39,8 +39,7 @@ mod_07_00_engine_control_ui <- function(id) {
             )
         ),
         uiOutput(ns("internal_status_ui")),
-        br(),
-        listviewer::jsoneditOutput(ns("debug_json"), height = "auto")
+        uiOutput(ns("show_debug_internal"))
     )
   )
 }
@@ -58,13 +57,12 @@ mod_07_00_engine_control_DEBUG_ui <-  function(id) {
 
 
 # Server del Módulo
-# Server del Módulo - v.0.7.1 (Safe Mode)
-# Server del Módulo - v.0.7.1 (Safe Mode + Modal Confirmation)
-# Server del Módulo - v.0.7.1 (Modal solo para RESET)
-# Server del Módulo - v.0.7.1 (Modal como Bloqueo de Interfaz)
-mod_07_00_engine_control_server <- function(id, show_debug = FALSE) {
+mod_07_00_engine_control_server <- function(id, show_debug = reactive({FALSE})) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    internal_show_debug     <- reactive( if(is.function(show_debug)) show_debug() else show_debug)
+
 
     www_folder <- system.file("www", package = "Rscience2027")
     if (www_folder == "") www_folder <- "www"
@@ -72,9 +70,11 @@ mod_07_00_engine_control_server <- function(id, show_debug = FALSE) {
 
     # --- ALMACÉN DE ESTADO ---
     engine_status <- reactiveValues(
+      description = "Control Engine Multipropose.",
+      my_sys_time = Sys.time(),
       mode = "unlock",
-      last_update = format(Sys.time(), "%H:%M:%S"),
-      try_lock = FALSE
+      try_lock = FALSE,
+      clic_count = 0
     )
 
     # --- LÓGICA DE RESET CON BLOQUEO TOTAL ---
@@ -83,7 +83,6 @@ mod_07_00_engine_control_server <- function(id, show_debug = FALSE) {
 
       req(input$engine_mode == "reset")
 
-      # 1. Disparamos un modal que NO se puede cerrar (Bloqueo de UI)
       # 1. Disparamos un modal que NO se puede cerrar (Bloqueo de UI)
       showModal(modalDialog(
         title = NULL,
@@ -113,8 +112,9 @@ mod_07_00_engine_control_server <- function(id, show_debug = FALSE) {
 
       # 2. Actualizamos el estado interno
       engine_status$mode <- "reset"
-      engine_status$last_update <- format(Sys.time(), "%H:%M:%S")
+      engine_status$my_sys_time = Sys.time()
       engine_status$try_lock <- FALSE
+      engine_status$clic_count <- engine_status$clic_count + 1
 
       # 3. Simulamos/Ejecutamos el proceso y liberamos la UI
       shinyjs::delay(2000, {
@@ -123,23 +123,25 @@ mod_07_00_engine_control_server <- function(id, show_debug = FALSE) {
 
         # Actualizamos estado
         engine_status$mode <- "unlock"
-        engine_status$last_update <- format(Sys.time(), "%H:%M:%S")
+        engine_status$my_sys_time = Sys.time()
 
         # QUITAMOS EL MODAL (Libera la App)
         removeModal()
 
         showNotification("Engine Ready", type = "message")
       })
-    })
+    }, ignoreInit = T)
 
     # --- ACTUALIZACIÓN DE ESTADO (LOCK / UNLOCK) ---
     observeEvent(input$engine_mode, {
       req(input$engine_mode %in% c("unlock", "lock"))
       engine_status$mode <- input$engine_mode
-      engine_status$last_update <- format(Sys.time(), "%H:%M:%S")
+      engine_status$my_sys_time = Sys.time()
+      engine_status$clic_count <- engine_status$clic_count + 1
+
 
       if(input$engine_mode == "lock")  engine_status$try_lock <- TRUE else engine_status$try_lock <- TRUE
-    })
+    }, ignoreInit = T)
 
     # --- RENDERS VISUALES ---
     output$internal_status_ui <- renderUI({
@@ -161,26 +163,33 @@ mod_07_00_engine_control_server <- function(id, show_debug = FALSE) {
       )
     }
 
-    output$debug_json <- listviewer::renderJsonedit({
-      req(show_debug)
+    output$debug_internal <- listviewer::renderJsonedit({
+      req(internal_show_debug())
+      render_debug_json()
+    })
+
+    output$show_debug_internal <- renderUI({
+      req(internal_show_debug())
+      div(class = "debug-section",
+          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
+          div(class = "section-label", style = "justify-content: flex-start !important; gap: 8px;", icon("bug"), " Internal Debug - Control Engine"),
+          listviewer::jsoneditOutput(ns("debug_internal"), height = "auto")
+      )
+    })
+
+    output$debug_external <- listviewer::renderJsonedit({
       render_debug_json()
     })
 
     output$show_debug_external <- renderUI({
-      req(show_debug)
-      div(style = "background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #333;",
-          div(style = "display: flex; align-items: center; gap: 10px; margin-bottom: 10px;",
-              icon("microchip", style="color: #00bc8c;"),
-              h5("DEBUG - Engine Control System", style="color: #00bc8c; margin: 0;")
-          ),
-          listviewer::jsoneditOutput(ns("debug_json_ext"), height = "300px")
+      div(class = "debug-section",
+          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
+          div(class = "section-label", style = "justify-content: flex-start !important; gap: 8px;", icon("bug"), " External Debug - Control Engine"),
+          listviewer::jsoneditOutput(ns("debug_external"), height = "auto")
       )
     })
 
-    output$debug_json_ext <- listviewer::renderJsonedit({
-      req(show_debug)
-      render_debug_json()
-    })
+
 
     # --- RETORNO ---
     return(reactive({ reactiveValuesToList(engine_status) }))
