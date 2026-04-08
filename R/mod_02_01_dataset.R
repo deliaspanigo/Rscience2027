@@ -252,12 +252,25 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
 
       if (lock_it) {
         shinyjs::addClass(id = "main_input_col", class = "locked-disabled")
+
+        # Labels principales
         shinyjs::html("label_source", paste0("Source Type", suffix))
         shinyjs::html("label_selection", paste0("Data Selection", suffix))
+
+        # Labels Dinámicos (Solo si existen en el UI en ese momento)
+        shinyjs::html("label_sheet", paste0("Excel Sheet Selection", suffix))
+        shinyjs::html("label_sep", paste0("Delimiter / Separator", suffix))
+
       } else {
         shinyjs::removeClass(id = "main_input_col", class = "locked-disabled")
+
+        # Reset labels principales
         shinyjs::html("label_source", "Source Type")
         shinyjs::html("label_selection", "Data Selection")
+
+        # Reset labels dinámicos
+        shinyjs::html("label_sheet", "Excel Sheet Selection")
+        shinyjs::html("label_sep", "Delimiter / Separator")
       }
     }
 
@@ -295,28 +308,24 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
       ext <- tolower(tools::file_ext(input$file_input$name))
 
       if (ext == "xlsx") {
-        # Caso Excel: Leer hojas disponibles
         sheets <- readxl::excel_sheets(input$file_input$datapath)
-
         div(class = "row mt-2",
             div(class = "col-12",
-                div(class = "section-label", "Excel Sheet Selection"),
+                # ID AÑADIDO: label_sheet
+                div(id = ns("label_sheet"), class = "section-label", "Excel Sheet Selection"),
                 selectInput(ns("excel_sheet"), NULL, choices = sheets, width = "100%")
             )
         )
       } else if (ext %in% c("csv", "tsv", "txt")) {
-        # Caso Texto: Seleccionar separador
         div(class = "row mt-2",
             div(class = "col-12",
-                div(class = "section-label", "Delimiter / Separator"),
+                # ID AÑADIDO: label_sep
+                div(id = ns("label_sep"), class = "section-label", "Delimiter / Separator"),
                 selectizeInput(ns("sep"), NULL,
                                choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab (\t)" = "\t"),
                                selected = ",", width = "100%")
             )
         )
-      } else {
-        # Formato no soportado
-        div(class = "alert alert-danger", "File format not supported.")
       }
     })
 

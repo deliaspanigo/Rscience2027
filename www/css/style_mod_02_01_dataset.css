@@ -186,3 +186,114 @@ table.dataTable tbody tr:hover {
     border: 1px solid var(--rs-primary) !important;
     font-weight: bold;
 }
+
+
+
+/* --- DIAGNÓSTICO: BARRA DE CARGA ROJA --- */
+
+/* 1. FUERZA BRUTA: Rojo Neón por defecto */
+.import-engine-container .progress-bar {
+    background-color: var(--rs-primary) !important; /* Rojo puro */
+    background-image: none !important;
+    box-shadow: 0 0 15px var(--rs-primary) !important;
+    color: white !important;
+}
+
+/* 2. El carril de fondo también lo ponemos oscuro para que resalte el rojo */
+.import-engine-container .progress {
+    background-color: rgba(0, 212, 255, 0.4) !important;
+    border: 2px solid var(--rs-primary) !important;
+    height: 20px !important; /* La hacemos más gruesa para verla bien */
+}
+
+/* 3. SOLO SI FUNCIONA EL ROJO: El cambio a Verde al bloquear */
+.locked-disabled .progress-bar {
+    background-color: var(--rs-success) !important;
+    box-shadow: 0 0 15px var(--rs-success) !important;
+}
+
+.locked-disabled .progress {
+    border-color: var(--rs-success) !important;
+}
+
+
+
+/* ==========================================================================
+   FILE INPUT: BORDERS & BUTTONS (RScience Sync)
+   ========================================================================== */
+
+/* 1. ESTADO POR DEFECTO (Cyan) */
+.lock-wrapper:not(.locked-disabled) .btn-file {
+    background-color: #1a252f !important;
+    border: 1px solid rgba(0, 212, 255, 0.5) !important;
+    color: var(--rs-primary) !important;
+}
+
+.lock-wrapper:not(.locked-disabled) .form-control {
+    background-color: #1a252f !important;
+    border: 1px solid rgba(0, 212, 255, 0.3) !important;
+    color: white !important;
+}
+
+/* Hover en estado Cyan */
+.lock-wrapper:not(.locked-disabled) .btn-file:hover {
+    border-color: var(--rs-primary) !important;
+    box-shadow: 0 0 8px var(--rs-glow-primary) !important;
+}
+
+/* 2. ESTADO BLOQUEADO (Verde Success) */
+.locked-disabled .btn-file {
+    background-color: #0b1218 !important;
+    border: 1px solid var(--rs-success) !important;
+    color: var(--rs-success) !important;
+    opacity: 0.7;
+}
+
+.locked-disabled .form-control {
+    background-color: #0b1218 !important;
+    border: 1px solid var(--rs-success) !important;
+    color: var(--rs-success) !important;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* 3. BARRA DE CARGA (Asegurando el Rojo de prueba) */
+.import-engine-container .progress-bar {
+    background-color: var(--rs-primary) !important; /* Mantenemos el rojo para probar si linkea */
+    background-image: none !important;
+    box-shadow: 0 0 15px var(--rs-primary) !important;
+}
+
+.locked-disabled .progress-bar {
+    background-color: var(--rs-success) !important;
+    box-shadow: 0 0 15px var(--rs-success) !important;
+}
+
+
+/* ==========================================================================
+   FILE INPUT: TEXT COLOR (Filename detail)
+   ========================================================================== */
+
+/* 1. Color del texto cuando el archivo está seleccionado (Estado UNLOCK) */
+.lock-wrapper:not(.locked-disabled) .form-control {
+    color: #ffffff !important; /* Blanco puro para que resalte sobre el fondo oscuro */
+
+}
+
+/* Color del texto cuando el archivo está bloqueado (Estado LOCK) */
+.locked-disabled .form-control {
+    color: #ffffff !important; /* Blanco puro para que resalte sobre el fondo oscuro */
+
+}
+
+/* 2. Controlar el color del "Placeholder" (el texto que dice 'No file selected') */
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* 3. El texto dentro del botón 'Browse...' (por si quieres cambiarlo también) */
+.btn-file {
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
