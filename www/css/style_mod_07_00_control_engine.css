@@ -6,72 +6,88 @@
     border: 2px solid rgba(0, 212, 255, 0.2); /* Un poco más de presencia al borde de la card */
 }
 
-/* --- 2. GRUPO DE BOTONES (Estructura) --- */
+/* --- 2. GRUPO DE BOTONES (Estructura Cyber-Capsule) --- */
 .rs-engine-selector .btn-group {
     display: flex !important;
     width: 100%;
-    gap: 0;
-    border-radius: var(--rs-radius-sm);
-    overflow: hidden; /* Asegura que el contenido no desborde los radios */
+    gap: 12px; /* Espacio entre las cápsulas */
+    background: transparent !important;
+    padding: 5px;
 }
 
 .rs-engine-selector .btn-group > .btn-engine-custom {
     flex: 1;
-    padding: 14px 5px !important; /* Un poco más de aire vertical */
-    font-size: 0.85rem !important;
+    padding: 12px 5px !important;
+    font-size: 0.8rem !important;
     font-weight: 800 !important;
     text-transform: uppercase;
-    background-color: #080808 !important; /* Fondo más profundo */
-    transition: all 0.2s ease-in-out;
-    border-radius: 0 !important;
+    background-color: #0c1218 !important; /* Fondo oscuro sólido */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* FORMA OVALADA / CÁPSULA */
+    border-radius: 50px !important;
+
     display: flex;
     justify-content: center;
     align-items: center;
-    /* BORDE BASE GRUESO (3px) */
-    border: 3px solid transparent !important;
+    position: relative;
+    overflow: hidden;
+
+    /* BORDE NEÓN FINO BASE */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-/* --- 3. COLORES Y BORDES DINÁMICOS --- */
+/* Efecto de brillo interno para dar volumen */
+.rs-engine-selector .btn-group > .btn-engine-custom::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 50%);
+    pointer-events: none;
+}
 
-/* UNLOCK (Cian) */
+/* --- 3. COLORES DINÁMICOS (CYBER-ESTILOS) --- */
+
+/* Hover General */
+.rs-engine-selector .btn-group > .btn-engine-custom:hover {
+    transform: translateY(-2px);
+    background-color: #161f27 !important;
+}
+
+/* UNLOCK (Cian Neón) */
 .rs-engine-selector .btn-group > .btn-engine-custom:nth-of-type(1) {
     color: var(--rs-primary) !important;
-    border: 3px solid var(--rs-primary) !important;
-    border-right-width: 1.5px !important; /* Mitad del borde para la unión */
-    border-top-left-radius: var(--rs-radius-sm) !important;
-    border-bottom-left-radius: var(--rs-radius-sm) !important;
+    border: 1px solid var(--rs-primary) !important;
 }
 .rs-engine-selector .btn-group > .btn-check:checked + .btn-engine-custom:nth-of-type(1) {
     background-color: var(--rs-primary) !important;
     color: #000 !important;
-    box-shadow: 0 0 20px var(--rs-glow-primary) !important;
+    box-shadow: 0 0 15px var(--rs-glow-primary), inset 0 0 10px rgba(255,255,255,0.5) !important;
+    border-color: #fff !important;
 }
 
-/* LOCKED (Verde) */
+/* LOCKED (Verde Matrix) */
 .rs-engine-selector .btn-group > .btn-engine-custom:nth-of-type(2) {
     color: var(--rs-success) !important;
-    border: 3px solid var(--rs-success) !important;
-    border-left-width: 1.5px !important; /* Unión izquierda */
-    border-right-width: 1.5px !important; /* Unión derecha */
+    border: 1px solid var(--rs-success) !important;
 }
 .rs-engine-selector .btn-group > .btn-check:checked + .btn-engine-custom:nth-of-type(2) {
     background-color: var(--rs-success) !important;
     color: #000 !important;
-    box-shadow: 0 0 20px rgba(0, 188, 140, 0.5) !important;
+    box-shadow: 0 0 15px rgba(0, 188, 140, 0.6), inset 0 0 10px rgba(255,255,255,0.5) !important;
+    border-color: #fff !important;
 }
 
-/* RESET (Naranja) */
+/* RESET (Naranja Warning) */
 .rs-engine-selector .btn-group > .btn-engine-custom:nth-of-type(3) {
     color: var(--rs-warning) !important;
-    border: 3px solid var(--rs-warning) !important;
-    border-left-width: 1.5px !important; /* Unión izquierda */
-    border-top-right-radius: var(--rs-radius-sm) !important;
-    border-bottom-right-radius: var(--rs-radius-sm) !important;
+    border: 1px solid var(--rs-warning) !important;
 }
 .rs-engine-selector .btn-group > .btn-check:checked + .btn-engine-custom:nth-of-type(3) {
     background-color: var(--rs-warning) !important;
     color: #000 !important;
-    box-shadow: 0 0 20px rgba(243, 156, 18, 0.5) !important;
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.6), inset 0 0 10px rgba(255,255,255,0.5) !important;
+    border-color: #fff !important;
 }
 
 /* --- 4. DISPLAY DE ESTADO (Con efecto Push-Up) --- */

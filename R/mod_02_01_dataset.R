@@ -91,14 +91,10 @@ mod_02_01_dataset_ui <- function(id) {
                   DTOutput(ns("preview"))
               ),
 
-              br(),
+              uiOutput(ns("show_debug_internal"))
 
               # Area de Debug con altura automática para no bloquear el scroll
-              div(class = "debug-section",
-                  style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
-                  div(class = "section-label", icon("bug"), " Engine Debug"),
-                  listviewer::jsoneditOutput(ns("debug_internal"), height = "auto")
-              )
+
           )
       )
     )
@@ -116,9 +112,11 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
     ns <- session$ns
 
 
+    internal_show_debug     <- reactive( if(is.function(show_debug)) show_debug() else show_debug)
+
 
     # Invocamos el Engine Control y recibimos su estado reactivo (mode y last_update)
-    engine_state <- mod_07_00_engine_control_server("main_switch", show_debug = show_debug)
+    engine_state <- mod_07_00_engine_control_server("main_switch", show_debug = internal_show_debug())
 
     # --- REACTIVE VALUES ---
     list_default <- list(
@@ -345,6 +343,15 @@ mod_02_01_dataset_server <- function(id, show_debug = FALSE) {
       listviewer::jsonedit(
         listdata = reactiveValuesToList(data_store),
         mode = "text"
+      )
+    })
+
+    output$show_debug_internal <- renderUI({
+      req(internal_show_debug())
+      div(class = "debug-section",
+          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
+          div(class = "section-label", icon("bug"), " Engine Debug"),
+          listviewer::jsoneditOutput(ns("debug_internal"), height = "auto")
       )
     })
 
