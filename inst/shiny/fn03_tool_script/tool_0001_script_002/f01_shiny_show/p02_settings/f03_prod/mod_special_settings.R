@@ -22,7 +22,7 @@ mod_special_settings_ui <- function(id) {
 
         # Monitor de estado (Solo debug)
         uiOutput(ns("global_status_tag")),
-        uiOutput(ns("debug_container")),
+
 
         # Card de bslib integrada al diseño RS
         card(
@@ -46,7 +46,8 @@ mod_special_settings_ui <- function(id) {
               div(style = "padding-top: 15px;", uiOutput(ns("ui_step2")))
             )
           )
-        )
+        ),
+        uiOutput(ns("debug_container")),
     )
   )
 }

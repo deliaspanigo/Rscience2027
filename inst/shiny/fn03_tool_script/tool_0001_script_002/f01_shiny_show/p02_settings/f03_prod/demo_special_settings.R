@@ -12,6 +12,9 @@ library(listviewer)
 
 devtools::load_all()
 
+source("sub_module/sm01_var_selection.R")
+source("sub_module/sm02_levels.R")
+
 source("mod_special_settings.R")
 
 # 2. PREPARACIÓN DE DATOS DE PRUEBA

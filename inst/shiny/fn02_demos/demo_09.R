@@ -69,7 +69,7 @@ server <- function(input, output, session) {
 
   # Llamamos al server del módulo
   # Guardamos el retorno en un reactivo por si queremos usar los datos en la app
-  mod_rscience_engine_server(id = "mi_analisis_01", show_debug_tab = F, show_debug_general = F)
+  mod_rscience_engine_server(id = "mi_analisis_01", show_debug_tab = T, show_debug_general = F)
 
   # # Ejemplo de cómo acceder a los datos desde fuera del módulo
   # observe({

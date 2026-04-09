@@ -100,19 +100,22 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
     engine_state <- mod_07_00_engine_control_server("main_switch", show_debug = internal_show_debug)
 
     # --- REACTIVE VALUES ---
-    list_default <- list(
-      "details" = "*** RScience - Import Engine ***",
-      "my_sys_time" = Sys.time(),
-      click_count_count = 0,
-      "is_done" = FALSE,
-      "is_locked" = FALSE,
-      "error_msg" = NULL,
-      "metadata" = list(
-        selected_source = NULL, name_mod = NULL, rows = NULL, cols = NULL, timestamp = NULL
-      ),
-      "df" = NULL
-    )
-    data_store <- do.call(reactiveValues, list_default)
+    get_default_data <- function() {
+      list(
+        "details" = "*** RScience - Import Engine ***",
+        "my_sys_time" = Sys.time(),
+        "click_count" = 0, # Corregido el nombre si era click_count
+        "is_done" = FALSE,
+        "is_locked" = FALSE,
+        "error_msg" = NULL,
+        "metadata" = list(
+          selected_source = NULL, name_mod = NULL, rows = NULL, cols = NULL, "my_sys_time" = NULL
+        ),
+        "df" = NULL
+      )
+    }
+
+    data_store <- do.call(reactiveValues, get_default_data())
 
     # --- LÓGICA DE IMPORTACIÓN ---
     import_logic <- function() {
@@ -146,7 +149,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
         data_store$df <- as.data.frame(temp_df)
         data_store$metadata$rows <- nrow(data_store$df)
         data_store$metadata$cols <- ncol(data_store$df)
-        data_store$metadata$timestamp <- format(Sys.time(), "%H:%M:%S")
+        data_store$metadata$"my_sys_time" <- format(Sys.time(), "%H:%M:%S")
         data_store$is_done <- TRUE
 
         toggle_import_controls(TRUE)
@@ -183,59 +186,64 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
         data_store$is_locked <- FALSE
 
         reset_data_store()
-        unblock_opts()
+        # unblock_opts()
       } else if (state == "reset") {
         reset_all()
-        block_opts()
+        # block_opts()
       }
     })
 
     # --- FUNCIONES DE ACCIÓN ---
     reset_data_store <- function() {
-      data_store$details <- "*** RScience - Import Engine ***"
-      data_store$is_done <- FALSE
-      data_store$is_locked <- FALSE
-      data_store$error_msg <- NULL
-      data_store$df <- data.frame()
-      data_store$metadata <- list(
-        selected_source = NULL, name_mod = NULL, rows = NULL, cols = NULL, timestamp = NULL
-      )
+      defaults <- get_default_data()
+
+      # mapply recorre los nombres y valores de la lista de defaults
+      # y los asigna uno a uno al objeto reactiveValues
+      mapply(function(val, name) {
+        data_store[[name]] <- val
+      }, defaults, names(defaults))
     }
 
     toggle_import_controls <- function(lock_it) {
       vector_obj <- c("root_id" = "import_container",
                       "header_id"  = "the_header",
                       "menu_id" = "the_menu",
+                      "control_id" = "the_control",
                       "summary_id" = "the_summary",
                       "view_id" = "the_view")
 
+      selected_root <- "import_container"
       selected_summary <-vector_obj["summary_id"]
       selected_menu <-vector_obj["menu_id"]
 
       if (lock_it) {
+        # Hay que bloquar...
         # Pasamos a modo LOCK (Verde)
-        shinyjs::removeClass(selected_summary, "pack-style-unlock")
-        shinyjs::removeClass(selected_summary, "pack-style-reset")
-        shinyjs::addClass(selected_summary, "pack-style-lock")
+        ## Summary al estado Lock (VERDE)
+        shinyjs::removeClass(selected_summary, "pack-style-unlock pack-style-reset")   # Quitamos los colores...
+        shinyjs::addClass(selected_summary, "pack-style-lock") # Aplicamos el color de lock
 
-        shinyjs::removeClass(selected_menu, "rs-clean-block")
-        shinyjs::addClass(selected_menu, "rs-block-smoke")
-        shinyjs::removeClass(selected_menu, "neon-glow-RUN")
-
-        #shinyjs::addClass(selected_menu, )
-        #
+        ## Bloqueamos el menu de seleccion
+        shinyjs::removeClass(selected_menu, "rs-clean-block")   # Quitamos el clean...
+        shinyjs::addClass(selected_menu, "rs-block-smoke")      # Aplicamos block...
+        shinyjs::removeClass(selected_menu, "neon-glow-RUN")    # Quitamos el neon...
 
 
       } else {
+        # Hay que desplockear
         # Pasamos a modo UNLOCK (Cian)
-        #
+
+        # Limpiamos los colores de todos...
         lapply(vector_obj, function(selected_id) {
           shinyjs::removeClass(selected_id, "pack-style-lock  pack-style-reset")
           shinyjs::addClass(selected_id, "pack-style-unlock")
         })
-        shinyjs::addClass(selected_menu, "neon-glow-RUN")
-        shinyjs::removeClass(selected_menu, "rs-block-smoke")
-        shinyjs::removeClass(selected_menu, "rs-block-invisible")
+
+        # Cambios varios
+        shinyjs::addClass(selected_menu, "neon-glow-RUN")  # aplicamos el neon
+        shinyjs::removeClass(selected_menu, "rs-block-smoke") # Quitamos el block smote
+        shinyjs::removeClass(selected_menu, "rs-block-invisible") # Quitamos el block invisible del menu
+        shinyjs::removeClass(selected_root, "rs-block-invisible") # Quitamos el block invisible de la pagina principal
 
 
       }
@@ -245,19 +253,26 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
       vector_obj <- c("root_id" = "import_container",
                       "header_id"  = "the_header",
                       "menu_id" = "the_menu",
+                      "control_id" = "the_control",
                       "summary_id" = "the_summary",
                       "view_id" = "the_view")
 
+      #  Descatados...
+      selected_root <- "import_container"
       selected_menu <- vector_obj["menu_id"]
-      shinyjs::removeClass(selected_menu, "rs-block-smoke")
-      shinyjs::addClass(selected_menu, "neon-glow-RUN")
-      shinyjs::addClass(selected_menu, "rs-block-invisible")
+
+      # Cambios por reset
+      shinyjs::removeClass(selected_menu, "rs-block-smoke")  # Quitamos smoke (por las dudas...)
+      shinyjs::addClass(selected_menu, "neon-glow-RUN")      # colocamos el neon...
+
+      shinyjs::addClass(selected_root, "rs-block-invisible") # Bloqueamos todo hasta que finalice el reseteo...
 
 
 
-      reset_data_store()
-     shinyjs::reset(vector_obj["menu_id"])
+      reset_data_store()  # Reseteo interno del reactive vallues...
+      shinyjs::reset(selected_menu) # Reseteamos las opciones del menu a default
 
+      # Mandamos a todos lso colores de reset....
       lapply(vector_obj, function(selected_id) {
         shinyjs::removeClass(selected_id, "pack-style-lock pack-style-unlock pack-style-reset")
         shinyjs::addClass(selected_id, "pack-style-reset")
@@ -266,17 +281,17 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
 
     }
 
-    block_opts <- function(){
-      root_id <- "import_container"
-      input_panel_id <- "main_input_col"
-      # shinyjs::addClass(root_id , "rs-block-invisible")
-    }
-
-    unblock_opts <- function(){
-      root_id <- "import_container"
-      input_panel_id <- "main_input_col"
-      # shinyjs::removeClass(root_id , "rs-block-invisible")
-    }
+    # block_opts <- function(){
+    #   root_id <- "import_container"
+    #   input_panel_id <- "main_input_col"
+    #   # shinyjs::addClass(root_id , "rs-block-invisible")
+    # }
+    #
+    # unblock_opts <- function(){
+    #   root_id <- "import_container"
+    #   input_panel_id <- "main_input_col"
+    #   # shinyjs::removeClass(root_id , "rs-block-invisible")
+    # }
 
 
     # --- RENDERS ---

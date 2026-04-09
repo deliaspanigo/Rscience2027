@@ -2,6 +2,20 @@
 # MOD_07_00_ENGINE_CONTROL.R
 # ==========================================================
 
+
+
+mod_07_00_engine_control_DEBUG_ui <-  function(id) {
+
+  ns <- NS(id)
+
+  tagList(
+    uiOutput(ns("show_debug_external"))
+  )
+
+}
+
+
+
 # UI del Módulo
 mod_07_00_engine_control_ui <- function(id) {
   ns <- NS(id)
@@ -44,17 +58,6 @@ mod_07_00_engine_control_ui <- function(id) {
   )
 }
 
-mod_07_00_engine_control_DEBUG_ui <-  function(id) {
-
-  ns <- NS(id)
-
-  tagList(
-    uiOutput(ns("show_debug_external"))
-  )
-
-}
-
-
 
 # Server del Módulo
 mod_07_00_engine_control_server <- function(id, show_debug = reactive({FALSE})) {
@@ -68,84 +71,79 @@ mod_07_00_engine_control_server <- function(id, show_debug = reactive({FALSE})) 
     if (www_folder == "") www_folder <- "www"
     try(addResourcePath("WWW-FOLDER", normalizePath(www_folder)), silent = TRUE)
 
-    # --- ALMACÉN DE ESTADO ---
-    engine_status <- reactiveValues(
-      description = "Control Engine Multipropose.",
-      my_sys_time = Sys.time(),
-      mode = "unlock",
-      try_lock = FALSE,
-      clic_count = 0
-    )
+    get_default_data <- function() {
+      list(
+          description = "*** RScience - Control Engine Multipropose ***",
+          my_sys_time = Sys.time(),
+          click_count = 0,
+          mode = "unlock",
+          try_lock = FALSE
+      )
+    }
+    reset_data_store <- function() {
+      defaults <- get_default_data()
+
+      # mapply recorre los nombres y valores de la lista de defaults
+      # y los asigna uno a uno al objeto reactiveValues
+      mapply(function(val, name) {
+        data_store[[name]] <- val
+      }, defaults, names(defaults))
+    }
+
+    data_store <- do.call(reactiveValues, get_default_data())
+
 
     # --- LÓGICA DE RESET CON BLOQUEO TOTAL ---
     observeEvent(input$engine_mode, {
-
-
       req(input$engine_mode == "reset")
 
-      # # 1. Disparamos un modal que NO se puede cerrar (Bloqueo de UI)
-      # showModal(modalDialog(
-      #   title = NULL,
-      #   footer = NULL,
-      #   size = "l",
-      #   easyClose = FALSE,
-      #   div(class = "text-center", style = "padding: 40px; background-color: #0b1218; border-radius: 15px;",
-      #
-      #       # --- CONTENEDOR DE IMAGEN ---
-      #       div(style = "margin-bottom: 30px;",
-      #           img(src = "WWW-FOLDER/Rscience_logo_sticker.png",
-      #               style = "width: 250px; filter: drop-shadow(0 0 10px #00d4ff66);")
-      #       ),
-      #
-      #       # --- ICONO DE PROCESO ---
-      #       div(style = "margin-bottom: 20px;",
-      #           icon("sync-alt", class = "fa-spin",
-      #                style = "font-size: 4.5rem; color: #ffc107; text-shadow: 0 0 20px rgba(255, 193, 7, 0.4);")
-      #       ),
-      #
-      #       # --- TEXTO DE ESTADO ---
-      #       h3("RScience Engine", style = "color: #00d4ff; font-weight: 800; letter-spacing: 2px;"),
-      #       p("Resetting system & clearing cache...",
-      #         style = "color: #aaaaaa; font-style: italic; font-size: 1.1rem; margin-top: 10px;")
-      #   )
-      # ))
+      # 1. BLOQUEO INMEDIATO (Visual y Lógico)
+      # Usamos la clase que definimos antes para que el usuario no toque nada
+      # rs_engine_status(c("the_menu", "the_summary"), action = "clean")
 
-      # 2. Actualizamos el estado interno
-      engine_status$mode <- "reset"
-      engine_status$my_sys_time = Sys.time()
-      engine_status$try_lock <- FALSE
-      engine_status$clic_count <- engine_status$clic_count + 1
+      # Marcamos un estado de "tránsito"
+      data_store$is_locked <- TRUE
 
-      # 3. Simulamos/Ejecutamos el proceso y liberamos la UI
+      # 2. PROCESO INTERNO (Aislado si es necesario)
+      # Si reset_data_store activa muchos observers, podrías envolverlo,
+      # pero al ser una función de asignación directa, el problema suele ser la cadena reactiva.
+      isolate({
+        reset_data_store()
+        data_store$mode <- "reset"
+      })
+
+      # 3. EL DELAY (La "Cámara de Silencio")
       shinyjs::delay(2000, {
-        # Volvemos el selector a unlock
+
+        # Solo al final de los 2 segundos actualizamos los valores que disparan UI
+        isolate({
+          data_store$my_sys_time <- Sys.time()
+          data_store$mode <- "unlock"
+          data_store$is_done <- FALSE
+        })
+
+        # 4. LIBERACIÓN
         shinyWidgets::updateRadioGroupButtons(session, "engine_mode", selected = "unlock")
-
-        # Actualizamos estado
-        engine_status$mode <- "unlock"
-        engine_status$my_sys_time = Sys.time()
-
-        # QUITAMOS EL MODAL (Libera la App)
-        # removeModal()
+        # rs_engine_status(c("the_menu", "the_summary"), action = "unlock")
 
         showNotification("Engine Ready", type = "message")
       })
-    }, ignoreInit = T)
+    }, ignoreInit = TRUE)
 
     # --- ACTUALIZACIÓN DE ESTADO (LOCK / UNLOCK) ---
     observeEvent(input$engine_mode, {
       req(input$engine_mode %in% c("unlock", "lock"))
-      engine_status$mode <- input$engine_mode
-      engine_status$my_sys_time = Sys.time()
-      engine_status$clic_count <- engine_status$clic_count + 1
+      data_store$mode <- input$engine_mode
+      data_store$my_sys_time = Sys.time()
+      data_store$click_count <- data_store$click_count + 1
 
 
-      if(input$engine_mode == "lock")  engine_status$try_lock <- TRUE else engine_status$try_lock <- TRUE
+      if(input$engine_mode == "lock")  data_store$try_lock <- TRUE else data_store$try_lock <- TRUE
     }, ignoreInit = T)
 
     # --- RENDERS VISUALES ---
     output$internal_status_ui <- renderUI({
-      mode <- engine_status$mode
+      mode <- data_store$mode
       config <- switch(mode,
                        "unlock" = list(txt = "ENGINE UNLOCKED",  cl = "status-unlock"),
                        "lock"   = list(txt = "ENGINE LOCKED",    cl = "status-lock"),
@@ -158,7 +156,7 @@ mod_07_00_engine_control_server <- function(id, show_debug = reactive({FALSE})) 
     # --- LÓGICA DE DEBUG (PROTEGIDA) ---
     render_debug_json <- function() {
       listviewer::jsonedit(
-        listdata = reactiveValuesToList(engine_status),
+        listdata = reactiveValuesToList(data_store),
         mode = "text"
       )
     }
@@ -192,7 +190,7 @@ mod_07_00_engine_control_server <- function(id, show_debug = reactive({FALSE})) 
 
 
     # --- RETORNO ---
-    return(reactive({ reactiveValuesToList(engine_status) }))
+    return(reactive({ reactiveValuesToList(data_store) }))
   })
 }
 

@@ -86,11 +86,15 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
     internal_show_debug_general <- reactive( if(is.function(show_debug_general)) show_debug_general() else show_debug_general)
 
     observe({
-      if (!isTRUE(internal_show_debug_tab)) {
-        # Ocultamos la tarjeta del sidebar usando shinyjs
-        shinyjs::hide("c_DEBUG")
-      } else {
+      # Usamos isTRUE para manejar posibles NULLs iniciales
+      show_it <- isTRUE(internal_show_debug_tab())
+
+      if (show_it) {
         shinyjs::show("c_DEBUG")
+        # Forzamos visibilidad si el CSS de la clase phase-card interfiere
+        shinyjs::runjs(sprintf("$('#%s').css('display', 'flex');", ns("c_DEBUG")))
+      } else {
+        shinyjs::hide("c_DEBUG")
       }
     })
 
@@ -201,6 +205,12 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       navset_card_tab(
         title = "RScience Engine v.0.0.1",
 
+
+        nav_panel(
+          title = "Dataset",
+          icon = icon("book"),
+          mod_02_01_dataset_DEBUG_ui(id=ns("my_ns_dataset"))
+        ),
         nav_panel(
           title = "Theory",
           icon = icon("book"),
