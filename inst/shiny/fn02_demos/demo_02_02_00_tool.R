@@ -4,20 +4,20 @@ library(dplyr)
 
 devtools::load_all()
 
-# # 1. CARGAR RECURSOS (Esto es lo que faltaba)
-# # Buscamos la carpeta www del paquete
-# lib_www_path <- system.file("www", "css", package = "Rscience2027")
-#
-# # Si estás en desarrollo local (sin el paquete instalado aún)
-# if (lib_www_path == "") lib_www_path <- "www"
-#
-# # Si existe la carpeta, creamos la ruta y el path al CSS
-# if (dir.exists(lib_www_path)) {
-#   addResourcePath("lib_www", normalizePath(lib_www_path))
-#   path_to_css <- file.path(lib_www_path, "style_000.css")
-# } else {
-#   path_to_css <- NULL
-# }
+# 1. CARGAR RECURSOS (Esto es lo que faltaba)
+# Buscamos la carpeta www del paquete
+lib_www_path <- system.file("www", "css", package = "Rscience2027")
+
+# Si estás en desarrollo local (sin el paquete instalado aún)
+if (lib_www_path == "") lib_www_path <- "www"
+
+# Si existe la carpeta, creamos la ruta y el path al CSS
+if (dir.exists(lib_www_path)) {
+  addResourcePath("lib_www", normalizePath(lib_www_path))
+  path_to_css <- file.path(lib_www_path, "style_000.css")
+} else {
+  path_to_css <- NULL
+}
 
 
 # ==========================================
@@ -33,12 +33,13 @@ ui <- fluidPage(
     }
   ),
 
-  mod_02_02_00_tool_ui("my_tool")
+  mod_02_02_00_tool_ui("my_tool"),
+  mod_02_02_00_tool_DEBUG_ui("my_tool")
 )
 
 server <- function(input, output, session) {
   # Resultado final de todo el flujo
-  resultado_final <- mod_02_02_00_tool_server(id = "my_tool", show_debug = F)
+  resultado_final <- mod_02_02_00_tool_server(id = "my_tool", show_debug = T)
 
   observe({
     req(resultado_final()$confirmado)

@@ -114,7 +114,15 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
         "df" = NULL
       )
     }
+    reset_data_store <- function() {
+      defaults <- get_default_data()
 
+      # mapply recorre los nombres y valores de la lista de defaults
+      # y los asigna uno a uno al objeto reactiveValues
+      mapply(function(val, name) {
+        data_store[[name]] <- val
+      }, defaults, names(defaults))
+    }
     data_store <- do.call(reactiveValues, get_default_data())
 
     # --- LÓGICA DE IMPORTACIÓN ---
@@ -194,15 +202,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
     })
 
     # --- FUNCIONES DE ACCIÓN ---
-    reset_data_store <- function() {
-      defaults <- get_default_data()
 
-      # mapply recorre los nombres y valores de la lista de defaults
-      # y los asigna uno a uno al objeto reactiveValues
-      mapply(function(val, name) {
-        data_store[[name]] <- val
-      }, defaults, names(defaults))
-    }
 
     toggle_import_controls <- function(lock_it) {
       vector_obj <- c("root_id" = "import_container",
@@ -363,6 +363,8 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
       datatable(data_store$df, options = list(scrollX = TRUE, scrollY = "400px", scrollCollapse = TRUE, pageLength = 5, dom = 'ftpi'))
     })
 
+
+    # # # DEBUG
     output$debug_internal <- listviewer::renderJsonedit({
       req(internal_show_debug())
       listviewer::jsonedit(listdata = reactiveValuesToList(data_store), mode = "text")
@@ -390,6 +392,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
                       mod_07_00_engine_control_DEBUG_ui(id = ns("main_switch"))))))
     })
 
+    # # # OUTPUT
     return(reactive({ reactiveValuesToList(data_store) }))
   })
 }

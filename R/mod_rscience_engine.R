@@ -212,10 +212,16 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
           mod_02_01_dataset_DEBUG_ui(id=ns("my_ns_dataset"))
         ),
         nav_panel(
+          title = "Tool",
+          icon = icon("book"),
+          mod_02_02_00_tool_DEBUG_ui(id=ns("my_ns_tool"))
+        ),
+        nav_panel(
           title = "Theory",
           icon = icon("book"),
           mod_03_A_theory_DEBUG_ui(id=ns("txt_1"))
         )
+
       )
 
     })
