@@ -304,12 +304,18 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
     output$show_debug_external <- renderUI({
       div(style = "background: #1a1a1a; padding: 15px; border-radius: 8px;",
           div(class = "row",
-              div(class = "col-md-8",
+              div(class = "col-md-4",
                   div(class = "section-label", style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 15px;", icon("bug"), " External Debug - Dataset"),
                   listviewer::jsoneditOutput(ns("debug_external"), height = "500px")),
               div(class = "col-md-4",
                   div(style = "border-left: 1px solid #333; padding-left: 15px; height: 100%;",
-                      mod_07_00_engine_control_DEBUG_ui(id = ns("main_switch"))))))
+                      mod_07_00_engine_control_DEBUG_ui(id = ns("main_switch")))),
+              div(class = "col-md-4",
+                  div(style = "border-left: 1px solid #333; padding-left: 15px; height: 100%;",
+                      mod_02_02_01_tree_DEBUG_ui(id = ns("inner_tree")))))
+          )
+
+
     })
 
 

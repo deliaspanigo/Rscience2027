@@ -4,20 +4,10 @@ library(dplyr)
 
 devtools::load_all()
 
-# 1. CARGAR RECURSOS (Esto es lo que faltaba)
-# Buscamos la carpeta www del paquete
-lib_www_path <- system.file("www", "css", package = "Rscience2027")
-
-# Si estás en desarrollo local (sin el paquete instalado aún)
-if (lib_www_path == "") lib_www_path <- "www"
-
-# Si existe la carpeta, creamos la ruta y el path al CSS
-if (dir.exists(lib_www_path)) {
-  addResourcePath("lib_www", normalizePath(lib_www_path))
-  path_to_css <- file.path(lib_www_path, "style_000.css")
-} else {
-  path_to_css <- NULL
-}
+# Registro de recursos CSS
+css_folder <- system.file("www", "css", package = "Rscience2027")
+if (css_folder == "") css_folder <- "www/css"
+try(addResourcePath("RS-STYLES", normalizePath(css_folder)), silent = TRUE)
 
 
 ui <- fluidPage(
@@ -26,11 +16,15 @@ ui <- fluidPage(
 
   theme = bs_theme(version = 5, bg = "#0b1218", fg = "#ffffff", primary = "#00d4ff"),
 
+  # 2. Configurar el HEAD
   tags$head(
     useShinyjs(),
-    if (!is.null(path_to_css)) {
-      tags$link(rel = "stylesheet", type = "text/css", href = "lib_www/style_000.css")
-    }
+    tags$link(
+      rel = "stylesheet",
+      type = "text/css",
+      # RS-STYLES debe ser el nombre que registraste en addResourcePath
+      href = paste0("RS-STYLES/style_000.css?v=", as.numeric(Sys.time()))
+    )
   ),
   tags$div(
     #style = "padding: 10px 20px; background: #111; color: white;",
@@ -39,8 +33,7 @@ ui <- fluidPage(
 
   # El módulo absorberá el 100% del espacio restante
   mod_02_02_01_tree_ui("tree_module"),
-
-  "AVERR"
+  mod_02_02_00_tool_DEBUG_ui("tree_module")
 )
 
 server <- function(input, output, session) {

@@ -10,6 +10,13 @@ library(listviewer)
 # MÓDULO: EXPLORADOR DE ÁRBOL RScience (UI)
 # ==========================================
 
+mod_02_02_01_tree_DEBUG_ui <- function(id) {
+  ns <- NS(id)
+  tagList(
+    uiOutput(ns("show_debug_external"))
+  )
+}
+
 mod_02_02_01_tree_ui <- function(id) {
   ns <- NS(id)
   module_id <- ns("module-wrapper")
@@ -134,17 +141,17 @@ mod_02_02_01_tree_ui <- function(id) {
             )
         )
     ),
-    div(style = "max-height: 500px; overflow-y: auto;",
-        listviewer::jsoneditOutput(ns("debug_json"), height = "auto")
-    ),
-
-    uiOutput(ns("js_injector"))
+    uiOutput(ns("js_injector")), #Tree
+    uiOutput(ns("show_debug_internal")) # Debug Internal
   )
 }
 
 mod_02_02_01_tree_server <- function(id, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    internal_show_debug <- reactive(if(is.function(show_debug)) show_debug() else show_debug)
+
 
     cleaning_jumps <- function(text) {
       # gsub busca todas las ocurrencias de /n y las reemplaza por nada
@@ -476,9 +483,33 @@ mod_02_02_01_tree_server <- function(id, show_debug = FALSE) {
       )))
     })
 
-    output$debug_json <- listviewer::renderJsonedit({
-      req(show_debug)
+
+    # # # DEBUG
+    output$debug_internal <- listviewer::renderJsonedit({
+      req(internal_show_debug())
       listviewer::jsonedit(listdata = info_nodo(), mode = "text")
+    })
+
+    output$show_debug_internal <- renderUI({
+      req(internal_show_debug())
+      div(class = "debug-section", style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
+          div(class = "section-label", style = "justify-content: flex-start !important; gap: 8px;", icon("bug"), " Internal Debug - Tree"),
+          listviewer::jsoneditOutput(ns("debug_internal"), height = "auto"))
+    })
+
+    output$debug_external <- listviewer::renderJsonedit({
+      listviewer::jsonedit(listdata = info_nodo(), mode = "text")
+    })
+
+    output$show_debug_external <- renderUI({
+      div(style = "background: #1a1a1a; padding: 15px; border-radius: 8px;",
+          div(class = "row",
+              div(class = "col-md-8",
+                  div(class = "section-label", style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 15px;", icon("bug"), " External Debug - Tree"),
+                  listviewer::jsoneditOutput(ns("debug_external"), height = "500px")),
+              div(class = "col-md-4",
+                  div(style = "border-left: 1px solid #333; padding-left: 15px; height: 100%;",
+                      mod_07_00_engine_control_DEBUG_ui(id = ns("main_switch"))))))
     })
 
     return(info_nodo)
