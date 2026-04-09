@@ -23,6 +23,7 @@ mod_07_00_engine_control_ui <- function(id) {
     ),
 
     div(class = "rs-control-card",
+        uiOutput(ns("internal_status_ui")),
         div(class = "rs-btn-group-container rs-engine-selector",
             shinyWidgets::radioGroupButtons(
               inputId = ns("engine_mode"),
@@ -38,7 +39,6 @@ mod_07_00_engine_control_ui <- function(id) {
               status = "engine-custom"
             )
         ),
-        uiOutput(ns("internal_status_ui")),
         uiOutput(ns("show_debug_internal"))
     )
   )

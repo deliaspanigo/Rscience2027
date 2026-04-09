@@ -235,6 +235,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
         })
         shinyjs::addClass(selected_menu, "neon-glow-RUN")
         shinyjs::removeClass(selected_menu, "rs-block-smoke")
+        shinyjs::removeClass(selected_menu, "rs-block-invisible")
 
 
       }
@@ -246,6 +247,13 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
                       "menu_id" = "the_menu",
                       "summary_id" = "the_summary",
                       "view_id" = "the_view")
+
+      selected_menu <- vector_obj["menu_id"]
+      shinyjs::removeClass(selected_menu, "rs-block-smoke")
+      shinyjs::addClass(selected_menu, "neon-glow-RUN")
+      shinyjs::addClass(selected_menu, "rs-block-invisible")
+
+
 
       reset_data_store()
      shinyjs::reset(vector_obj["menu_id"])
