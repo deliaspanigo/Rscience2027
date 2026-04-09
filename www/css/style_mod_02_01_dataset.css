@@ -1,261 +1,312 @@
 /* ==========================================================================
-   MODULE: DATASET IMPORT (mod_02_01) - RScience Scoped Edition
-   Aislamiento total y Variables Centralizadas
+   RScience - MODULE: DATASET IMPORT (mod_02_01)
    ========================================================================== */
 
-/* --- 0. CONTENEDOR RAÍZ Y SCROLL --- */
-.rs-mod-dataset-container {
-    display: block !important;
-    height: auto !important;
-    min-height: 100px;
-    overflow: visible !important; /* Fix crucial para el scroll de la página */
-    padding-bottom: 60px;
+/* --- DEFINICIÓN DE ESTADOS (Inyectores de variables) --- */
+.pack-style-unlock {
+    --rs-input-color-full: var(--rs-color-cyan);
+    --rs-input-color-medium: color-mix(in srgb, var(--rs-input-color-full), transparent 50%); /* 50% brillo */
+    --rs-input-color-soft:   color-mix(in srgb, var(--rs-input-color-full), transparent 80%); /* 20% brillo */
+    --rs-input-bg: #1a1a1a;
+    --rs-input-op: 1;
 }
 
-/* --- 1. HEADERS DINÁMICOS --- */
+.pack-style-lock {
+    --rs-input-color-full: #39FF14;
+    --rs-input-color-medium: color-mix(in srgb, var(--rs-input-color-full), transparent 50%);
+    --rs-input-color-soft:   color-mix(in srgb, var(--rs-input-color-full), transparent 80%);
+    --rs-input-bg: #0a0f0a;
+    --rs-input-op: 1;
+}
+
+.pack-style-reset {
+    --rs-input-color-full: #FF9100;
+    --rs-input-color-medium: color-mix(in srgb, var(--rs-input-color-full), transparent 50%);
+    --rs-input-color-soft:   color-mix(in srgb, var(--rs-input-color-full), transparent 80%);
+    --rs-input-bg: #1a1a1a;
+    --rs-input-op: 1;
+}
+
+/* --- BLOQUEO POR PROCESAMIENTO (Humo/Congelado) --- */
+.rs-block-smoke {
+    pointer-events: none !important;
+    opacity: 1;
+    filter: blur(0px) grayscale(0.7); /* Desenfoque sutil para indicar "ocupado" */
+    transition: all 0.4s ease;
+}
+
+/* --- BLOQUEO TOTAL INVISIBLE (Seguridad) --- */
+.rs-block-invisible {
+    pointer-events: none !important;
+    user-select: none; /* Evita que el usuario seleccione texto mientras se limpia */
+}
+
+/* --- BLOQUEO POR CLEAN (Reset de Fábrica) --- */
+.rs-clean-block {
+    pointer-events: none !important;
+    opacity: 0.4; /* Mucho más tenue que el smoke */
+    filter: grayscale(1) brightness(0.8); /* Blanco y negro total */
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Efecto opcional: desaturar los bordes neón */
+    border-color: #444 !important;
+    box-shadow: none !important;
+}
+/* ------------------------------------------------------------------------------------------------*/
+
+
+/* --- 4. INPUTS (APLICACIÓN ÚNICA) --- */
+.rs-mod-dataset-container .form-control,
+/* 1. LA CAJA EXTERNA (Lo que ves siempre) */
+.rs-mod-dataset-container .selectize-input {
+    font-family: var(--rs-font-mono, monospace) !important;
+    font-size: 14px !important;
+    border: 4px solid var(--rs-input-color-full, #444) !important;
+    border-radius: 15px !important;
+}
+
+/* ------------------------------------------------------------------------------------------------*/
+/* 2. EL TEXTO SELECCIONADO (La opción que ya elegiste) */
+.rs-mod-dataset-container .selectize-input .item {
+    font-family: var(--rs-font-mono, monospace) !important;
+    color: white !important;
+}
+
+/* Para el texto que aparece cuando NO has seleccionado nada aún */
+.rs-mod-dataset-container .selectize-input .item.placeholder,
+/* 1. Atacamos el contenedor del texto que se muestra por defecto */
+.rs-mod-dataset-container .selectize-input .item {
+    font-family: var(--rs-font-mono, monospace) !important;
+    color: #ffffff !important;
+}
+
+/* 2. Selectize a veces usa un input interno para el placeholder cuando se puede escribir */
+.rs-mod-dataset-container .selectize-input input::placeholder {
+    font-family: var(--rs-font-mono, monospace) !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+/* 3. Para navegadores antiguos o variaciones de Selectize */
+.rs-mod-dataset-container .selectize-input input::-webkit-input-placeholder {
+    color: #ffffff !important;
+    font-family: var(--rs-font-mono, monospace) !important;
+}
+
+/* 4. IMPORTANTE: Si el texto "Select a source..." NO se ha seleccionado todavía,
+      Selectize lo pone dentro de este div específico */
+.rs-mod-dataset-container .selectize-control.single .selectize-input.input-active input {
+    color: var(--rs-input-color-full, #ee33ff) !important;
+    font-family: var(--rs-font-mono, monospace) !important;
+}
+
+/* 4. EL MENÚ DESPLEGABLE (La lista de opciones al hacer clic) */
+.selectize-dropdown .option {
+    font-family: var(--rs-font-mono, monospace) !important;
+    font-size: 13px !important;
+}
+
+/* 5. LA OPCIÓN RESALTADA (Cuando pasas el mouse por encima) */
+.selectize-dropdown .active {
+    background-color: var(--rs-input-color-full, #00d4ff) !important;
+    color: #000 !important; /* Texto negro para que resalte sobre el neón */
+}
+
+.rs-mod-dataset-container .section-label {
+    color: var(--rs-input-color-full, #aaa);
+    transition: color 0.4s ease;
+}
+/* ------------------------------------------------------------------------------------------------*/
+
+
+/* --- 1. CONTENEDOR PRINCIPAL --- */
+/* --- 1. CONTENEDOR PRINCIPAL --- */
+.rs-mod-dataset-container .lock-wrapper {
+    background: #1a1a1a;
+    /* CAMBIO AQUÍ: Usamos la variable full para el borde base */
+    border: 5px solid var(--rs-input-color-full) !important;
+    transition: all 0.5s ease;
+    padding: 20px;
+    border-radius: 12px;
+    position: relative;
+}
+
+/* ------------------------------------------------------------------------------------------------*/
+
+/* --- 3. ANIMACIONES (EL LATIDO) --- */
+
+@keyframes neon-glow-STONE {
+    0% {
+        box-shadow: 0 0 5px var(--rs-input-color-full), 0 0 10px var(--rs-input-color-soft);
+        border-color: var(--rs-input-color-soft);
+    }
+    50% {
+        box-shadow: 0 0 20px var(--rs-input-color-full), 0 0 35px var(--rs-input-color-medium), inset 0 0 10px var(--rs-input-color-soft);
+        border-color: var(--rs-input-color-full);
+    }
+    100% {
+        box-shadow: 0 0 5px var(--rs-input-color-full), 0 0 10px var(--rs-input-color-soft);
+        border-color: var(--rs-input-color-soft);
+    }
+}
+
+/* La clase que activa la animación (Sincronizada con STONE) */
+.rs-mod-dataset-container .neon-glow-RUN {
+    animation: neon-glow-STONE 3s infinite ease-in-out !important;
+}
+
+/* ------------------------------------------------------------------------------------------------*/
+
+
+
+/* --- HEADER DEL MÓDULO (FILA 0) - GENÉRICO --- */
+
 .rs-mod-dataset-container .selection-header {
-    padding: 15px;
-    border-radius: var(--rs-radius-sm);
-    font-weight: 800;
-    letter-spacing: 1px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-left: 5px solid #444;
-    background: rgba(255, 255, 255, 0.03);
-    transition: var(--rs-transition);
-}
+    padding: 12px 20px;
 
-/* Header Cyan (Unlock) */
-.rs-mod-dataset-container .selection-header.active-selection {
-    border-left-color: var(--rs-primary) !important;
-    color: var(--rs-primary) !important;
-    background: rgba(0, 212, 255, 0.08) !important;
-}
+    /* 1. REDONDEADO MAESTRO */
+    border-radius: 15px !important;
 
-/* Header Verde (Locked) */
-.rs-mod-dataset-container .selection-header.confirmed {
-    border-left-color: var(--rs-success) !important;
-    color: var(--rs-success) !important;
-    background: rgba(0, 188, 140, 0.1) !important;
-}
-
-/* Header Warning (Waiting) */
-.rs-mod-dataset-container .selection-header.waiting-mode {
-    border-left-color: var(--rs-warning) !important;
-    color: var(--rs-warning) !important;
-    background: rgba(243, 156, 18, 0.08) !important;
-}
-
-/* --- 2. LABELS (CIAN -> VERDE) --- */
-.rs-mod-dataset-container .section-label {
-    font-size: 0.75rem !important;
-    font-weight: 800 !important;
+    font-family: var(--rs-font-mono, monospace);
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: flex-start !important;
-    gap: 8px;
-    color: var(--rs-primary) !important;
-    transition: var(--rs-transition);
-}
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    transition: all 0.5s ease;
 
-/* Solo los labels cambian a verde cuando el contenedor está locked */
-.rs-mod-dataset-container .locked-disabled .section-label {
-    color: var(--rs-success) !important;
-}
+    /* 2. BACKGROUND & BORDER */
+    /* Usamos border-color para no resetear el radio del borde */
+    background: color-mix(in srgb, var(--rs-input-color-full), transparent 92%);
+    color: var(--rs-input-color-full);
 
-/* --- 3. SELECTIZE & INPUTS --- */
-.rs-mod-dataset-container .selectize-control {
-    border: none !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-}
+    /* Definimos el borde general */
+    border: 5px solid color-mix(in srgb, var(--rs-input-color-full), transparent 70%) !important;
 
-.rs-mod-dataset-container .selectize-input,
-.rs-mod-dataset-container .form-control {
-    background-color: var(--rs-text-dark) !important;
-    border: 3px solid rgba(0, 212, 255, 0.3) !important;
-    color: #ffffff !important;
-    border-radius: var(--rs-radius-sm) !important;
-    padding: 10px 12px !important;
-    transition: var(--rs-transition);
-    box-shadow: none !important;
-}
+    /* 3. EL DETALLE LATERAL */
+    /* Si quieres mantener el borde izquierdo más grueso, hay que asegurar que respete el radio */
+    border-left: 8px solid var(--rs-input-color-full) !important;
 
-/* Focus: Brillo basado en variable de Glow */
-.rs-mod-dataset-container .selectize-input.focus,
-.rs-mod-dataset-container .form-control:focus {
-    border-color: var(--rs-primary) !important;
-    box-shadow: 0 0 10px var(--rs-glow-primary) !important;
-    outline: none !important;
-}
+    /* Efecto de brillo */
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--rs-input-color-full), transparent 90%);
 
-/* --- 4. FILE INPUT (BROWSE BUTTON) --- */
-.rs-mod-dataset-container .btn-file {
-    background-color: var(--rs-text-dark) !important;
-    border: 1px solid var(--rs-primary) !important;
-    color: var(--rs-primary) !important;
-    font-weight: 700;
-    border-radius: 0 var(--rs-radius-sm) var(--rs-radius-sm) 0 !important;
-}
-
-/* --- 5. COMPORTAMIENTO LÓGICO DE "LOCKED" --- */
-.rs-mod-dataset-container .locked-disabled {
-    pointer-events: none !important;
-}
-
-/* En Locked: Inputs fondo main, texto blanco legible, borde verde sutil */
-.rs-mod-dataset-container .locked-disabled .selectize-input,
-.rs-mod-dataset-container .locked-disabled .form-control {
-    background-color: var(--rs-bg-main) !important;
-    border-color: rgba(0, 188, 140, 0.4) !important;
-    color: #ffffff !important;
-    opacity: 0.9;
-}
-
-/* El botón de archivo sí cambia a verde para feedback visual */
-.rs-mod-dataset-container .locked-disabled .btn-file {
-    border-color: var(--rs-success) !important;
-    color: var(--rs-success) !important;
-}
-
-/* --- 6. DATATABLES (DT) --- */
-.rs-mod-dataset-container .rs-table-wrapper {
-    width: 100%;
-    background: var(--rs-bg-header) !important;
-    border: 3px solid rgba(0, 212, 255, 0.2);
-    border-radius: var(--rs-radius-lg);
-    padding: 15px;
-    margin-top: 10px;
-    overflow-x: auto !important;
-}
-
-.rs-mod-dataset-container table.dataTable thead th {
-    background-color: rgba(0, 212, 255, 0.1) !important;
-    color: var(--rs-primary) !important;
-    border-bottom: 2px solid var(--rs-primary) !important;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-}
-
-/* --- 7. PROGRESS BAR --- */
-.rs-mod-dataset-container .progress {
-    background-color: rgba(0, 0, 0, 0.4) !important;
-    border: 3px solid var(--rs-primary) !important;
-    height: 18px !important;
-    border-radius: 10px;
-}
-
-.rs-mod-dataset-container .progress-bar {
-    background-color: var(--rs-primary) !important;
-    box-shadow: 0 0 10px var(--rs-glow-primary);
-}
-
-.rs-mod-dataset-container .locked-disabled .progress {
-    border-color: var(--rs-success) !important;
-}
-
-.rs-mod-dataset-container .locked-disabled .progress-bar {
-    background-color: var(--rs-success) !important;
-}
-
-/* --- 8. STATUS ICON (CANDADO) --- */
-.rs-mod-dataset-container .status-closed {
-    color: var(--rs-success) !important;
-    font-weight: 700;
-    font-size: 0.7rem;
-    margin-left: 8px;
+    /* Asegura que el contenido no se salga de las esquinas redondeadas */
+    overflow: hidden;
 }
 
 
-/* --- RS-MINIMAL BAR --- */
-.rs-minimal-bar {
+/* ------------------------------------------------------------------------------------------------*/
+
+
+
+/* --- RS-MINIMAL-BAR: Herencia Directa de Packs --- */
+.rs-mod-dataset-container .rs-minimal-bar {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 30px;
-    padding: 10px 20px;
-    background: var(--rs-bg-header);
-    border-radius: var(--rs-radius-sm);
-    margin-bottom: 20px;
-    font-family: var(--rs-font-mono);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: var(--rs-transition);
+
+    background: #0d0d0d;
+    padding: 15px 25px;
+    border-radius: 15px;
+    margin: 25px 0;
+    font-family: var(--rs-font-mono, monospace);
+    font-size: 13px;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* EL BORDE DINÁMICO: Toma el color del Pack activo */
+    border: 5px solid var(--rs-input-color-soft);
+    border-left: 10px solid var(--rs-input-color-full);
+
+    /* Brillo ambiental basado en el Pack */
+    box-shadow: 0 5px 20px color-mix(in srgb, var(--rs-input-color-full), transparent 95%);
 }
 
-.status-segment {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 250px;
-}
-
-.info-segment {
-    display: flex;
-    gap: 8px;
-    font-size: 0.85rem;
-}
-
-.info-label {
-    color: rgba(255, 255, 255, 0.5); /* Blanco tenue */
-    font-weight: 800;
-}
-
-.info-val {
-    color: white;
-}
-
-/* --- INDICADOR LED --- */
-.led-indicator {
+/* --- EL LED: Sincronizado con el Pack --- */
+.rs-mod-dataset-container .led-indicator {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    transition: var(--rs-transition);
+    /* Color base del pack */
+    background: var(--rs-input-color-full);
+    /* Brillo del pack */
+    box-shadow: 0 0 12px var(--rs-input-color-full);
 }
 
-/* --- ESTADO: WAITING (Blanco / Animado) --- */
-.rs-status-waiting {
-    border-color: var(--rs-primary);
+
+
+/* --- SEGMENTOS: Estética de Laboratorio --- */
+.rs-mod-dataset-container .status-segment {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 240px;
 }
 
-.rs-status-waiting .led-indicator {
-    background-color: var(--rs-primary);
-    box-shadow: 0 0 10px var(--rs-primary);
-    animation: led-pulse-white 1.5s infinite;
-}
-
-.rs-status-waiting .status-text {
-    color: var(--rs-primary);
-    font-weight: 600;
+.rs-mod-dataset-container .status-text {
+    font-weight: 800;
     letter-spacing: 1px;
+    color: var(--rs-input-color-full); /* El texto del estado cambia con el pack */
+    filter: brightness(1.2);
 }
 
-/* --- ESTADO: LOCKED (Verde) --- */
-.rs-status-locked {
-    border-color: var(--rs-success) !important;
-    background: rgba(0, 188, 140, 0.05) !important;
+.rs-mod-dataset-container .info-segment {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding-left: 20px;
+    border-left: 1px solid color-mix(in srgb, var(--rs-input-color-full), transparent 85%);
 }
 
-.rs-status-locked .led-indicator {
-    background-color: var(--rs-success);
-    box-shadow: 0 0 12px var(--rs-success);
-    animation: none; /* Se queda encendido fijo */
+.rs-mod-dataset-container .info-label {
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
-.rs-status-locked .status-text,
-.rs-status-locked .info-label,
-.rs-status-locked .info-val {
-    color: var(--rs-success) !important;
+.rs-mod-dataset-container .info-val {
+    /* Valor resalta con el color del pack */
+    color: #eee;
+    font-weight: 700;
+    text-shadow: 0 0 5px color-mix(in srgb, var(--rs-input-color-full), transparent 80%);
 }
 
-/* --- ANIMACIÓN DE PULSO --- */
-@keyframes led-pulse-white {
-    0% { opacity: 0.3; box-shadow: 0 0 0px var(--rs-primary); }
-    50% { opacity: 1; box-shadow: 0 0 12px var(--rs-primary); }
-    100% { opacity: 0.3; box-shadow: 0 0 0pxvar(--rs-primary); }
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+    .rs-mod-dataset-container .rs-minimal-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .rs-mod-dataset-container .info-segment {
+        border-left: none;
+        padding-left: 0;
+        border-bottom: 1px solid #222;
+        width: 100%;
+        padding-bottom: 5px;
+    }
 }
 
 
+/* ------------------------------------------------------------------------------------------------*/
+/* --- FILAS CON COLORES SÓLIDOS --- */
 
+/* Fila Impar (Más clara/activa) */
+.rs-table-wrapper table.dataTable tbody tr.odd td {
+    background-color: color-mix(in srgb, var(--rs-input-color-full), #0b1218 80%) !important;
+    color: #ffffff !important;
+}
+
+/* Fila Par (Un tono más oscuro para contraste) */
+.rs-table-wrapper table.dataTable tbody tr.even td {
+    background-color: color-mix(in srgb, var(--rs-input-color-full), #0b1218 90%) !important;
+    color: #eeeeee !important;
+}
+
+/* Columna de ordenación (Sólida) */
+.rs-table-wrapper table.dataTable tbody tr.odd td.sorting_1 {
+    background-color: color-mix(in srgb, var(--rs-input-color-full), #0b1218 70%) !important;
+}

@@ -83,32 +83,32 @@ mod_07_00_engine_control_server <- function(id, show_debug = reactive({FALSE})) 
 
       req(input$engine_mode == "reset")
 
-      # 1. Disparamos un modal que NO se puede cerrar (Bloqueo de UI)
-      showModal(modalDialog(
-        title = NULL,
-        footer = NULL,
-        size = "l",
-        easyClose = FALSE,
-        div(class = "text-center", style = "padding: 40px; background-color: #0b1218; border-radius: 15px;",
-
-            # --- CONTENEDOR DE IMAGEN ---
-            div(style = "margin-bottom: 30px;",
-                img(src = "WWW-FOLDER/Rscience_logo_sticker.png",
-                    style = "width: 250px; filter: drop-shadow(0 0 10px #00d4ff66);")
-            ),
-
-            # --- ICONO DE PROCESO ---
-            div(style = "margin-bottom: 20px;",
-                icon("sync-alt", class = "fa-spin",
-                     style = "font-size: 4.5rem; color: #ffc107; text-shadow: 0 0 20px rgba(255, 193, 7, 0.4);")
-            ),
-
-            # --- TEXTO DE ESTADO ---
-            h3("RScience Engine", style = "color: #00d4ff; font-weight: 800; letter-spacing: 2px;"),
-            p("Resetting system & clearing cache...",
-              style = "color: #aaaaaa; font-style: italic; font-size: 1.1rem; margin-top: 10px;")
-        )
-      ))
+      # # 1. Disparamos un modal que NO se puede cerrar (Bloqueo de UI)
+      # showModal(modalDialog(
+      #   title = NULL,
+      #   footer = NULL,
+      #   size = "l",
+      #   easyClose = FALSE,
+      #   div(class = "text-center", style = "padding: 40px; background-color: #0b1218; border-radius: 15px;",
+      #
+      #       # --- CONTENEDOR DE IMAGEN ---
+      #       div(style = "margin-bottom: 30px;",
+      #           img(src = "WWW-FOLDER/Rscience_logo_sticker.png",
+      #               style = "width: 250px; filter: drop-shadow(0 0 10px #00d4ff66);")
+      #       ),
+      #
+      #       # --- ICONO DE PROCESO ---
+      #       div(style = "margin-bottom: 20px;",
+      #           icon("sync-alt", class = "fa-spin",
+      #                style = "font-size: 4.5rem; color: #ffc107; text-shadow: 0 0 20px rgba(255, 193, 7, 0.4);")
+      #       ),
+      #
+      #       # --- TEXTO DE ESTADO ---
+      #       h3("RScience Engine", style = "color: #00d4ff; font-weight: 800; letter-spacing: 2px;"),
+      #       p("Resetting system & clearing cache...",
+      #         style = "color: #aaaaaa; font-style: italic; font-size: 1.1rem; margin-top: 10px;")
+      #   )
+      # ))
 
       # 2. Actualizamos el estado interno
       engine_status$mode <- "reset"
@@ -126,7 +126,7 @@ mod_07_00_engine_control_server <- function(id, show_debug = reactive({FALSE})) 
         engine_status$my_sys_time = Sys.time()
 
         # QUITAMOS EL MODAL (Libera la App)
-        removeModal()
+        # removeModal()
 
         showNotification("Engine Ready", type = "message")
       })

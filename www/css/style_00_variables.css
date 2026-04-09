@@ -1,5 +1,6 @@
 /* style_00_variables.css */
 :root {
+    --rs-color-cyan: #00d4ff;
     --rs-primary: #00d4ff;
     --rs-success: #00bc8c;
     --rs-warning: #f39c12;
