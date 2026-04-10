@@ -238,23 +238,72 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
     ############################################################################
 
-    folder_path_collector02 <- reactive({
-      req(folder_path_collector01())
-      aver <- folder_path_collector01()
-      print("AAA")
-      print(aver)
-      print("BBB")
-      aver
-    })
+
 
     # 1.4. Ejecución del módulo
     rlist_settings <- mod_04_00_settings_server(
       id = "my_ns_collector02_settings",
       df_input = reactive(mtcars), # Asegúrate de que esto sea reactivo
-      folder_path_tool_script = folder_path_collector02,
+      folder_path_tool_script = folder_path_collector01,
       show_debug = internal_show_debug_general()
     )
 
+
+  ##############################################################################################
+  # Collector 02
+  rlist_collector02 <- reactive({
+    internal_list <- rlist_settings()
+    internal_folder_path_collector01 <- folder_path_collector01()
+
+    req(internal_list, internal_folder_path_collector01)
+
+    my_list <- list()
+
+    my_list$"folder_script_tool" <- internal_folder_path_collector01
+
+    my_list$"settings" <- internal_list$list_clean
+
+    my_list
+
+  })
+
+
+
+    output$debug_collector02 <- listviewer::renderJsonedit({
+      req(rlist_collector02())
+      internal_rlist_collector02 <- list(rlist_collector02())
+
+      listviewer::jsonedit(listdata = internal_rlist_collector02, mode = "text")
+    })
+
+    output$show_debug_external_collector02 <- renderUI({
+      # Si quieres ver el panel aunque esté vacío, quita el req() de aquí arriba
+      # y manéjalo internamente o deja que los jsonedit muestren NULL
+
+      div(class = "debug-section",
+          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
+
+          div(class = "section-label",
+              style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 10px;",
+              icon("bug"), " External Debug - Collector 01"),
+
+          div(class = "row",
+              div(class = "col-md-6",
+                  # El req() dentro del renderJsonedit ya se encarga de esperar los datos
+                  listviewer::jsoneditOutput(ns("debug_collector02"), height = "auto")
+              ),
+              div(class = "col-md-6",
+                  listviewer::jsoneditOutput(ns("debug_collector02"), height = "auto")
+              )
+          )
+      )
+    })
+  ##############################################################################################
+
+
+
+
+  ##############################################################################################
 
     output$show_debug <- renderUI({
 
@@ -287,6 +336,13 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
           icon = icon("book"),
           mod_04_00_settings_DEBUG_ui(ns("my_ns_collector02_settings"))
         ),
+        nav_panel(
+          title = "Collector02",
+          icon = icon("book"),
+          uiOutput(ns("show_debug_external_collector02"))
+        ),
+
+
         # mod_04_00_settings_ui(id = ns(""))
         nav_panel(
           title = "Theory",

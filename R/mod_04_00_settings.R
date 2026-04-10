@@ -9,7 +9,7 @@ library(listviewer)
 
 mod_04_00_settings_DEBUG_ui <- function(id) {
   ns <- NS(id)
-  uiOutput(ns("panel_debug_externo"))
+  uiOutput(ns("debug_externo"))
 }
 
 mod_04_00_settings_ui <- function(id) {
@@ -45,34 +45,40 @@ mod_04_00_settings_ui <- function(id) {
 # ==============================================================================
 # MÓDULO SERVER: COLECTOR Y ORQUESTADOR RECURSIVO
 # ==============================================================================
+library(shiny)
+library(bslib)
+library(shinyjs)
+library(listviewer)
+
+# ==============================================================================
+# MÓDULO SERVER: COLECTOR Y ORQUESTADOR RECURSIVO
+# ==============================================================================
 
 mod_04_00_settings_server <- function(id, df_input, folder_path_tool_script, show_debug = TRUE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    internal_show_debug <- reactive(if(is.function(show_debug)) show_debug() else show_debug)
+
+
+    # Lógica de layout para el debug interno
     ui_debug_layout <- function(ns, prefix = "") {
       id_colector  <- ns(paste0(prefix, "render_json_colector"))
       id_submodulo <- ns(paste0(prefix, "render_json_submodulo"))
-
-      div(style = "margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px; border: 1px solid #333;",
-          h4(icon("terminal"), "RScience Debug Console", style = "color: #00bc8c; font-family: monospace;"),
+      div(style = "margin-top: 20px; padding: 15px; background: #0b1218; border-radius: 8px; border: 1px solid #1a262f;",
+          h6(icon("terminal"), "RScience Debug Console", style = "color: #00bc8c;"),
           fluidRow(
-            column(6, tags$b("Colector Meta", style="color:#00d4ff;"), listviewer::jsoneditOutput(id_colector, height = "300px")),
-            column(6, tags$b("Sub-Módulo Return", style="color:#00bc8c;"), listviewer::jsoneditOutput(id_submodulo, height = "300px"))
+            column(6, tags$small("Colector Meta", style="color:#00d4ff;"), listviewer::jsoneditOutput(id_colector, height = "250px")),
+            column(6, tags$small("Sub-Módulo Return", style="color:#00bc8c;"), listviewer::jsoneditOutput(id_submodulo, height = "250px"))
           )
       )
     }
-
-    # Registro de recursos para logos y assets
-    www_folder <- system.file("www", package = "Rscience2027")
-    if (www_folder == "") www_folder <- "www"
-    try(addResourcePath("WWW-FOLDER", normalizePath(www_folder)), silent = TRUE)
 
     # --- 1. ESTADOS ---
     local_env <- reactiveVal(NULL)
     rv <- reactiveValues(ready = FALSE, sub_data = NULL)
 
-    # --- 2. GESTIÓN DE RUTA E IDENTIFICACIÓN DEL TARGET ---
+    # --- 2. GESTIÓN DE RUTA ---
     internal_meta <- reactive({
       p <- if (is.function(folder_path_tool_script)) folder_path_tool_script() else folder_path_tool_script
       if (is.null(p) || p == "") return(list(status = "WAITING_PATH", exists = FALSE))
@@ -90,63 +96,45 @@ mod_04_00_settings_server <- function(id, df_input, folder_path_tool_script, sho
     # --- 3. CARGA DINÁMICA RECURSIVA ---
     observeEvent(internal_meta(), {
       info <- internal_meta()
-
       if (info$status == "PATH_PROVIDED" && isTRUE(info$exists)) {
         rv$ready <- FALSE
 
-        # Aislamos las funciones en un entorno hijo del actual
-        new_env <- new.env(parent = environment())
+        # IMPORTANTE: El entorno padre debe ser .GlobalEnv para que Selectize
+        # encuentre las funciones de ayuda y librerías.
+        new_env <- new.env(parent = .GlobalEnv)
 
         tryCatch({
-          # Definimos la carpeta de búsqueda (f03_prod)
           special_folder <- dirname(info$target_file)
-
-          # Buscamos todos los .R (incluyendo sub_module/)
-          all_r_files <- list.files(
-            path = special_folder,
-            pattern = "\\.R$",
-            full.names = TRUE,
-            recursive = TRUE
-          )
+          all_r_files <- list.files(path = special_folder, pattern = "\\.R$", full.names = TRUE, recursive = TRUE)
           all_r_files <- all_r_files[!grepl("^demo_", basename(all_r_files))]
 
-          print(all_r_files)
-          # Normalizamos para no cargar dos veces el principal
+          # Carga de archivos (dependencias primero)
           target_norm <- normalizePath(info$target_file, mustWork = FALSE)
           others <- all_r_files[normalizePath(all_r_files, mustWork = FALSE) != target_norm]
 
-          # Carga de dependencias
-          lapply(others, function(f) {
-            source(f, local = new_env)
-          })
-
-          # Carga del Orquestador Hijo
+          lapply(others, function(f) source(f, local = new_env))
           source(info$target_file, local = new_env)
+
           local_env(new_env)
 
-          # Ejecución del servidor hijo
+          # Ejecución del servidor hijo dentro de su entorno
           if (exists("mod_special_settings_server", envir = new_env)) {
             func_server <- get("mod_special_settings_server", envir = new_env)
 
+            # Pasamos df_input tal cual (como reactivo)
             rv$sub_data <- func_server(
               id = "sub_theory",
               df_input = df_input,
               folder_path_tool_script = folder_path_tool_script
             )
             rv$ready <- TRUE
-          } else {
-            stop("No se encontró la función mod_special_settings_server.")
           }
-
         }, error = function(e) {
           rv$ready <- FALSE
-          warning("--- [RScience Collector] Error Crítico: ", e$message)
+          message("Error en carga dinámica: ", e$message)
         })
-      } else {
-        rv$ready <- FALSE
-        rv$sub_data <- NULL
       }
-    }, ignoreInit = FALSE)
+    })
 
     # --- 4. RENDER UI ---
     output$placeholder_dinamico <- renderUI({
@@ -155,28 +143,10 @@ mod_04_00_settings_server <- function(id, df_input, folder_path_tool_script, sho
       if(exists("mod_special_settings_ui", envir = env)) {
         func_ui <- get("mod_special_settings_ui", envir = env)
         func_ui(ns("sub_theory"))
-      } else {
-        div(class="alert alert-danger", "Error: mod_special_settings_ui no encontrada.")
       }
     })
 
-    # --- 5. LÓGICA DE ESPERA ---
-    output$ui_waiting_state <- renderUI({
-      tagList(
-        tags$style(HTML("@keyframes bounceIn {
-          0% { opacity: 0; transform: scale3d(.3, .3, .3); }
-          50% { opacity: 1; transform: scale3d(1.05, 1.05, 1.05); }
-          100% { transform: scale3d(1, 1, 1); }
-        } .rs-logo-animated { animation: bounceIn 0.8s ease-out; }")),
-        div(style = "padding: 60px 20px; text-align: center; border: 2px dashed #333; border-radius: 20px; background: #0f171e;",
-            div(class = "rs-logo-animated", img(src = "WWW-FOLDER/Rscience_logo_sticker.png", style = "width: 120px;")),
-            h3("RScience Framework", style = "color: #00bc8c; margin-top: 20px; font-weight: 700;"),
-            p("Waiting for directory selection...", style = "color: #888;")
-        )
-      )
-    })
-
-    # --- 6. COORDINADOR DE VISTAS (SWITCHER) ---
+    # --- 5. SWITCHER DE VISTAS ---
     observe({
       info <- internal_meta()
       if (info$status == "WAITING_PATH") {
@@ -188,30 +158,24 @@ mod_04_00_settings_server <- function(id, df_input, folder_path_tool_script, sho
       }
     })
 
-    # --- 7. DEBUG LOGIC ---
-    get_debug_data <- function() {
+    # --- 6. DEBUG LOGIC ---
+    get_debug_data <- reactive({
       req(rv$ready)
-      res_val <- if(is.reactive(rv$sub_data)) rv$sub_data() else rv$sub_data
-      list(
-        env_objects = ls(local_env()),
-        sub_return_type = if(is.reactive(rv$sub_data)) "Reactive" else "Static",
-        sub_content = res_val
-      )
-    }
+      if(is.reactive(rv$sub_data)) rv$sub_data() else rv$sub_data
+    })
 
     output$render_json_colector <- listviewer::renderJsonedit({ listviewer::jsonedit(internal_meta()) })
     output$render_json_submodulo <- listviewer::renderJsonedit({ listviewer::jsonedit(get_debug_data()) })
-    output$ext_render_json_colector <- listviewer::renderJsonedit({ listviewer::jsonedit(internal_meta()) })
-    output$ext_render_json_submodulo <- listviewer::renderJsonedit({ listviewer::jsonedit(get_debug_data()) })
+    output$debug_internal <- renderUI({ req(internal_show_debug); ui_debug_layout(ns) })
 
-    output$debug_internal <- renderUI({ req(show_debug); ui_debug_layout(ns) })
-    output$panel_debug_externo <- renderUI({
-      div(style = "border: 1px solid #00d4ff; padding: 10px; border-radius: 10px; background: #0b1218;",
-          h5(icon("external-link-alt"), "EXTERNAL SYSTEM MONITOR", style="color: #00d4ff; font-size: 0.8rem;"),
-          ui_debug_layout(ns, prefix = "ext_"))
-    })
 
-    # --- 8. RETORNO UNIFICADO ---
+    ##########
+
+    output$render_json_colector_externo <- listviewer::renderJsonedit({ listviewer::jsonedit(internal_meta()) })
+    output$render_json_submodulo_externo <- listviewer::renderJsonedit({ listviewer::jsonedit(get_debug_data()) })
+    output$debug_externo <- renderUI({  ui_debug_layout(ns) })
+
+
     return(reactive({
       req(rv$ready)
       if(is.reactive(rv$sub_data)) rv$sub_data() else rv$sub_data

@@ -2,7 +2,7 @@
 title: "Rscience - Anova - script06 - ASA"
 format: 
   html:
-    css: custom_theme.css
+#    css: custom_theme.css
     grid:
       body-width: 2000px
       margin-width: 250px
@@ -12,13 +12,10 @@ format:
     toc-location: right
     self-contained: true
     link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
-
 knitr: 
     opts_chunk: 
         collapse: false
         comment: ""
-
-    
 ---
 
 ```{r}
@@ -33,11 +30,11 @@ library(tidyverse)
 
 ```{r eval=TRUE, echo=TRUE} 
 
-load("R_obj_env_script01_anova_import_and_control.RData")
-load("R_obj_env_script02_anova_full_test.RData")
-load("R_obj_env_script03_anova_model.RData")
-load("R_obj_env_script04_anova_descriptive_rv.RData")
-load("R_obj_env_script05_anova_descriptive_residuals.RData")
+load("R_obj_env_file01_anova_import_and_control.RData")
+load("R_obj_env_file02_anova_full_test.RData")
+load("R_obj_env_file03_anova_model.RData")
+load("R_obj_env_file04_anova_descriptive_rv.RData")
+load("R_obj_env_file05_anova_descriptive_residuals.RData")
 
 vector_all_obj_init <- ls(envir = .GlobalEnv)
 ```
@@ -621,7 +618,7 @@ phrase02_anova_tukey_selected     <- ifelse(test = check_anova_yes_tukey_no,    
 
 We now have an entire set of outputs with short phrases that can be used in different parts of the report.
 ```{r eval=TRUE, echo=TRUE}
-cat(phrase01_normality_selected, 
+vector_text_pack01 <- c(phrase01_normality_selected, 
     phrase01_homogeneity_selected,
     phrase01A_requeriments_selected,
     phrase01B_requeriments_selected,
@@ -632,12 +629,13 @@ cat(phrase01_normality_selected,
     phrase01C_tukey_selected,
     phrase01_anova_tukey_selected)
 
+cat(vector_text_pack01)
 ```
 
 And a second set comprised of longer phrases that serve to accompany statistical results or to properly assemble a paragraph or a page of the report.
 
 ```{r eval=TRUE, echo=TRUE}
-cat(phrase02_normality_selected, 
+vector_text_pack02 <- c(phrase02_normality_selected, 
     phrase02_homogeneity_selected,
     phrase02A_requeriments_selected,
     phrase02B_requeriments_selected,
@@ -647,37 +645,21 @@ cat(phrase02_normality_selected,
     phrase02B_tukey_selected,
     phrase02C_tukey_selected,
     phrase02_anova_tukey_selected)
+
+cat(vector_text_pack02)
 
 ```
 
 ####  Phrases
 The first phrase is short, and serves to summarize. Without details.
 ```{r eval=TRUE, echo=FALSE}
-cat(phrase01_normality_selected, 
-    phrase01_homogeneity_selected,
-    phrase01A_requeriments_selected,
-    phrase01B_requeriments_selected,
-    phrase01C_requeriments_selected,
-    phrase01_anova_selected,
-    phrase01A_tukey_selected,
-    phrase01B_tukey_selected,
-    phrase01C_tukey_selected,
-    phrase01_anova_tukey_selected)
+cat(vector_text_pack01)
 
 ```
 
 The second phrase is longer and serves to help the operator (you) appropriately interpret the p-value obtained for the Shapiro-Wilk normality test applied to the residuals.
 ```{r eval=TRUE, echo=FALSE}
-cat(phrase02_normality_selected, 
-    phrase02_homogeneity_selected,
-    phrase02A_requeriments_selected,
-    phrase02B_requeriments_selected,
-    phrase02C_requeriments_selected,
-    phrase02_anova_selected,
-    phrase02A_tukey_selected,
-    phrase02B_tukey_selected,
-    phrase02C_tukey_selected,
-    phrase02_anova_tukey_selected)
+cat(vector_text_pack02)
 
 ```
 :::
@@ -1408,6 +1390,6 @@ vector_exclusion <- vector_all_obj_init
 vector_save_obj <- setdiff(vector_all_obj_end, vector_exclusion)
 
 # Guardar todo excepto los excluidos
-save(list = vector_save_obj, file = "R_obj_env_script06_anova_asa.RData")
+save(list = vector_save_obj, file = "R_obj_env_file06_anova_asa.RData")
 
 ```

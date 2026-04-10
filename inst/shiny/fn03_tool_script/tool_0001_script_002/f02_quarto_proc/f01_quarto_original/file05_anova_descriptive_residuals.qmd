@@ -1,8 +1,8 @@
 ---
-title: "Rscience - Anova - script05 - Descriptive Residuals"
+title: "Rscience - Anova - script03 - Anova - Model"
 format: 
   html:
-    css: custom_theme.css
+#    css: custom_theme.css
     grid:
       body-width: 2000px
       margin-width: 250px
@@ -12,13 +12,10 @@ format:
     toc-location: right
     self-contained: true
     link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
-
 knitr: 
     opts_chunk: 
         collapse: false
         comment: ""
-
-    
 ---
 
 
@@ -42,39 +39,33 @@ options(width = 500)
 
 ```
 
-```{r eval=TRUE, echo=FALSE} 
-fn_load_env_hidden <- function(path_rdata){
-  # 1. Definir la ruta del archivo
+```{r eval=TRUE, echo=FALSE}
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
 
-  # 2. Crear un entorno temporal
-  temp_env <- new.env()
-  
-  # 3. Cargar el archivo dentro de ese entorno específico
-  load(path_rdata, envir = temp_env)
-  
-  # 4. Convertir el entorno a una lista
-  list_obj_script01 <- as.list(temp_env)
-  
-  # (Opcional) Eliminar el entorno temporal para liberar memoria
-  rm(temp_env)
-    
-  return(list_obj_script01)
-}
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
 
-```
 
 ```{r eval=TRUE, echo=TRUE} 
 # load("R_obj_env_script01_anova_import_and_control.RData")
 # vector_all_obj_init <- ls(envir = .GlobalEnv)
 
 # 1. Definir la ruta del archivo
-path_rdata_script01 <- "R_obj_env_script01_anova_import_and_control.RData"
-path_rdata_script02 <- "R_obj_env_script02_anova_full_test.RData"
+path_rdata_file01 <- "R_obj_env_file01_anova_import_and_control.RData"
+path_rdata_file02 <- "R_obj_env_file02_anova_full_test.RData"
 
 
 # 4. Convertir el entorno a una lista
-list_obj_script01 <- fn_load_env_hidden(path_rdata = path_rdata_script01)
-list_obj_script02 <- fn_load_env_hidden(path_rdata = path_rdata_script02)
+list_obj_file01 <- fn_load_env_RData_hidden(path_rdata = path_rdata_file01)
+list_obj_file02 <- fn_load_env_RData_hidden(path_rdata = path_rdata_file02)
 
 
 
@@ -82,34 +73,34 @@ list_obj_script02 <- fn_load_env_hidden(path_rdata = path_rdata_script02)
 
 ```{r eval=TRUE, echo=TRUE} 
 # From Script01
-var_name_rv <- list_obj_script01$var_name_rv
-var_name_factor <- list_obj_script01$var_name_factor
-my_minidataset <-  list_obj_script01$my_minidataset 
-df_factor_info <- list_obj_script01$df_factor_info
-vector_color_levels_new <- list_obj_script01$vector_color_levels_new
-alpha_value <- list_obj_script01$alpha_value
-my_minidataset <- list_obj_script01$my_minidataset
-vector_order_levels_new <- list_obj_script01$vector_order_levels_new
+var_name_rv <- list_obj_file01$var_name_rv
+var_name_factor <- list_obj_file01$var_name_factor
+my_minidataset <-  list_obj_file01$my_minidataset 
+df_factor_info <- list_obj_file01$df_factor_info
+vector_color_levels_new <- list_obj_file01$vector_color_levels_new
+alpha_value <- list_obj_file01$alpha_value
+my_minidataset <- list_obj_file01$my_minidataset
+vector_order_levels_new <- list_obj_file01$vector_order_levels_new
 
 # From Script02
-my_minidataset_ext <- list_obj_script02$my_minidataset_ext
-df_model_error <- list_obj_script02$df_model_error
-df_tukey_table_classroom <- list_obj_script02$df_tukey_table_classroom
-model_error_var_MSE <- list_obj_script02$model_error_var_MSE
-model_error_sd <- list_obj_script02$model_error_sd
+my_minidataset_ext <- list_obj_file02$my_minidataset_ext
+df_model_error <- list_obj_file02$df_model_error
+df_tukey_table_classroom <- list_obj_file02$df_tukey_table_classroom
+model_error_var_MSE <- list_obj_file02$model_error_var_MSE
+model_error_sd <- list_obj_file02$model_error_sd
 ```
 
 ```{r eval=TRUE, echo=TRUE} 
 
-rm(list_obj_script01)
-rm(list_obj_script02)
+rm(list_obj_file01)
+rm(list_obj_file02)
 vector_all_obj_init <- ls(envir = .GlobalEnv)
 #vector_all_obj_init <- ""
 ```
 
 
 
-Medidas de posición de los residuos para cada nivel del factor.
+# Medidas de posición de los residuos para cada nivel del factor.
 ```{r eval=TRUE, echo=TRUE}   
 
   # # # # # Section 11 - Partitioned Measures (Residuals)-------------------------
@@ -138,7 +129,7 @@ Medidas de posición de los residuos para cada nivel del factor.
 ```
   
   
-Medidas de dispersión de los residuos para cada nivel del factor.
+# Medidas de dispersión de los residuos para cada nivel del factor.
 ```{r eval=TRUE, echo=TRUE}   
 
   # # # Partitioned Measures of Dispersion (residuals)
@@ -171,7 +162,7 @@ Medidas de dispersión de los residuos para cada nivel del factor.
 ```  
   
   
-  
+# Medidas de posicion general de los residuos (sin grupos).
 ```{r eval=TRUE, echo=TRUE}    
   # # # General Measures of Position (residuals)
   df_residuals_position_general <- data.frame(
@@ -188,7 +179,8 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   df_residuals_position_general
 ```
   
-  
+
+# Medidas de dispersion general de los residuos (sin grupos).
 ```{r eval=TRUE, echo=TRUE}   
   # # # General Measures of Dispersion (residuals)
   df_residuals_dispersion_general <- data.frame(
@@ -218,7 +210,7 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
   
   
-  
+# Tabla del plot01
 ```{r eval=TRUE, echo=TRUE}    
 
   
@@ -306,7 +298,7 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
   
   
-  
+# Residuals - Plot001
 ```{r eval=TRUE, echo=TRUE}    
   
   ####### DESDE ACAAAAAAAAAAAAAAAAAAAA
@@ -336,6 +328,8 @@ Medidas de dispersión de los residuos para cada nivel del factor.
                                         yaxis = list(zeroline = TRUE))
   
   
+  plot_residuals001 <- plotly::plotly_build(plot_residuals001)
+  
   # # # Plot output
   plot_residuals001
   
@@ -343,9 +337,9 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
 ```  
   
-  
-  
-  
+
+
+# Residuals - Plot002
 ```{r eval=TRUE, echo=TRUE}    
   
   #library(plotly)
@@ -377,15 +371,18 @@ Medidas de dispersión de los residuos para cada nivel del factor.
                                       xaxis = list(zeroline = FALSE),
                                       yaxis = list(zeroline = FALSE))
   
+  plot_residuals002 <- plotly::plotly_build(plot_residuals002)
+  
   # # # Output plot003_anova...
   plot_residuals002
   
   
 ```  
   
+ 
   
   
-  
+# Residuals - Plot003
 ```{r eval=TRUE, echo=TRUE}    
   
   
@@ -416,15 +413,17 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   plot003residuals <- plotly::layout(p = plot_residuals003,
                                      xaxis = list(zeroline = FALSE),
                                      yaxis = list(zeroline = FALSE))
+ 
+  plot_residuals003 <- plotly::plotly_build(plot_residuals003)
   
   # # # Output plot003_anova...
   plot_residuals003
   
 ```  
   
+
   
-  
-  
+# Residuals - Plot004
 ```{r eval=TRUE, echo=TRUE}    
   
   
@@ -457,15 +456,19 @@ Medidas de dispersión de los residuos para cada nivel del factor.
                                       xaxis = list(zeroline = TRUE),
                                       yaxis = list(zeroline = FALSE))
   
+  plot_residuals004 <- plotly::plotly_build(plot_residuals004)
+  
   # # # Output plot003_anova...
   plot_residuals004
   
   
 ```  
   
+
+
   
-  
-  
+# Residuals - Plot005
+
 ```{r eval=TRUE, echo=TRUE}    
   
   # - el 5
@@ -515,15 +518,17 @@ Medidas de dispersión de los residuos para cada nivel del factor.
                                       font = list(size = 20),
                                       margin = list(t = 100))
   
+  plot_residuals005 <- plotly::plotly_build(plot_residuals005)
+  
   # Mostrar el gráfico
   plot_residuals005
   # - Fin el 5
   
 ```  
   
+
   
-  
-  
+# Residuals - Plot006
 ```{r eval=TRUE, echo=TRUE}    
   
   # # # Create a new plot...
@@ -552,15 +557,19 @@ Medidas de dispersión de los residuos para cada nivel del factor.
                                         yaxis = list(zeroline = TRUE))
   
   
+  plot_residuals006 <- plotly::plotly_build(plot_residuals006)
+  
   # # # Plot output
   plot_residuals006
   
   
 ```  
   
+
+
   
-  
-  
+# Residuals - Plot007
+
 ```{r eval=TRUE, echo=TRUE}    
   
   # # # Create a new plot...
@@ -589,6 +598,8 @@ Medidas de dispersión de los residuos para cada nivel del factor.
                                         yaxis = list(zeroline = TRUE))
   
   
+  plot_residuals007 <- plotly::plotly_build(plot_residuals007)
+  
   # # # Plot output
   plot_residuals007
   
@@ -598,7 +609,8 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
   
   
-  
+# Residuals - Plot008
+
 ```{r eval=TRUE, echo=TRUE}    
   
   
@@ -631,6 +643,8 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   plot_residuals008 <- plotly::layout(p = plot_residuals008,
                                       xaxis = list(zeroline = TRUE),
                                       yaxis = list(zeroline = FALSE))
+ 
+  plot_residuals008 <- plotly::plotly_build(plot_residuals008)
   
   # # # Output plot003_anova...
   plot_residuals008
@@ -638,9 +652,9 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
 ```  
   
+
   
-  
-  
+# Residuals - Plot009
 ```{r eval=TRUE, echo=TRUE}    
   
   # el 9
@@ -700,6 +714,8 @@ Medidas de dispersión de los residuos para cada nivel del factor.
                                       font = list(size = 20),
                                       margin = list(t = 100))
   
+  plot_residuals009 <- plotly::plotly_build(plot_residuals009)
+  
   plot_residuals009
   # fin el 9
   
@@ -707,7 +723,7 @@ Medidas de dispersión de los residuos para cada nivel del factor.
   
   
   
-  
+# Residuals - Plot010
 ```{r eval=TRUE, echo=TRUE}    
   
   
@@ -757,10 +773,14 @@ Medidas de dispersión de los residuos para cada nivel del factor.
                                       font = list(size = 20),
                                       margin = list(t = 100))
   
+  plot_residuals010 <- plotly::plotly_build(plot_residuals010)
+  
   # Mostrar el gráfico
   plot_residuals010
   
 ```
+
+
 
 
 ```{r eval=TRUE, echo=TRUE} 
@@ -772,6 +792,6 @@ vector_exclusion <- vector_all_obj_init
 vector_save_obj <- setdiff(vector_all_obj_end, vector_exclusion)
 
 # Guardar todo excepto los excluidos
-save(list = vector_save_obj, file = "R_obj_env_script05_anova_descriptive_residuals.RData")
+save(list = vector_save_obj, file = "R_obj_env_file05_anova_descriptive_residuals.RData")
 
 ```

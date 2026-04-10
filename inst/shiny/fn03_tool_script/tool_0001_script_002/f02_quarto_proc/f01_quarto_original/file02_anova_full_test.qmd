@@ -2,7 +2,7 @@
 title: "Rscience - Anova - script02 - Anova - Full test"
 format: 
   html:
-    css: custom_theme.css
+#    css: custom_theme.css
     grid:
       body-width: 2000px
       margin-width: 250px
@@ -12,50 +12,58 @@ format:
     toc-location: right
     self-contained: true
     link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
-
 knitr: 
     opts_chunk: 
         collapse: false
         comment: ""
-
-    
 ---
+
+```{r}
+#| eval: true
+#| echo: true
+#| message: false
+#| warning: false
+library(dplyr)
+library(plotly)
+```
+
+```{r eval=TRUE, echo=FALSE}
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
+
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
 
 ```{r eval=TRUE, echo=TRUE} 
 # load("R_obj_env_script01_anova_import_and_control.RData")
 # vector_all_obj_init <- ls(envir = .GlobalEnv)
 
 # 1. Definir la ruta del archivo
-path_rdata <- "R_obj_env_script01_anova_import_and_control.RData"
-
-# 2. Crear un entorno temporal
-temp_env <- new.env()
-
-# 3. Cargar el archivo dentro de ese entorno específico
-load(path_rdata, envir = temp_env)
-
-# 4. Convertir el entorno a una lista
-list_obj_script01 <- as.list(temp_env)
-
-# (Opcional) Eliminar el entorno temporal para liberar memoria
-rm(temp_env)
-
+path_rdata_file01 <- "R_obj_env_file01_anova_import_and_control.RData"
+list_obj_file01 <- fn_load_env_RData_hidden(path_rdata = path_rdata_file01)
 ```
 
 ```{r eval=TRUE, echo=TRUE} 
-var_name_rv <- list_obj_script01$var_name_rv
-var_name_factor <- list_obj_script01$var_name_factor
-my_minidataset <-  list_obj_script01$my_minidataset 
-df_factor_info <- list_obj_script01$df_factor_info
-vector_color_levels_new <- list_obj_script01$vector_color_levels_new
-alpha_value <- list_obj_script01$alpha_value
+var_name_rv <- list_obj_file01$var_name_rv
+var_name_factor <- list_obj_file01$var_name_factor
+my_minidataset <-  list_obj_file01$my_minidataset 
+df_factor_info <- list_obj_file01$df_factor_info
+vector_color_levels_new <- list_obj_file01$vector_color_levels_new
+alpha_value <- list_obj_file01$alpha_value
 ```
 
 ```{r eval=TRUE, echo=TRUE} 
 
-rm(list_obj_script01)
-#vector_all_obj_init <- ls(envir = .GlobalEnv)
-vector_all_obj_init <- ""
+rm(list_obj_file01)
+vector_all_obj_init <- ls(envir = .GlobalEnv)
+#vector_all_obj_init <- ""
 ```
 
 
@@ -252,6 +260,84 @@ nuestra propia tabla:
 ```  
   
   
+```{r eval=TRUE, echo=TRUE}
+
+df_table_tukey_plot001 <- data.frame(
+    "order" = df_factor_info$order,
+    "level" = df_factor_info$level,
+    "n" = df_factor_info$n,
+    "mean" = tapply(my_minidataset[,var_name_rv], my_minidataset[,var_name_factor], mean),
+    "model_error_se" = df_model_error$model_error_se
+  )
+  df_table_tukey_plot001["lower_limit"] <- df_table_tukey_plot001$mean - df_table_tukey_plot001$model_error_se
+  df_table_tukey_plot001["upper_limmit"] <- df_table_tukey_plot001$mean + df_table_tukey_plot001$model_error_se
+  df_table_tukey_plot001["color"] <- df_factor_info$color
+
+  df_table_tukey_plot001[,"level"] <- factor(
+  x = df_table_tukey_plot001[,"level"],       # La variable original de factor
+  levels = df_table_tukey_plot001[,"level"]  # El orden de los niveles que calculamos en el Paso 2
+)
+  
+
+correct_pos_letters <- order(df_tukey_table_classroom$level)
+vector_letters <- df_tukey_table_classroom$group[correct_pos_letters]
+df_table_tukey_plot001["group"] <- vector_letters
+df_table_tukey_plot001
+```
+
+```{r eval=TRUE, echo=TRUE}
+  # # # Create a new plot...
+  plot_tukey001 <- plotly::plot_ly()
+  
+  
+  # # # Adding errors...
+  plot_tukey001 <-   plotly::add_trace(p = plot_tukey001,
+                                        type = "scatter",
+                                        mode = "markers",
+                                        x = df_table_tukey_plot001$level,
+                                        y = df_table_tukey_plot001$mean,
+                                        color = df_table_tukey_plot001$level,
+                                        colors = df_table_tukey_plot001$color,
+                                        marker = list(symbol = "line-ew-open",
+                                                      size = 50,
+                                                      opacity = 1,
+                                                      line = list(width = 5)),
+                                        error_y = list(type = "data", array = df_table_tukey_plot001$model_error_se)
+  )
+  
+  
+  
+  plot_tukey001 <-  add_text(p = plot_tukey001,
+                              x = df_table_tukey_plot001$level,
+                              y = df_table_tukey_plot001$mean,
+                              text = df_table_tukey_plot001$group, name = "Tukey Group",
+                              size = 20)
+  
+  # # # Title and settings...
+  plot_tukey001 <- plotly::layout(p = plot_tukey001,
+                                   title = "Plot 007 - Mean y model standard error",
+                                   font = list(size = 20),
+                                   margin = list(t = 100))
+  
+  # # # Without zerolines
+  plot_tukey001 <-plotly::layout(p = plot_tukey001,
+                                  xaxis = list(zeroline = FALSE),
+                                  yaxis = list(zeroline = FALSE))
+  
+  
+  plot_tukey001 <- plotly::plotly_build(plot_tukey001)
+  
+  # # # Plot output
+  plot_tukey001
+  
+
+```  
+
+   
+
+
+
+
 ## Section 10 - my_minidataset_ext
 Hasta el momento nuestro objeto my_minidataset contiene la variable respuesta, el factor, el color correspondiente a 
 cada nivel del factor, y el id tanto respecto a my_datasete y my_minidataset.
@@ -398,7 +484,7 @@ vector_exclusion <- vector_all_obj_init
 vector_save_obj  <- setdiff(vector_all_obj_end, vector_exclusion)
 
 # Guardar todo excepto los excluidos
-save(list = vector_save_obj, file = "R_obj_env_script02_anova_full_test.RData")
+save(list = vector_save_obj, file = "R_obj_env_file02_anova_full_test.RData")
 
 ```
 

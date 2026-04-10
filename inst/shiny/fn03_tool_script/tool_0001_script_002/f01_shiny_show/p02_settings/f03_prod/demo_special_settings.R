@@ -50,7 +50,7 @@ server <- function(input, output, session) {
     id = "analysis_pack",
     df_input = reactive(mtcars),
     folder_path_tool_script = folder_prueba,
-    show_debug = TRUE
+    show_debug = T
   )
 
   # Opcional: Observar en la consola de R cuando el usuario bloquea TODO el pack

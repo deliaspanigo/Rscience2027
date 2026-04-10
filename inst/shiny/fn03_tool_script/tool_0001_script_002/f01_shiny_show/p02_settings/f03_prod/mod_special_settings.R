@@ -1,7 +1,15 @@
+mod_special_DEBUG_ui <- function(id) {
+  ns <- NS(id)
+  tagList(
+    # Este uiOutput cargará todo lo que definiste en output$show_debug_external
+    uiOutput(ns("debug_external"))
+  )
+}
+
+
 mod_special_settings_ui <- function(id) {
   ns <- NS(id)
 
-  # Quitamos la lógica de addResourcePath de aquí, ya la hace el mod_04
   tagList(
     div(class = "rs-settings-pack settings-container",
         card(
@@ -14,19 +22,19 @@ mod_special_settings_ui <- function(id) {
           navset_pill(
             id = ns("main_tabs"),
             nav_panel(
-              title = "Variables", # Simplificado para estabilidad
+              title = "Variables",
               value = "panel_vars",
-              div(style = "padding-top: 15px;", uiOutput(ns("ui_step1")))
+              div(style = "padding-top: 15px;", SUB_mod_var_selection_ui(ns("step1")))
             ),
             nav_panel(
               title = "Levels",
               value = "panel_levels",
-              div(style = "padding-top: 15px;", uiOutput(ns("ui_step2")))
+              div(style = "padding-top: 15px;", SUB_mod_levels_ui(ns("step2")))
             )
           )
         ),
-        # Monitor de debug interno
-        if(TRUE) uiOutput(ns("global_status_tag"))
+        # --- NUEVO MONITOR DE DEBUG GLOBAL ---
+        uiOutput(ns("global_debug_ui"))
     )
   )
 }
@@ -38,74 +46,126 @@ mod_special_settings_server <- function(id, df_input, folder_path_tool_script, s
     internal_df_input <- reactive(if(is.function(df_input)) df_input() else df_input)
     internal_show_debug <- reactive(if(is.function(show_debug)) show_debug() else show_debug)
 
+    # --- 1. INSTANCIAS DE SUB-SERVIDORES ---
+    rlist_vars <- SUB_mod_var_selection_server("step1", df_input = internal_df_input, show_debug = internal_show_debug())
 
+    safe_rv     <- reactive({ req(rlist_vars()$is_locked); rlist_vars()$metadata$rv })
+    safe_factor <- reactive({ req(rlist_vars()$is_locked); rlist_vars()$metadata$factor })
 
-    # --- IMPORTANTE: YA NO HACEMOS SOURCE AQUÍ ---
-    # El mod_04 ya cargó recursivamente sm01_var_selection.R y sm02_levels.R
-    # en el entorno. Si los volvemos a cargar, rompemos la reactividad.
-
-    # --- 1. RENDERIZADO DE UI ---
-    output$ui_step1 <- renderUI({
-      # Llamamos directamente a la función que ya existe en el entorno
-      req(exists("SUB_mod_var_selection_ui"))
-      SUB_mod_var_selection_ui(ns("step1"))
-    })
-
-    output$ui_step2 <- renderUI({
-      req(exists("SUB_mod_levels_ui"))
-      SUB_mod_levels_ui(ns("step2"))
-    })
-
-    # --- 2. INSTANCIAS DE SERVIDORES ---
-    # Invocamos los servidores de los submódulos que ya están cargados
-    res_vars <- SUB_mod_var_selection_server("step1", df_input = internal_df_input)
-
-    # Reactivos de seguridad puente para el paso 2
-    safe_rv <- reactive({
-      req(res_vars()$is_locked)
-      res_vars()$metadata$rv
-    })
-
-    safe_factor <- reactive({
-      req(res_vars()$is_locked)
-      res_vars()$metadata$factor
-    })
-
-    res_levels <- SUB_mod_levels_server(
+    rlist_levels <- SUB_mod_levels_server(
       "step2",
-      df_input   = df_input,
+      df_input   = internal_df_input,
       var_rv     = safe_rv,
-      var_factor = safe_factor
+      var_factor = safe_factor,
+      show_debug = internal_show_debug()
     )
 
-    # --- 3. TÍTULO DINÁMICO ---
-    output$master_title_ui <- renderUI({
-      locked_1 <- isTRUE(res_vars()$is_locked)
-      locked_2 <- isTRUE(res_levels()$is_locked)
-      is_all_locked <- locked_1 && locked_2
+    # --- 2. GENERACIÓN DE LISTA LIMPIA PARA REPRODUCIBILIDAD ---
+    rlist_all_inputs <- reactive({
+      # Eliminado el dput que hacía print molesto
 
-      icon_tag  <- if(is_all_locked) icon("check-double") else icon("sliders")
-      color_tag <- if(is_all_locked) "#198754" else "#2c3e50"
+      list(
+        rv = list(
+          detail = "Response variable",
+          name = "var_name_rv",
+          R_value = rlist_vars()$metadata$rv,
+          str_R = as.character(rlist_vars()$metadata$rv),
+          str_quarto = "_var_name_rv_"
+        ),
+        factor = list(
+          detail = "The Factor",
+          name = "var_name_factor",
+          R_value = rlist_vars()$metadata$factor,
+          str_R = as.character(rlist_vars()$metadata$factor),
+          str_quarto = "_var_name_factor_"
+
+        ),
+        alpha_value = list(
+          detail = "Alpha value number",
+          name = "alpha_value",
+          R_value = rlist_vars()$metadata$alpha,
+          str_R = as.character(rlist_vars()$metadata$alpha),
+          str_quarto = "_alpha_value_"
+
+        ),
+        vector_new_order_levels = list(
+          detail = "Vector with levels in the new order",
+          name = "vector_order_levels_new",
+          R_value = rlist_levels()$data$nivel,
+          # Sentencia con comillas simples y sin barras de escape visibles
+          str_R = chartr('"', "'", paste(deparse(rlist_levels()$data$nivel), collapse = "")),
+          str_quarto = "_vector_order_levels_new_"
+        ),
+        vector_color = list(
+          detail = "Vector with hex colors",
+          name = "vector_color_levels_new",
+          R_value = rlist_levels()$data$color,
+          str_R = chartr('"', "'", paste(deparse(rlist_levels()$data$color), collapse = "")),
+          str_quarto = "_vector_color_levels_new_"
+        )
+      )
+    })
+
+    # --- 3. OBJETO DE SALIDA CONSOLIDADO ---
+    the_output <- reactive({
+      list(
+        is_locked = isTRUE(rlist_vars()$is_locked && rlist_levels()$is_locked),
+        metadata = list(
+          vars   = rlist_vars(),
+          levels = rlist_levels()
+        ),
+        timestamp = Sys.time(),
+        list_clean = rlist_all_inputs()
+      )
+    })
+
+
+
+    # --- 5. TÍTULO DINÁMICO ---
+    output$master_title_ui <- renderUI({
+      locked_all <- isTRUE(the_output()$is_locked)
+      icon_tag  <- if(locked_all) icon("check-double") else icon("sliders")
+      color_tag <- if(locked_all) "#00bc8c" else "#00d4ff"
 
       div(class = "d-flex align-items-center",
           span(icon_tag, style = paste0("color: ", color_tag, "; margin-right: 12px; font-size: 1.2rem;")),
-          span("FACTORIAL ANALYSIS SETUP", style="font-weight:800; color: #2c3e50;"),
-          span("v.0.0.1", style="margin-left: 10px; font-size: 0.7rem; color: #adb5bd;")
+          span("FACTORIAL ANALYSIS SETUP", style="font-weight:800; color: #ffffff;"),
+          span("v.0.0.1", style="margin-left: 10px; font-size: 0.7rem; color: #566b7a;")
       )
     })
 
-    # --- 4. SALIDA CONSOLIDADA ---
-    # Este es el retorno que leerá el mod_04 y finalmente tu App
-    return(reactive({
-      list(
-        is_locked = isTRUE(res_vars()$is_locked && res_levels()$is_locked),
-        metadata = list(
-          selection = res_vars()$metadata$selection, # Para que coincida con tu print() en app.R
-          vars      = res_vars(),
-          levels    = res_levels()
-        ),
-        timestamp = Sys.time()
+    output$global_json <- listviewer::renderJsonedit({
+      req(internal_show_debug())
+      listviewer::jsonedit(the_output(), mode = "view")
+    })
+
+    # --- 4. DEBUG GLOBAL ---
+    output$global_debug_ui <- renderUI({
+      req(internal_show_debug())
+      div(class = "rs-card-wrapper mt-3",
+          style = "border: 1px dashed #00d4ff; background: #0b1218;",
+          h6("GLOBAL OUTPUT MONITOR (mod_special_settings)", style="color: #00d4ff; font-weight:800;"),
+          listviewer::jsoneditOutput(ns("global_json"), height = "auto")
       )
-    }))
+    })
+
+    #######
+    output$json_external <- listviewer::renderJsonedit({
+      req(internal_show_debug())
+      listviewer::jsonedit(the_output(), mode = "view")
+    })
+
+    # --- 4. DEBUG GLOBAL ---
+    output$debug_external <- renderUI({
+      req(internal_show_debug())
+      div(class = "rs-card-wrapper mt-3",
+          style = "border: 1px dashed #00d4ff; background: #0b1218;",
+          h6("GLOBAL OUTPUT MONITOR (mod_special_settings)", style="color: #00d4ff; font-weight:800;"),
+          listviewer::jsoneditOutput(ns("json_external"), height = "auto")
+      )
+    })
+
+
+    return(the_output)
   })
 }
