@@ -5,15 +5,14 @@ library(shinyjs)
 
 devtools::load_all()
 
-
 # Registro de recursos CSS
 css_folder <- system.file("www", "css", package = "Rscience2027")
 if (css_folder == "") css_folder <- "www/css"
 try(addResourcePath("RS-STYLES", normalizePath(css_folder)), silent = TRUE)
 
-# 2. UI
-# 2. UI
-ui <- page_fixed(
+
+# UI con disposición vertical (Interactividad -> Debug)
+ui <- bslib::page_fluid(
   # 1. Definir el tema primero
   theme = bs_theme(version = 5, bg = "#0b1218", fg = "#fff", primary = "#00d4ff"),
 

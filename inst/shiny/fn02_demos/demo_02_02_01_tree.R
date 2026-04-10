@@ -10,7 +10,7 @@ if (css_folder == "") css_folder <- "www/css"
 try(addResourcePath("RS-STYLES", normalizePath(css_folder)), silent = TRUE)
 
 
-ui <- fluidPage(
+ui <- bslib::page_fluid(
   # ESTILO CRÍTICO: Convierte la App en un contenedor que no se desborda
   #style = "display: flex; flex-direction: column; height: 100vh; width: 100vw; margin: 0; padding: 0; overflow: hidden;",
 

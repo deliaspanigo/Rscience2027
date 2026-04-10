@@ -11,6 +11,8 @@ mod_02_01_dataset_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
+    # 2. Configurar el HEAD
+
     # CLASE RAÍZ ÚNICA PARA AISLAMIENTO TOTAL
     div(
       id = ns("import_container"),

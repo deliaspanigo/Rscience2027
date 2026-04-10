@@ -36,7 +36,8 @@ mod_07_00_engine_control_ui <- function(id) {
       if (!is.null(path_to_css)) tags$link(rel = "stylesheet", type = "text/css", href = path_to_css)
     ),
 
-    div(class = "rs-control-card",
+    div(id = ns("the_control"),
+        class = "rs-control-card",
         uiOutput(ns("internal_status_ui")),
         div(class = "rs-btn-group-container rs-engine-selector",
             shinyWidgets::radioGroupButtons(
@@ -95,39 +96,58 @@ mod_07_00_engine_control_server <- function(id, show_debug = reactive({FALSE})) 
 
     # --- LÓGICA DE RESET CON BLOQUEO TOTAL ---
     observeEvent(input$engine_mode, {
-      req(input$engine_mode == "reset")
+      req(input$engine_mode)
+      internal_mode <- input$engine_mode
 
-      # 1. BLOQUEO INMEDIATO (Visual y Lógico)
-      # Usamos la clase que definimos antes para que el usuario no toque nada
-      # rs_engine_status(c("the_menu", "the_summary"), action = "clean")
+      if(internal_mode == "unlock"){
 
-      # Marcamos un estado de "tránsito"
-      data_store$is_locked <- TRUE
-
-      # 2. PROCESO INTERNO (Aislado si es necesario)
-      # Si reset_data_store activa muchos observers, podrías envolverlo,
-      # pero al ser una función de asignación directa, el problema suele ser la cadena reactiva.
-      isolate({
-        reset_data_store()
-        data_store$mode <- "reset"
-      })
-
-      # 3. EL DELAY (La "Cámara de Silencio")
-      shinyjs::delay(2000, {
-
-        # Solo al final de los 2 segundos actualizamos los valores que disparan UI
         isolate({
+            data_store$mode <- internal_mode
+            data_store$my_sys_time <- Sys.time()
+            data_store$click_count <- data_store$click_count + 1
+            data_store$try_lock <- FALSE
+
+            shinyjs::enable("the_control")
+        })
+        return()
+
+      }
+
+      if(input$engine_mode == "lock"){
+
+        isolate({
+          data_store$mode <- internal_mode
           data_store$my_sys_time <- Sys.time()
-          data_store$mode <- "unlock"
-          data_store$is_done <- FALSE
+          data_store$click_count <- data_store$click_count + 1
+          data_store$try_lock <- TRUE
+        })
+        return()
+      }
+
+      if(internal_mode == "reset"){
+
+        isolate({
+          reset_data_store()
+          data_store$mode <- "reset"
+          shinyjs::disable("the_control")
+
+          shinyjs::delay(2000, {
+
+            # 4. LIBERACIÓN
+            shinyWidgets::updateRadioGroupButtons(session, "engine_mode", selected = "unlock")
+            # rs_engine_status(c("the_menu", "the_summary"), action = "unlock")
+
+            showNotification("Engine Reseted", type = "message")
+          })
+
+          return()
         })
 
-        # 4. LIBERACIÓN
-        shinyWidgets::updateRadioGroupButtons(session, "engine_mode", selected = "unlock")
-        # rs_engine_status(c("the_menu", "the_summary"), action = "unlock")
 
-        showNotification("Engine Ready", type = "message")
-      })
+
+      }
+
+
     }, ignoreInit = TRUE)
 
     # --- ACTUALIZACIÓN DE ESTADO (LOCK / UNLOCK) ---
@@ -138,7 +158,13 @@ mod_07_00_engine_control_server <- function(id, show_debug = reactive({FALSE})) 
       data_store$click_count <- data_store$click_count + 1
 
 
-      if(input$engine_mode == "lock")  data_store$try_lock <- TRUE else data_store$try_lock <- TRUE
+
+
+      if(input$engine_mode == "unlock"){
+
+        return()
+      }
+
     }, ignoreInit = T)
 
     # --- RENDERS VISUALES ---

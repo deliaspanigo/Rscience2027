@@ -157,21 +157,79 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
     ############################################################################
 
     # Colector 01 - Theory - Bibliographt - Cite
-    folder_path_collector01 <- reactive({
-      # 1. Accedemos al contenido del reactivo del módulo script
+    rlist_collector01 <- reactive({
       datos_script <- rlist_script()
+      the_path_script <- datos_script$metadata$folder_path_absolute
+      str_expected <- "f01_shiny_show"
 
-      # 2. Extraemos el path de la metadata (solo si está lock)
-      # Usamos el nombre exacto de la lista: "folder_path"
-      the_path <- datos_script$metadata$folder_path
+      # Inicializamos para evitar el error de "not found"
+      new_path_absolute <- NULL
+      check_inside <- FALSE
 
-      # Debug en consola
-      if(!is.null(the_path)) {
-        print(paste(">>> Ruta detectada en Engine:", the_path))
+      if (!is.null(the_path_script) && the_path_script != "") {
+        check_inside <- grepl(str_expected, the_path_script)
+        if (check_inside) {
+          pattern <- sprintf("(.*%s).*", str_expected)
+          new_path <- sub(pattern, "\\1", the_path_script)
+          # Usar try para evitar que normalizePath rompa todo si el path es temporalmente inválido
+          new_path_absolute <- tryCatch(normalizePath(new_path), error = function(e) NULL)
+        }
       }
 
-      return(the_path)
+      list(
+        str_expected = str_expected,
+        check_inside = check_inside,
+        the_path_script = the_path_script,
+        new_path_absolute = new_path_absolute
+      )
     })
+
+    folder_path_collector01 <- reactive({
+      req(rlist_collector01())
+      internal_rlist_collector01 <- rlist_collector01()
+      internal_rlist_collector01$new_path_absolute
+    })
+
+
+    output$debug_collector01_01 <- listviewer::renderJsonedit({
+      req(rlist_collector01())
+      internal_rlist_collector01 <- rlist_collector01()
+
+      listviewer::jsonedit(listdata = internal_rlist_collector01, mode = "text")
+    })
+
+    output$debug_collector01_02 <- listviewer::renderJsonedit({
+      req(folder_path_collector01())
+      internal_folder_path_collector01 <- folder_path_collector01()
+
+      listviewer::jsonedit(listdata = internal_folder_path_collector01, mode = "text")
+    })
+
+
+    output$show_debug_external_collector01 <- renderUI({
+      # Si quieres ver el panel aunque esté vacío, quita el req() de aquí arriba
+      # y manéjalo internamente o deja que los jsonedit muestren NULL
+
+      div(class = "debug-section",
+          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
+
+          div(class = "section-label",
+              style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 10px;",
+              icon("bug"), " External Debug - Collector 01"),
+
+          div(class = "row",
+              div(class = "col-md-6",
+                  # El req() dentro del renderJsonedit ya se encarga de esperar los datos
+                  listviewer::jsoneditOutput(ns("debug_collector01_01"), height = "auto")
+              ),
+              div(class = "col-md-6",
+                  listviewer::jsoneditOutput(ns("debug_collector01_02"), height = "auto")
+              )
+          )
+      )
+    })
+
+    ############################################################################
 
     rlist_theory <-       mod_03_A_theory_server(id = "txt_1", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
     rlist_bibliography <- mod_03_B_bibliography_server(id = "txt_2", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
@@ -216,6 +274,17 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
           icon = icon("book"),
           mod_02_02_00_tool_DEBUG_ui(id=ns("my_ns_tool"))
         ),
+        nav_panel(
+          title = "Script",
+          icon = icon("book"),
+          mod_02_03_00_script_DEBUG_ui(id=ns("my_ns_script"))
+        ),
+        nav_panel(
+          title = "Collector01",
+          icon = icon("book"),
+          uiOutput(ns("show_debug_external_collector01"))
+        ),
+
         nav_panel(
           title = "Theory",
           icon = icon("book"),

@@ -7,12 +7,25 @@ library(shinyWidgets) # Necesario para el radioGroupButtons
 
 devtools::load_all()
 
+# Registro de recursos CSS
+css_folder <- system.file("www", "css", package = "Rscience2027")
+if (css_folder == "") css_folder <- "www/css"
+try(addResourcePath("RS-STYLES", normalizePath(css_folder)), silent = TRUE)
+
 
 # 2. UI DE LA APP
-ui <- fluidPage(
+ui <- bslib::page_fluid(
   theme = bs_theme(version = 5, bg = "#0b1218", fg = "#ffffff", primary = "#00d4ff"),
 
-
+  tags$head(
+    useShinyjs(),
+    tags$link(
+      rel = "stylesheet",
+      type = "text/css",
+      # RS-STYLES debe ser el nombre que registraste en addResourcePath
+      href = paste0("RS-STYLES/style_000.css?v=", as.numeric(Sys.time()))
+    )
+  ),
   # El h2 y el módulo
   #div(style = "height: 100vh; display: flex; flex-direction: column;",
       div(style = "padding: 10px 0; flex-shrink: 0;",
