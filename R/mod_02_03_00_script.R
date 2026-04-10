@@ -72,6 +72,8 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
         is_done = NULL,
         is_locked = NULL,
         selected_script_tool = NULL,
+        script_tool_folder_path = NULL,
+        folder_exists = NULL,
         metadata = list()
       )
     }
@@ -94,28 +96,35 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
       !is.null(sel) && sel != ""
     })
 
+    rlist_selected_script_folder <- reactive({
+      # Buscamos la carpeta BASE de scripts, no el seleccionado aún
+      pkg_path <- system.file("shiny", "fn03_tool_script", package = "Rscience2027")
+      #if (pkg_path == "") pkg_path <- "inst/shiny/fn03_tool_script" # Fallback desarrollo
+
+      target_folder_path_absolute <- normalizePath(pkg_path, mustWork = FALSE)
+
+      list(
+        target_folder_path_absolute = target_folder_path_absolute,
+        target_folder_exists = dir.exists(target_folder_path_absolute)
+      )
+    })
 
     # --- 2. IMPORTACIÓN DINÁMICA ---
     # 2.1 Generamos la lista de entornos y datos
     tmp_list <- reactive({
-      internal_folders <- internal_vector_folder()
-      req(length(internal_folders) > 0)
-
-      pkg_path <- system.file(package = "Rscience2027")
-      if (pkg_path == "") pkg_path <- "inst"
-      base_path <- file.path(pkg_path, "shiny", "fn03_tool_script")
+      req(internal_vector_folder())
+      base_folder <- rlist_selected_script_folder()$target_folder_path_absolute
 
       res_list <- list()
+      for (tool_script_name in internal_vector_folder()) {
 
-      for (tool_script_name in internal_folders) {
-        folder_path <- file.path(base_path, tool_script_name, "f01_shiny_show", "p00_script_info")
-        file_name <- "mod_special_script_info.R"
-        file_path   <- file.path(folder_path, file_name)
-
-        folder_path_absolute <- normalizePath(folder_path)
-        check_folder_exists <- dir.exists(folder_path_absolute)
-        file_path_absolute <- normalizePath(file_path)
-        check_file_file_path <- file.exists(file_path_absolute)
+        # Construimos la ruta exacta al archivo mod_special_script_info.R
+        # según tu estructura de carpetas confirmada por 'ls'
+        file_path <- file.path(base_folder,
+                               tool_script_name,
+                               "f01_shiny_show",
+                               "p00_script_info",
+                               "mod_special_script_info.R")
 
         if (file.exists(file_path)) {
           local_env <- new.env(parent = .GlobalEnv)
@@ -123,10 +132,8 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
             source(file = file_path, local = local_env)
             res_list[[tool_script_name]] <- list(
               tool_script_name = tool_script_name,
-              check_folder_exists = check_folder_exists,
-              check_file_file_path = check_file_file_path,
-              folder_path_absolute = folder_path_absolute,
-              file_path_absolute = file_path_absolute,
+              folder_path_absolute = normalizePath(file.path(base_folder, tool_script_name)),
+              file_path_absolute = normalizePath(file_path),
               local_env = local_env,
               names_obj = names(local_env)
             )
@@ -230,7 +237,11 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
     observeEvent(engine_state(), {
       internal_mode <- engine_state()$mode
       internal_is_done <- is_done_val()
-      internal_selected_script_tool <-input$tool_selector
+      internal_selected_script_tool <- input$tool_selector
+      internal_rlist_selected_script_folder <-   rlist_selected_script_folder()
+      internal_selected_tool_script_folder <- internal_rlist_selected_script_folder$target_folder_path_absolute
+      internal_selected_folder_exists <- internal_rlist_selected_script_folder$target_folder_exists
+
       internal_tmp_list <- tmp_list()
 
       to_freeze <- c("header_section", "selector_section")
@@ -261,7 +272,16 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
           data_store$mode <- internal_mode
           data_store$is_locked <- TRUE
           data_store$selected_script_tool <- internal_selected_script_tool
-          data_store$metadata <- internal_tmp_list[internal_selected_script_tool]
+          data_store$script_tool_folder_path <- file.path(
+            rlist_selected_script_folder()$target_folder_path_absolute,
+            internal_selected_script_tool
+          )
+          data_store$folder_exists <- dir.exists(file.path(
+            rlist_selected_script_folder()$target_folder_path_absolute,
+            internal_selected_script_tool
+          ))
+
+          data_store$metadata <- internal_tmp_list[[internal_selected_script_tool]]
         })
         return()
       }

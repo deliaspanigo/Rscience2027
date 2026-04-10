@@ -157,37 +157,32 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
     ############################################################################
 
     # Colector 01 - Theory - Bibliographt - Cite
+    # Colector 01 - Theory - Bibliography - Cite
     rlist_collector01 <- reactive({
+      # 1. El guardia principal
+      req(rlist_script())
+
       datos_script <- rlist_script()
-      the_path_script <- datos_script$metadata$folder_path_absolute
-      str_expected <- "f01_shiny_show"
+      target_folder_path <- datos_script$script_tool_folder_path
 
-      # Inicializamos para evitar el error de "not found"
-      new_path_absolute <- NULL
-      check_inside <- FALSE
+      # 2. SEGUNDO GUARDIA: Si la ruta es NULL, "" o NA, nos detenemos aquí
+      # Esto evita el "invalid filename argument"
+      req(!is.null(target_folder_path), target_folder_path != "")
 
-      if (!is.null(the_path_script) && the_path_script != "") {
-        check_inside <- grepl(str_expected, the_path_script)
-        if (check_inside) {
-          pattern <- sprintf("(.*%s).*", str_expected)
-          new_path <- sub(pattern, "\\1", the_path_script)
-          # Usar try para evitar que normalizePath rompa todo si el path es temporalmente inválido
-          new_path_absolute <- tryCatch(normalizePath(new_path), error = function(e) NULL)
-        }
-      }
+      target_folder_exists <- dir.exists(target_folder_path)
 
       list(
-        str_expected = str_expected,
-        check_inside = check_inside,
-        the_path_script = the_path_script,
-        new_path_absolute = new_path_absolute
+        target_folder_path = target_folder_path,
+        target_folder_exists = target_folder_exists
       )
     })
 
     folder_path_collector01 <- reactive({
-      req(rlist_collector01())
-      internal_rlist_collector01 <- rlist_collector01()
-      internal_rlist_collector01$new_path_absolute
+      # Solo si el colector tiene éxito
+      data <- rlist_collector01()
+      req(data$target_folder_path)
+
+      data$target_folder_path
     })
 
 
