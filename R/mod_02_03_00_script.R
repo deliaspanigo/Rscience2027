@@ -106,6 +106,8 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
 
     tmp_list <- reactive({
       req(internal_vector_folder())
+      req(rlist_selected_script_folder())
+
       base_folder <- rlist_selected_script_folder()$target_folder_path_absolute
 
       res_list <- list()
@@ -189,7 +191,14 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
 
     observeEvent(engine_state(), {
       state <- engine_state()$mode
-      req(state)
+      req(state, input$tool_selector)
+
+      internal_rlist_selected_script_folder <- rlist_selected_script_folder()
+      base_folder <- internal_rlist_selected_script_folder$target_folder_path_absolute
+      the_tool <- input$tool_selector
+      the_folder_relative <- file.path(base_folder, the_tool)
+      the_folder_absolute <- normalizePath(the_folder_relative)
+      the_folder_exists <- dir.exists(the_folder_absolute)
 
       done <- is_done_val()
       sel <- input$tool_selector
@@ -205,6 +214,10 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
 
           data_store$mode <- "lock"
           data_store$is_locked <- TRUE
+          data_store$script_tool_folder_path <- the_folder_absolute
+          data_store$folder_exists <- the_folder_exists
+
+
           data_store$metadata <- tmp_list()[[sel]]
         }
       }
@@ -272,8 +285,9 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
     })
 
     # --- 6. RETORNO REACTIVO ---
+    the_output <- reactive({ reactiveValuesToList(data_store) })
 
-    return(reactive({ reactiveValuesToList(data_store) }))
+    return(the_output)
   })
 }
 

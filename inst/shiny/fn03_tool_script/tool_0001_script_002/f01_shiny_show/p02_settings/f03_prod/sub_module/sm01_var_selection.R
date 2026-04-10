@@ -71,9 +71,14 @@ SUB_mod_var_selection_ui <- function(id) {
   )
 }
 
-SUB_mod_var_selection_server <- function(id, df_input = mtcars, show_debug = FALSE) {
+SUB_mod_var_selection_server <- function(id, df_input , show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+
+    the_dataset <- reactive({ if (is.reactive(df_input)) df_input() else df_input })
+    internal_show_debug <- reactive(if(is.function(show_debug)) show_debug() else show_debug)
+
 
     # 1. INITIAL STATE
     list_default <- list(
@@ -86,7 +91,7 @@ SUB_mod_var_selection_server <- function(id, df_input = mtcars, show_debug = FAL
 
     data_store <- do.call(reactiveValues, list_default)
     output_rv  <- reactiveValues(val = list_default)
-    the_dataset <- reactive({ if (is.reactive(df_input)) df_input() else df_input })
+
 
     # 2. INPUT UPDATES (ANTI-RESET & EMPTY START LOGIC)
     observe({

@@ -25,62 +25,63 @@ mod_04_00_collector02_settings_server <- function(id, df_input, folder_path_tool
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # 1. Creamos un reactiveVal INTERNO para guardar la instancia del servidor cargado
-    # Lo inicializamos como una función vacía que devuelve NULL para evitar errores al inicio
-    current_sub_server_out <- reactiveVal(function() NULL)
+    # 1. Usamos un reactiveVal para guardar el RETORNO del submódulo
+    # No guardamos la función, guardamos el objeto reactivo mismo.
+    sub_module_data_r <- reactiveVal(NULL)
 
-    # Entorno local aislado
+    # Entorno local
     local_env <- new.env(parent = environment())
 
-    # Manejo de la ruta
     path_r <- reactive({
-      if (is.function(folder_path_tool_script)) folder_path_tool_script() else folder_path_tool_script
+      val <- if (is.function(folder_path_tool_script)) folder_path_tool_script() else folder_path_tool_script
+      req(val)
+      val
     })
 
-    # 2. El OBSERVE se encarga de la "fontanería" (source y ejecución)
-    observe({
-      req(path_r())
+    # 2. Monitor de cambio de ruta
+    observeEvent(path_r(), {
       base_p <- path_r()
+      path_settings <- file.path(base_p, "f01_shiny_show", "p02_settings", "f03_prod", "mod_special_settings.R")
 
-      # Al cambiar de carpeta, reseteamos la salida actual para que el padre sepa
-      # que la herramienta anterior ya no es válida
-      current_sub_server_out(function() NULL)
+      req(file.exists(path_settings))
 
-      path_settings <- file.path(base_p, "f03_soft_opts", "f04_settings", "f03_prod", "mod_special_settings.R")
+      tryCatch({
+        # Limpiamos el entorno para evitar basura de la herramienta anterior
+        local_env <- new.env(parent = environment())
+        source(file = path_settings, local = local_env)
 
-      if (file.exists(path_settings)) {
-        tryCatch({
-          # Source local
-          source(file = path_settings, local = local_env)
-
-          # Render UI
-          output$placeholder_settings <- renderUI({
-            req(local_env$mod_special_settings_ui)
-            local_env$mod_special_settings_ui(ns("sub_settings"))
-          })
-
-          # Ejecución del servidor y captura de su retorno
-          if (!is.null(local_env$mod_special_settings_server)) {
-            res <- local_env$mod_special_settings_server(id = "sub_settings", df_input = df_input, folder_path_tool_script = folder_path_tool_script)
-            # Guardamos el objeto reactivo que devuelve el sub-módulo
-            current_sub_server_out(res)
-          }
-
-        }, error = function(e) {
-          warning("Error en carga dinámica: ", e$message)
+        # Renderizar la UI primero
+        output$placeholder_settings <- renderUI({
+          req(local_env$mod_special_settings_ui)
+          # Usamos un ID fijo pero dentro de nuestro namespace
+          local_env$mod_special_settings_ui(ns("sub_settings"))
         })
-      }
+
+        # EJECUCIÓN CLAVE:
+        # Ejecutamos el servidor y guardamos el objeto reactivo que devuelve.
+        if (!is.null(local_env$mod_special_settings_server)) {
+          # IMPORTANTE: El ID aquí debe coincidir EXACTAMENTE con el de la UI arriba
+          res <- local_env$mod_special_settings_server(
+            id = "sub_settings",
+            df_input = df_input,
+            folder_path_tool_script = path_r # Pasamos el reactivo de la ruta
+          )
+
+          # Guardamos el objeto reactivo (la lista de inputs/datos)
+          sub_module_data_r(res)
+        }
+
+      }, error = function(e) {
+        warning("Error en carga dinámica RScience: ", e$message)
+      })
     })
 
-    # 3. LA SALIDA REACTIVA FINAL
-    # Este es el objeto que el padre consumirá.
-    # Al ser un reactive(), se invalidará automáticamente cuando current_sub_server_out cambie.
-    the_output <- reactive({
-      # Llamamos al reactivo que capturamos del sub-módulo
-      current_sub_server_out()()
-    })
-
-    # 4. RETORNO
-    return(the_output)
+    # 3. Retorno simplificado
+    # Esto devolverá el contenido del reactivo del submódulo.
+    return(reactive({
+      req(sub_module_data_r())
+      # Ejecutamos el reactivo guardado para obtener los valores actuales
+      sub_module_data_r()()
+    }))
   })
 }

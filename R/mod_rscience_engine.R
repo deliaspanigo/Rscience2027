@@ -63,7 +63,7 @@ mod_rscience_engine_ui <- function(id) {
                 nav_panel_hidden("c_data",   mod_02_01_dataset_ui(id = ns("my_ns_dataset"))),
                 nav_panel_hidden("c_tool",   mod_02_02_00_tool_ui(id = ns("my_ns_tool"))),
                 nav_panel_hidden("c_script", mod_02_03_00_script_ui(id=ns("my_ns_script"))),
-                nav_panel_hidden("c_settings", mod_04_00_collector02_settings_ui(id = ns("my_ns_collector02_settings"))),
+                nav_panel_hidden("c_settings", mod_04_00_settings_ui(id = ns("my_ns_collector02_settings"))),
                 nav_panel_hidden("c_play", card(card_body("Consola..."))),
                 nav_panel_hidden("c_DEBUG",   uiOutput(ns("show_debug"))),
                 nav_panel_hidden("c_out", card(card_body("Visualizador..."))),
@@ -156,6 +156,9 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
     ############################################################################
 
+    observe({
+      print(rlist_script())
+    })
     # Colector 01 - Theory - Bibliographt - Cite
     # Colector 01 - Theory - Bibliography - Cite
     rlist_collector01 <- reactive({
@@ -195,7 +198,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
     output$debug_collector01_02 <- listviewer::renderJsonedit({
       req(folder_path_collector01())
-      internal_folder_path_collector01 <- folder_path_collector01()
+      internal_folder_path_collector01 <- list(folder_path_collector01())
 
       listviewer::jsonedit(listdata = internal_folder_path_collector01, mode = "text")
     })
@@ -245,7 +248,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
     })
 
     # 1.4. Ejecución del módulo
-    rlist_settings <- mod_04_00_collector02_settings_server(
+    rlist_settings <- mod_04_00_settings_server(
       id = "my_ns_collector02_settings",
       df_input = reactive(mtcars), # Asegúrate de que esto sea reactivo
       folder_path_tool_script = folder_path_collector02,
@@ -279,7 +282,12 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
           icon = icon("book"),
           uiOutput(ns("show_debug_external_collector01"))
         ),
-
+        nav_panel(
+          title = "Settings",
+          icon = icon("book"),
+          mod_04_00_settings_DEBUG_ui(ns("my_ns_collector02_settings"))
+        ),
+        # mod_04_00_settings_ui(id = ns(""))
         nav_panel(
           title = "Theory",
           icon = icon("book"),
