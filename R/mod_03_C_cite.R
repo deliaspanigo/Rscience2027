@@ -51,29 +51,31 @@ mod_03_C_cite_ui <- function(id) {
 # ==============================================================================
 
 
-# Colócala fuera del mod_03_C_cite_server
-ui_debug_layout_cite <- function(ns, prefix = "") {
-  # Creamos IDs únicos basados en el prefijo (ej: "ext_render_json_colector")
-  id_colector <- ns(paste0(prefix, "render_json_colector"))
-  id_submodulo <- ns(paste0(prefix, "render_json_submodulo"))
 
-  div(style = "margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px;",
-      h4(icon("terminal"), "RScience Debug Console", style = "color: #00bc8c;"),
-      fluidRow(
-        column(6, tags$b("Colector"), listviewer::jsoneditOutput(id_colector, height = "300px")),
-        column(6, tags$b("Sub-Módulo"), listviewer::jsoneditOutput(id_submodulo, height = "300px"))
-      )
-  )
-}
 
 # Función auxiliar para estandarizar la vista de Debug
 # ==============================================================================
 # MÓDULO SERVER: COLECTOR Y ORQUESTADOR DE TEORÍA
 # ==============================================================================
 
-mod_03_C_cite_server <- function(id, folder_path_tool_script, show_debug = TRUE) {
+mod_03_C_cite_server <- function(id, module_cite_file_path, show_debug = TRUE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Colócala fuera del mod_03_C_cite_server
+    ui_debug_layout_theory <- function(ns, prefix = "") {
+      # Creamos IDs únicos basados en el prefijo (ej: "ext_render_json_colector")
+      id_colector <- ns(paste0(prefix, "render_json_colector"))
+      id_submodulo <- ns(paste0(prefix, "render_json_submodulo"))
+
+      div(style = "margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px;",
+          h4(icon("terminal"), "RScience Debug Console", style = "color: #00bc8c;"),
+          fluidRow(
+            column(6, tags$b("Colector"), listviewer::jsoneditOutput(id_colector, height = "300px")),
+            column(6, tags$b("Sub-Módulo"), listviewer::jsoneditOutput(id_submodulo, height = "300px"))
+          )
+      )
+    }
 
     www_folder <- system.file("www", package = "Rscience2027")
     if (www_folder == "") www_folder <- "www"
@@ -85,19 +87,19 @@ mod_03_C_cite_server <- function(id, folder_path_tool_script, show_debug = TRUE)
     rv <- reactiveValues(ready = FALSE, sub_data = NULL)
 
     # --- 2. METADATOS (Manejo de Path Vacío) ---
+    # --- 2. METADATOS (Manejo de Path Vacío) ---
     internal_meta <- reactive({
-      p <- if (is.function(folder_path_tool_script)) folder_path_tool_script() else folder_path_tool_script
+      # Aquí está el problema: module_cite_file_path es un reactive()
+      p <- if (is.function(module_cite_file_path)) module_cite_file_path() else module_cite_file_path
 
-      if (is.null(p) || p == "") {
+      if (is.null(p) || is.na(p) || p == "") { # Agregué is.na(p) por seguridad
         return(list(status = "WAITING_PATH", exists = FALSE))
       }
 
-      target <- file.path(p, "f01_shiny_show", "p01_03_cite", "f03_prod", "mod_special_cite.R")
       list(
         status      = "PATH_PROVIDED",
-        base_path   = p,
-        target_file = target,
-        exists      = file.exists(target),
+        target_file = p, # ¡Usa 'p', no 'module_cite_file_path'!
+        exists      = file.exists(p), # Aquí fallaba porque le pasabas la función entera
         timestamp   = Sys.time()
       )
     })
@@ -115,7 +117,7 @@ mod_03_C_cite_server <- function(id, folder_path_tool_script, show_debug = TRUE)
           local_env(new_env)
 
           if (!is.null(new_env$mod_special_cite_server)) {
-            rv$sub_data <- new_env$mod_special_cite_server(id = "sub_cite")
+            rv$sub_data <- new_env$mod_special_cite_server(id = "sub_theory")
           }
           rv$ready <- TRUE
 
@@ -187,7 +189,7 @@ mod_03_C_cite_server <- function(id, folder_path_tool_script, show_debug = TRUE)
             p("Complete the selection in the",
               tags$b("'Tools'", style="color: #00d4ff;"),
               "section to unlock the",
-              tags$b("cite", style="color: #ffffff;"),
+              tags$b("Theory", style="color: #ffffff;"),
               "content.",
               style = "color: #aaaaaa; font-size: 1.05rem; line-height: 1.5; max-width: 450px; margin: 0 auto;")
         )
@@ -199,7 +201,7 @@ mod_03_C_cite_server <- function(id, folder_path_tool_script, show_debug = TRUE)
       req(rv$ready)
       env <- local_env()
       req(env$mod_special_cite_ui)
-      env$mod_special_cite_ui(ns("sub_cite"))
+      env$mod_special_cite_ui(ns("sub_theory"))
     })
 
     # --- 6. CONTROL DE NAVEGACIÓN (SWITCHER) ---
@@ -236,14 +238,14 @@ mod_03_C_cite_server <- function(id, folder_path_tool_script, show_debug = TRUE)
 
     output$debug_internal <- renderUI({
       req(show_debug)
-      ui_debug_layout_cite(ns, prefix = "")
+      ui_debug_layout_theory(ns, prefix = "")
     })
 
     output$panel_debug_externo <- renderUI({
       req(internal_meta())
       div(style = "border: 2px solid #00d4ff; padding: 10px; border-radius: 10px;",
           h5("MODO EXTERNO ACTIVADO", style="color: #00d4ff;"),
-          ui_debug_layout_cite(ns, prefix = "ext_")
+          ui_debug_layout_theory(ns, prefix = "ext_")
       )
     })
 

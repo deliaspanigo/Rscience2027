@@ -305,6 +305,10 @@ mod_pipeline_server <- function(id, folder_target, list_settings) {
 # APP DE PRUEBA (SOLO PARA TEST)
 # ==============================================================================
 
+library(bslib)
+library(shiny)
+library(tidyverse)
+
 folder_target <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", package = "Rscience2027")
 
 

@@ -51,29 +51,31 @@ mod_03_A_theory_ui <- function(id) {
 # ==============================================================================
 
 
-# Colócala fuera del mod_03_A_theory_server
-ui_debug_layout_theory <- function(ns, prefix = "") {
-  # Creamos IDs únicos basados en el prefijo (ej: "ext_render_json_colector")
-  id_colector <- ns(paste0(prefix, "render_json_colector"))
-  id_submodulo <- ns(paste0(prefix, "render_json_submodulo"))
 
-  div(style = "margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px;",
-      h4(icon("terminal"), "RScience Debug Console", style = "color: #00bc8c;"),
-      fluidRow(
-        column(6, tags$b("Colector"), listviewer::jsoneditOutput(id_colector, height = "300px")),
-        column(6, tags$b("Sub-Módulo"), listviewer::jsoneditOutput(id_submodulo, height = "300px"))
-      )
-  )
-}
 
 # Función auxiliar para estandarizar la vista de Debug
 # ==============================================================================
 # MÓDULO SERVER: COLECTOR Y ORQUESTADOR DE TEORÍA
 # ==============================================================================
 
-mod_03_A_theory_server <- function(id, folder_path_tool_script, show_debug = TRUE) {
+mod_03_A_theory_server <- function(id, module_theory_file_path, show_debug = TRUE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    # Colócala fuera del mod_03_A_theory_server
+    ui_debug_layout_theory <- function(ns, prefix = "") {
+      # Creamos IDs únicos basados en el prefijo (ej: "ext_render_json_colector")
+      id_colector <- ns(paste0(prefix, "render_json_colector"))
+      id_submodulo <- ns(paste0(prefix, "render_json_submodulo"))
+
+      div(style = "margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px;",
+          h4(icon("terminal"), "RScience Debug Console", style = "color: #00bc8c;"),
+          fluidRow(
+            column(6, tags$b("Colector"), listviewer::jsoneditOutput(id_colector, height = "300px")),
+            column(6, tags$b("Sub-Módulo"), listviewer::jsoneditOutput(id_submodulo, height = "300px"))
+          )
+      )
+    }
 
     www_folder <- system.file("www", package = "Rscience2027")
     if (www_folder == "") www_folder <- "www"
@@ -85,19 +87,19 @@ mod_03_A_theory_server <- function(id, folder_path_tool_script, show_debug = TRU
     rv <- reactiveValues(ready = FALSE, sub_data = NULL)
 
     # --- 2. METADATOS (Manejo de Path Vacío) ---
+    # --- 2. METADATOS (Manejo de Path Vacío) ---
     internal_meta <- reactive({
-      p <- if (is.function(folder_path_tool_script)) folder_path_tool_script() else folder_path_tool_script
+      # Aquí está el problema: module_theory_file_path es un reactive()
+      p <- if (is.function(module_theory_file_path)) module_theory_file_path() else module_theory_file_path
 
-      if (is.null(p) || p == "") {
+      if (is.null(p) || is.na(p) || p == "") { # Agregué is.na(p) por seguridad
         return(list(status = "WAITING_PATH", exists = FALSE))
       }
 
-      target <- file.path(p, "f01_shiny_show", "p01_01_theory", "f03_prod", "mod_special_theory.R")
       list(
         status      = "PATH_PROVIDED",
-        base_path   = p,
-        target_file = target,
-        exists      = file.exists(target),
+        target_file = p, # ¡Usa 'p', no 'module_theory_file_path'!
+        exists      = file.exists(p), # Aquí fallaba porque le pasabas la función entera
         timestamp   = Sys.time()
       )
     })

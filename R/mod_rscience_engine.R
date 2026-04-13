@@ -80,11 +80,15 @@ mod_rscience_engine_ui <- function(id) {
 
 mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_general = F) {
   moduleServer(id, function(input, output, session) {
+
+    # NS
     ns <- session$ns
 
+    # Basics
     internal_show_debug_tab     <- reactive( if(is.function(show_debug_tab)) show_debug_tab() else show_debug_tab)
     internal_show_debug_general <- reactive( if(is.function(show_debug_general)) show_debug_general() else show_debug_general)
 
+    # Show/Hide debug
     observe({
       # Usamos isTRUE para manejar posibles NULLs iniciales
       show_it <- isTRUE(internal_show_debug_tab())
@@ -140,53 +144,84 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
     # Inicialización forzada
     shinyjs::runjs(sprintf("Shiny.setInputValue('%s', 'c_data');", ns("active_card")))
 
-    # Servidor del módulo de teoría
-    #mod_02_01_dataset_server(id = ns("my_ns_dataset"))
-    #resultado_final <- mod_02_02_00_tool_server(id = "my_ns_tool", show_debug = F)
-    # Server del módulo de dataset
-    rlist_dataset <- mod_02_01_dataset_server(id = "my_ns_dataset", show_debug = internal_show_debug_general()) # SIN ns()
 
-    # Server del módulo de tool
+
+    # OPT 01.01. Dataset -------------------------------------------------------------------------------------------
+    rlist_dataset <- mod_02_01_dataset_server(id = "my_ns_dataset", show_debug = internal_show_debug_general())
+
+
+    # OPT 01.02. Tool -------------------------------------------------------------------------------------------
     rlist_tool <- mod_02_02_00_tool_server(id = "my_ns_tool", show_debug = internal_show_debug_general()) # SIN ns()
 
-    # 1.3. Script
+
+    # OPT 01.03. Script -------------------------------------------------------------------------------------------
     rlist_script <-   mod_02_03_00_script_server(id="my_ns_script",
                                                vector_str_folder_tool_script = reactive(c("tool_0001_script_001", "tool_0001_script_002")),
                                                show_debug = internal_show_debug_general()) # Llamamos a la UI
 
-    ############################################################################
+    ############################################################################################################################
 
-    observe({
-      print(rlist_script())
-    })
-    # Colector 01 - Theory - Bibliographt - Cite
-    # Colector 01 - Theory - Bibliography - Cite
+
+    # Colector 01 - Temporal folder and copying selected tool_script folder
     rlist_collector01 <- reactive({
       # 1. El guardia principal
       req(rlist_script())
 
-      datos_script <- rlist_script()
-      target_folder_path <- datos_script$script_tool_folder_path
+      output_list <- list()
 
-      # 2. SEGUNDO GUARDIA: Si la ruta es NULL, "" o NA, nos detenemos aquí
-      # Esto evita el "invalid filename argument"
-      req(!is.null(target_folder_path), target_folder_path != "")
+      # Local folder path tool-script
+      flat_rlist_script <- rlist_script()
+      local_folder_path_tool_script <- flat_rlist_script$script_tool_folder_path
+      req(!is.null(local_folder_path_tool_script), local_folder_path_tool_script != "")
+      check_local_folder_path_tool_script_exists <- dir.exists(local_folder_path_tool_script)
+      output_list$local_folder_tool_script <- list()
+      output_list$local_folder_tool_script$folder_path   <- local_folder_path_tool_script
+      output_list$local_folder_tool_script$folder_exists <- check_local_folder_path_tool_script_exists
 
-      target_folder_exists <- dir.exists(target_folder_path)
+      # New temporal folder
+      str_time <- format(Sys.time(), "%Y_%m_%d_%H_%M_%S")
+      full_path_temp <- file.path(tempdir(), paste0("Rscience_", str_time))
+      check_folder_temp_created <- dir.create(full_path_temp, showWarnings = FALSE, recursive = TRUE)
+      output_list$temp_folder <- list()
+      output_list$temp_folder$str_time  <- str_time
+      output_list$temp_folder$folder_path <- full_path_temp
+      output_list$temp_folder$folder_exists <- check_folder_temp_created
 
-      list(
-        target_folder_path = target_folder_path,
-        target_folder_exists = target_folder_exists
-      )
+      # Copying files from local to temp
+      path_origin <- local_folder_path_tool_script
+      path_dest   <- full_path_temp
+      copy_status <- file.copy(from = path_origin, to = path_dest, recursive = TRUE, overwrite = TRUE)
+
+
+
+      temp_folder_tool_script <- file.path(path_dest, basename(path_origin))
+      check_temp_folder_tool_script <- dir.exists(temp_folder_tool_script)
+
+      output_list$temp_folder_tool_script <- list()
+      output_list$temp_folder_tool_script$folder_path   <- temp_folder_tool_script
+      output_list$temp_folder_tool_script$folder_exists <- check_temp_folder_tool_script
+
+
+      return(output_list)
     })
 
-    folder_path_collector01 <- reactive({
+    HOOK_local_folder_path_tool_script <- reactive({
       # Solo si el colector tiene éxito
       data <- rlist_collector01()
-      req(data$target_folder_path)
+      req(data$local_folder_tool_script$folder_path )
 
-      data$target_folder_path
+      data$local_folder_tool_script$folder_path
     })
+
+    HOOK_temp_folder_path_tool_script <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector01()
+      req(data$temp_folder_tool_script$folder_path )
+
+      data$temp_folder_tool_script$folder_path
+    })
+
+
 
 
     output$debug_collector01_01 <- listviewer::renderJsonedit({
@@ -197,10 +232,15 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
     })
 
     output$debug_collector01_02 <- listviewer::renderJsonedit({
-      req(folder_path_collector01())
-      internal_folder_path_collector01 <- list(folder_path_collector01())
+      req(HOOK_local_folder_path_tool_script(), HOOK_temp_folder_path_tool_script())
 
-      listviewer::jsonedit(listdata = internal_folder_path_collector01, mode = "text")
+      flat_HOOK_local_folder_path_tool_script <- HOOK_local_folder_path_tool_script()
+      flat_HOOK_temp_folder_path_tool_script <-  HOOK_temp_folder_path_tool_script()
+
+      the_list <- list(HOOK_local_folder_path_tool_script = flat_HOOK_local_folder_path_tool_script,
+                       HOOK_temp_folder_path_tool_script = flat_HOOK_temp_folder_path_tool_script)
+
+      listviewer::jsonedit(listdata = the_list, mode = "text")
     })
 
 
@@ -211,69 +251,98 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       div(class = "debug-section",
           style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
 
-          div(class = "section-label",
-              style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 10px;",
-              icon("bug"), " External Debug - Collector 01"),
+
 
           div(class = "row",
               div(class = "col-md-6",
-                  # El req() dentro del renderJsonedit ya se encarga de esperar los datos
-                  listviewer::jsoneditOutput(ns("debug_collector01_01"), height = "auto")
+                  div(class = "section-label",
+                      style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 10px;",
+                      icon("bug"), " External Debug - Collector 01"),
+                  listviewer::jsoneditOutput(ns("debug_collector01_01"), height = "auto"),
+                  div(class = "section-label",
+                      style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 10px;",
+                      icon("bug"), " External Debug - Collector 01"),
+                  listviewer::jsoneditOutput(ns("debug_collector01_02"), height = "auto")
               ),
               div(class = "col-md-6",
-                  listviewer::jsoneditOutput(ns("debug_collector01_02"), height = "auto")
+                  "Parte 2"
+
               )
           )
       )
     })
 
-    ############################################################################
+    ############################################################################################################################
 
-    rlist_theory <-       mod_03_A_theory_server(id = "txt_1", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
-    rlist_bibliography <- mod_03_B_bibliography_server(id = "txt_2", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
-    rlist_cite <-         mod_03_C_cite_server(id = "txt_3", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
-
-    #mod_03_B_bibliography_server(id = "txt_2", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
-    #mod_03_C_cite_server(id = "txt_3", folder_path_tool_script = folder_path_collector01, show_debug = internal_show_debug_general())
-
-    ############################################################################
+    rlist_collector02 <- reactive({
+      req(HOOK_local_folder_path_tool_script(), HOOK_temp_folder_path_tool_script())
+      flat_HOOK_local_folder_path_tool_script <- HOOK_local_folder_path_tool_script()
+      flat_HOOK_temp_folder_path_tool_script  <-  HOOK_temp_folder_path_tool_script()
 
 
+      # Folders
+      local_folder_path <-  flat_HOOK_local_folder_path_tool_script
+      temp_folder_path  <- flat_HOOK_temp_folder_path_tool_script
 
-    # 1.4. Ejecución del módulo
-    rlist_settings <- mod_04_00_settings_server(
-      id = "my_ns_collector02_settings",
-      df_input = reactive(mtcars), # Asegúrate de que esto sea reactivo
-      folder_path_tool_script = folder_path_collector01,
-      show_debug = internal_show_debug_general()
-    )
+      # Check folders
+      check_folder_local <- dir.exists(local_folder_path)
+      check_folder_temp  <- dir.exists(temp_folder_path)
 
+      # List files
+      list_files <- list()
 
-  ##############################################################################################
-  # Collector 02
-  rlist_collector02 <- reactive({
-    internal_list <- rlist_settings()
-    internal_folder_path_collector01 <- folder_path_collector01()
-
-    req(internal_list, internal_folder_path_collector01)
-
-    my_list <- list()
-
-    my_list$"folder_script_tool" <- internal_folder_path_collector01
-
-    my_list$"settings" <- internal_list$list_clean
-
-    my_list
-
-  })
+      #vector_target_file_name <- c("mod_special_settings.R", "mod_special_theory.R", "mod_special_bibliography.R", "mod_special_cite.R")
 
 
+      #target <- file.path(p, "f01_shiny_show", "p02_settings", "f03_prod", )
 
-    output$debug_collector02 <- listviewer::renderJsonedit({
+
+      list_files$"file01" <- list()
+      list_files$"file01"$"position"    <- "file01"
+      list_files$"file01"$"file_name"   <- "mod_special_settings.R"
+      list_files$"file01"$"description" <- "Module for settings from selected tool-script."
+      list_files$"file01"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p02_settings", "f03_prod", list_files$"file01"$"file_name")
+      list_files$"file01"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p02_settings", "f03_prod", list_files$"file01"$"file_name")
+      list_files$"file01"$"check_local" <- file.exists(list_files$"file01"$"local_file_path")
+      list_files$"file01"$"check_temp"  <- file.exists(list_files$"file01"$"temp_file_path")
+
+      list_files$"file03_01_theory" <- list()
+      list_files$"file03_01_theory"$"position"    <- "file03_01_theory"
+      list_files$"file03_01_theory"$"file_name"   <- "mod_special_theory.R"
+      list_files$"file03_01_theory"$"description" <- "Module theory for selected tool-script."
+      list_files$"file03_01_theory"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p01_01_theory", "f03_prod", list_files$"file03_01_theory"$"file_name")
+      list_files$"file03_01_theory"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p01_01_theory", "f03_prod", list_files$"file03_01_theory"$"file_name")
+      list_files$"file03_01_theory"$"check_local" <- file.exists(list_files$"file03_01_theory"$"local_file_path")
+      list_files$"file03_01_theory"$"check_temp"  <- file.exists(list_files$"file03_01_theory"$"temp_file_path")
+
+
+      list_files$"file03_02_bibliography" <- list()
+      list_files$"file03_02_bibliography"$"position"    <- "file03_02_bibliography"
+      list_files$"file03_02_bibliography"$"file_name"   <- "mod_special_bibliography.R"
+      list_files$"file03_02_bibliography"$"description" <- "Module bibliography for selected tool-script."
+      list_files$"file03_02_bibliography"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p01_02_bibliography", "f03_prod", list_files$"file03_02_bibliography"$"file_name")
+      list_files$"file03_02_bibliography"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p01_02_bibliography", "f03_prod", list_files$"file03_02_bibliography"$"file_name")
+      list_files$"file03_02_bibliography"$"check_local" <- file.exists(list_files$"file03_02_bibliography"$"local_file_path")
+      list_files$"file03_02_bibliography"$"check_temp"  <- file.exists(list_files$"file03_02_bibliography"$"temp_file_path")
+
+      list_files$"file03_03_cite" <- list()
+      list_files$"file03_03_cite"$"position"    <- "file03_03_cite"
+      list_files$"file03_03_cite"$"file_name"   <- "mod_special_cite.R"
+      list_files$"file03_03_cite"$"description" <- "Module cite for selected tool-script."
+      list_files$"file03_03_cite"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p01_03_cite", "f03_prod", list_files$"file03_03_cite"$"file_name")
+      list_files$"file03_03_cite"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p01_03_cite", "f03_prod", list_files$"file03_03_cite"$"file_name")
+      list_files$"file03_03_cite"$"check_local" <- file.exists(list_files$"file03_03_cite"$"local_file_path")
+      list_files$"file03_03_cite"$"check_temp"  <- file.exists(list_files$"file03_03_cite"$"temp_file_path")
+
+
+      return(list_files)
+    })
+
+    output$debug_collector02_01 <- listviewer::renderJsonedit({
       req(rlist_collector02())
-      internal_rlist_collector02 <- list(rlist_collector02())
+      flat_rlist_collector02 <- rlist_collector02()
 
-      listviewer::jsonedit(listdata = internal_rlist_collector02, mode = "text")
+      listviewer::jsonedit(listdata = flat_rlist_collector02, mode = "text")
     })
 
     output$show_debug_external_collector02 <- renderUI({
@@ -290,10 +359,137 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
           div(class = "row",
               div(class = "col-md-6",
                   # El req() dentro del renderJsonedit ya se encarga de esperar los datos
-                  listviewer::jsoneditOutput(ns("debug_collector02"), height = "auto")
+                  listviewer::jsoneditOutput(ns("debug_collector02_01"), height = "auto")
+              )#,
+              # div(class = "col-md-6",
+              #     listviewer::jsoneditOutput(ns("debug_collector01_02"), height = "auto")
+              # )
+          )
+      )
+    })
+    ############################################################################
+
+    # OPT 03.01. Theory -------------------------------------------------------------------------------------------
+    HOOK_temp_folder_path_theory  <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file03_01_theory"$"temp_file_path" )
+
+      data$"file03_01_theory"$"temp_file_path"
+    })
+    HOOK_local_folder_path_theory <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file03_01_theory"$"local_file_path" )
+
+      data$"file03_01_theory"$"local_file_path"
+    })
+    rlist_theory <-       mod_03_A_theory_server(id = "txt_1",
+                                                 module_theory_file_path = HOOK_temp_folder_path_theory,
+                                                 show_debug = internal_show_debug_general)
+
+
+    # OPT 03.02. Bibliography -------------------------------------------------------------------------------------------
+    HOOK_temp_folder_path_bibliography  <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file03_02_bibliography"$"temp_file_path" )
+
+      data$"file03_02_bibliography"$"temp_file_path"
+    })
+
+    HOOK_local_folder_path_bibliography  <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file03_02_bibliography"$"local_file_path" )
+
+      data$"file03_02_bibliography"$"local_file_path"
+    })
+    rlist_theory <-       mod_03_B_bibliography_server(id = "txt_2",
+                                                 module_bibliography_file_path = HOOK_temp_folder_path_bibliography ,
+                                                 show_debug = internal_show_debug_general)
+
+    # OPT 03.03. Cite -------------------------------------------------------------------------------------------
+    HOOK_temp_folder_path_cite  <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file03_03_cite"$"temp_file_path" )
+
+      data$"file03_03_cite"$"temp_file_path"
+    })
+
+    HOOK_local_folder_path_cite <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file03_03_cite"$"local_file_path" )
+
+      data$"file03_03_cite"$"local_file_path"
+    })
+    rlist_cite <-         mod_03_C_cite_server(id = "txt_3",
+                                               module_cite_file_path = HOOK_temp_folder_path_cite,
+                                               show_debug = internal_show_debug_general)
+
+    #mod_03_B_bibliography_server(id = "txt_2", folder_path_tool_script = local_folder_path_tool, show_debug = internal_show_debug_general())
+    #mod_03_C_cite_server(id = "txt_3", folder_path_tool_script = local_folder_path_tool, show_debug = internal_show_debug_general())
+
+    ############################################################################
+
+
+
+    # 1.4. Ejecución del módulo
+    rlist_settings <- mod_04_00_settings_server(
+      id = "my_ns_collector02_settings",
+      df_input = reactive(mtcars), # Asegúrate de que esto sea reactivo
+      folder_path_tool_script = HOOK_temp_folder_path_tool_script,
+      show_debug = internal_show_debug_general()
+    )
+
+
+  ##############################################################################################
+  # Collector 02
+  rlist_collector03 <- reactive({
+    internal_list <- rlist_settings()
+    internal_local_folder_path_tool <- HOOK_temp_folder_path_tool_script()
+
+    req(internal_list, internal_local_folder_path_tool)
+
+    my_list <- list()
+
+    my_list$"folder_script_tool" <- internal_local_folder_path_tool
+
+    my_list$"settings" <- internal_list$list_clean
+
+    my_list
+
+  })
+
+
+
+    output$debug_collector03 <- listviewer::renderJsonedit({
+      req(rlist_collector03())
+      internal_rlist_collector03 <- list(rlist_collector03())
+
+      listviewer::jsonedit(listdata = internal_rlist_collector03, mode = "text")
+    })
+
+    output$show_debug_external_collector03 <- renderUI({
+      # Si quieres ver el panel aunque esté vacío, quita el req() de aquí arriba
+      # y manéjalo internamente o deja que los jsonedit muestren NULL
+
+      div(class = "debug-section",
+          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
+
+          div(class = "section-label",
+              style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 10px;",
+              icon("bug"), " External Debug - Collector 01"),
+
+          div(class = "row",
+              div(class = "col-md-6",
+                  # El req() dentro del renderJsonedit ya se encarga de esperar los datos
+                  listviewer::jsoneditOutput(ns("debug_collector03"), height = "auto")
               ),
               div(class = "col-md-6",
-                  listviewer::jsoneditOutput(ns("debug_collector02"), height = "auto")
+                  listviewer::jsoneditOutput(ns("debug_collector03"), height = "auto")
               )
           )
       )
@@ -332,14 +528,19 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
           uiOutput(ns("show_debug_external_collector01"))
         ),
         nav_panel(
+          title = "Collector02",
+          icon = icon("book"),
+          uiOutput(ns("show_debug_external_collector02"))
+        ),
+        nav_panel(
           title = "Settings",
           icon = icon("book"),
           mod_04_00_settings_DEBUG_ui(ns("my_ns_collector02_settings"))
         ),
         nav_panel(
-          title = "Collector02",
+          title = "Collector03",
           icon = icon("book"),
-          uiOutput(ns("show_debug_external_collector02"))
+          uiOutput(ns("show_debug_external_collector03"))
         ),
 
 
