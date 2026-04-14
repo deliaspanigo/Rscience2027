@@ -86,13 +86,15 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       req(rlist_item03_quarto_proc()$is_done)
       path_val <- rlist_item03_quarto_proc()$path
       list_render_qmd_file <- list(
-        "pack01" = list(qmd_file_path_relative = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd",
+        "pack01" = list(qmd_file_path_relative = "g01_quarto_original/AAA_01_RUNNER_g01_quarto_original.qmd",
+                        label_on_rendering = "Applying setting on R scripts."),
+        "pack02" = list(qmd_file_path_relative = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd",
                         label_on_rendering = "Running R script"),
-        "pack02" = list(qmd_file_path_relative = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd",
-                        label_on_rendering = "Preparing R scripts for user."),
-        "pack03" = list(qmd_file_path_relative = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd",
+        "pack03" = list(qmd_file_path_relative = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd",
+                        label_on_rendering = "Packaging R scripts for user (.R - zip)."),
+        "pack04" = list(qmd_file_path_relative = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd",
                         label_on_rendering = "View - Shiny Outputs"),
-        "pack04" = list(qmd_file_path_relative = "g06_asa/AAA_01_RUNNER_g06_asa.qmd",
+        "pack05" = list(qmd_file_path_relative = "g06_asa/AAA_01_RUNNER_g06_asa.qmd",
                         label_on_rendering = "View - Automatic Statistic Asesor (ASA)")
       )
       list_processed <- lapply(list_render_qmd_file, function(item) {
@@ -162,7 +164,17 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
 
       isolate({
         tryCatch({
-          quarto::quarto_render(input = selected_path, quiet = TRUE)
+          selected_folder_path <- dirname(selected_path)
+          selected_qmd_file_name <- basename(selected_path)
+
+          old_wd <- getwd()
+          new_wd <- selected_folder_path
+
+          setwd(new_wd)
+          quarto::quarto_render(input = selected_qmd_file_name, quiet = FALSE)
+          setwd(old_wd)
+
+          # quarto::quarto_render(input = selected_path, quiet = TRUE)
           render_status[[selected_pkg_name]] <- "done"
         }, error = function(e) {
           render_status[[selected_pkg_name]] <- "error"

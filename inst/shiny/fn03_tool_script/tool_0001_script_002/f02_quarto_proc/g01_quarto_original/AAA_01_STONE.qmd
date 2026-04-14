@@ -1,0 +1,197 @@
+---
+title: "Rscience - Anova - script01 - Anova - Import and control"
+format: 
+  html:
+#    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+params:
+  rlist_collector03: NULL
+  use_default_collector03: FALSE
+---
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+library("knitr")
+library("tools")
+```
+
+
+```{r eval=TRUE, echo=FALSE}
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
+
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
+
+
+```{r eval=TRUE, echo=FALSE}
+
+default_collector03 <- list()
+default_collector03$"settings" <- list()
+default_collector03$"settings"$"rv" <- list(
+        "detail" = "Response variable",
+        "name" = "var_name_rv",
+        "R_value" = "mpg",
+        "str_R" = "mpg",
+        "str_quarto" = "_var_name_rv_"
+)
+default_collector03$"settings"$"factor" <- list(
+        "detail" = "The Factor",
+        "name" = "var_name_factor",
+        "R_value" = "cyl",
+        "str_R" = "cyl",
+        "str_quarto" = "_var_name_factor_"
+)
+
+
+default_collector03$"settings"$"alpha_value" <- list(
+        "detail" = "Alpha value number",
+        "name" = "alpha_value",
+        "R_value" = 0.05,
+        "str_R" = "0.05",
+        "str_quarto" = "_alpha_value_"
+)
+
+default_collector03$"settings"$"vector_new_order_levels" <- list(
+        "detail" = "Vector with levels in the new order",
+        "name" = "vector_order_levels_new",
+        "R_value" = c("4", "6", "8"),
+        "str_R" = "c('4', '6', '8')",
+        "str_quarto" = "_vector_order_levels_new_"
+)
+
+default_collector03$"settings"$"vector_color" <- list(
+        "detail" = "Vector with hex colors",
+        "name" = "vector_color_levels_new",
+        "R_value" = c("#FF0000", "#00FF00", "#0000FF"),
+        "str_R" = "c('#FF0000', '#00FF00', '#0000FF')",
+        "str_quarto" = "_vector_color_levels_new_"
+)
+
+
+selected_list_collector03 <- list()
+
+# Definimos la condición
+check_use_default <- is.null(params$rlist_collector03) || isTRUE(params$use_default_collector03)
+
+# Usamos if/else estándar para mantener la integridad de la lista
+if (check_use_default) {
+  selected_list_collector03 <- default_collector03
+} else {
+  selected_list_collector03 <- params$rlist_collector03
+}
+print(selected_list_collector03)
+```
+
+# Arhcivo qmd mod que se debe  modificar
+```{r eval=TRUE, echo=FALSE}
+str_quarto_mod_file_path_relative <- file.path("..", "f02_quarto_mod", "file01_anova_import_and_control.qmd")
+str_quarto_mod_file_path_absolute <- normalizePath(str_quarto_mod_file_path_relative)
+check_exists <- file.exists(str_quarto_mod_file_path_absolute)
+
+
+
+cat("Output folder--------------------------------------------------------- ", "\n",
+    "Target folder original relative: ", str_quarto_mod_file_path_relative, "\n",
+    "Target folder original absolute: ", str_quarto_mod_file_path_absolute, "\n",
+    "Target absolute exists:   ", check_exists, "\n")
+
+
+
+if(!check_exists){
+  cat("No existe la el archivo. Esto imposibilita continuar con el procesamiento. Que sucedio!!!????")
+  knitr::knit_exit()
+}
+
+```
+
+
+# Df changes forms ettings 
+```{r eval=TRUE, echo=FALSE}
+
+# --- 1. Definimos los campos que queremos extraer explícitamente ---
+target_fields <- c("detail", "name", "str_R", "str_quarto")
+
+# --- 2. Construimos el DataFrame fila por fila ---
+list_dfs <- lapply(names(selected_list_collector03$settings), function(nm) {
+  item <- selected_list_collector03$settings[[nm]]
+  
+  # Extraemos solo los campos definidos. 
+  # Si alguno no existe, pondrá NA en su lugar para no romper el rbind.
+  extracted_data <- lapply(target_fields, function(f) {
+    val <- item[[f]]
+    if(is.null(val)) return(NA_character_) else return(as.character(val))
+  })
+  
+  # Asignamos los nombres de las columnas
+  names(extracted_data) <- target_fields
+  
+  # Convertimos a data.frame de una fila y añadimos la 'key'
+  df_row <- as.data.frame(extracted_data, stringsAsFactors = FALSE)
+  df_row$key_id <- nm
+  
+  return(df_row)
+})
+
+# --- 3. Unimos todo con rbind ---
+df_settings_strings <- do.call(rbind, list_dfs)
+
+# Limpieza final
+rownames(df_settings_strings) <- NULL
+
+# --- 4. Ver el resultado ---
+print(df_settings_strings)
+```
+
+# DF all changes
+```{r eval=TRUE, echo=FALSE}
+
+df_all_changes <- df_settings_strings[c("str_R","str_quarto")]
+df_all_changes
+
+
+
+```
+
+
+```{r eval=TRUE, echo=FALSE}
+
+
+vector_code <- readLines(str_quarto_mod_file_path_absolute, encoding = "UTF-8")
+
+  library(stringi)
+
+# Aplicar todos los reemplazos a la vez
+lineas_archivo <- stringi::stri_replace_all_fixed(
+  str         = vector_code, 
+  pattern     = df_settings_strings$str_quarto, 
+  replacement = df_settings_strings$str_R, 
+  vectorize_all = FALSE
+)
+
+writeLines(lineas_archivo, str_quarto_mod_file_path_absolute, useBytes = TRUE)
+
+# 4. Mensaje de confirmación en consola
+cat("Cambios aplicados exitosamente en:", basename(str_quarto_mod_file_path_absolute), "\n")
+
+
+```

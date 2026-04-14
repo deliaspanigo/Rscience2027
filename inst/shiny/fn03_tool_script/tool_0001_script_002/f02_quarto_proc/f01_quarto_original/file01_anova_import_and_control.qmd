@@ -74,10 +74,10 @@ con todos los niveles del factor en el orden en el cual el usuario desea que los
 aparezcan en el informe, y un segundo vector para detallar un color por cada nivel del factor.
 ```{r eval=TRUE, echo=TRUE}
 # # # # # Section 03 - Settings ----------------------------------------------
-  var_name_rv     <-  _var_name_rv_
+  var_name_rv     <-  "_var_name_rv_"
   var_name_rv
 
-  var_name_factor <- _var_name_factor_
+  var_name_factor <- "_var_name_factor_"
   var_name_factor
 
   alpha_value     <-  _alpha_value_
