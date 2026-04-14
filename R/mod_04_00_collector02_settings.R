@@ -41,7 +41,7 @@ mod_04_00_collector02_settings_server <- function(id, df_input, folder_path_tool
     # 2. Monitor de cambio de ruta
     observeEvent(path_r(), {
       base_p <- path_r()
-      path_settings <- file.path(base_p, "f01_shiny_show", "p02_settings", "f03_prod", "mod_special_settings.R")
+      path_settings <- file.path(base_p, "f01_shiny_show", "p01_04_settings", "f03_prod", "mod_special_settings.R")
 
       req(file.exists(path_settings))
 

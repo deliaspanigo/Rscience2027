@@ -83,7 +83,7 @@ mod_04_00_settings_server <- function(id, df_input, folder_path_tool_script, sho
       p <- if (is.function(folder_path_tool_script)) folder_path_tool_script() else folder_path_tool_script
       if (is.null(p) || p == "") return(list(status = "WAITING_PATH", exists = FALSE))
 
-      target <- file.path(p, "f01_shiny_show", "p02_settings", "f03_prod", "mod_special_settings.R")
+      target <- file.path(p, "f01_shiny_show", "p01_04_settings", "f03_prod", "mod_special_settings.R")
       list(
         status      = "PATH_PROVIDED",
         base_path   = p,

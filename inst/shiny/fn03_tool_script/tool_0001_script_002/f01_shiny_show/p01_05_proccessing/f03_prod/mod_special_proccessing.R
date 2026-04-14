@@ -1,4 +1,4 @@
-mod_pipeline_ui <- function(id) {
+mod_special_proccessing_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
@@ -23,9 +23,13 @@ mod_pipeline_ui <- function(id) {
 }
 
 
-mod_pipeline_server <- function(id, local_folder_tool_script, temp_folder_tool_script, list_settings) {
+mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_folder_tool_script, list_settings) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    internal_local_folder_tool_script <- reactive(if(is.function(local_folder_tool_script)) local_folder_tool_script() else local_folder_tool_script)
+    internal_temp_folder_tool_script  <- reactive(if(is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script)
+
 
     # --------------------------------------------------------------------------
     # 0. CONTROL DE ESTADO
@@ -51,7 +55,7 @@ mod_pipeline_server <- function(id, local_folder_tool_script, temp_folder_tool_s
 
     rlist_item01_local_folder_tool_script <- reactive({
       req(engine$started)
-      path_val <- if(is.function(local_folder_tool_script)) local_folder_tool_script() else local_folder_tool_script
+      path_val <- internal_local_folder_tool_script()
       exists_val <- dir.exists(path_val)
       color_hex <- if(exists_val) "#00bc8c" else "#ff4b5c"
       list(path = path_val, is_done = exists_val, text = if(exists_val) "FOLDER VERIFIED" else "PATH NOT FOUND",
@@ -61,7 +65,7 @@ mod_pipeline_server <- function(id, local_folder_tool_script, temp_folder_tool_s
 
     rlist_item02_temp_folder_tool_script <- reactive({
       req(rlist_item01_local_folder_tool_script()$is_done)
-      path_val <- if(is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script
+      path_val <- if(is.function(internal_temp_folder_tool_script)) internal_temp_folder_tool_script() else internal_temp_folder_tool_script
       exists_val <- dir.exists(path_val)
       color_hex <- if(exists_val) "#00bc8c" else "#ff4b5c"
       list(path = path_val, is_done = exists_val, text = if(exists_val) "TEMP VERIFIED" else "TEMP NOT FOUND",
@@ -82,10 +86,14 @@ mod_pipeline_server <- function(id, local_folder_tool_script, temp_folder_tool_s
       req(rlist_item03_quarto_proc()$is_done)
       path_val <- rlist_item03_quarto_proc()$path
       list_render_qmd_file <- list(
-        "pack01" = list(qmd_file_path_relative = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd"),
-        "pack02" = list(qmd_file_path_relative = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd"),
-        "pack03" = list(qmd_file_path_relative = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd"),
-        "pack04" = list(qmd_file_path_relative = "g06_asa/AAA_01_RUNNER_g06_asa.qmd")
+        "pack01" = list(qmd_file_path_relative = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd",
+                        label_on_rendering = "Running R script"),
+        "pack02" = list(qmd_file_path_relative = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd",
+                        label_on_rendering = "Preparing R scripts for user."),
+        "pack03" = list(qmd_file_path_relative = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd",
+                        label_on_rendering = "View - Shiny Outputs"),
+        "pack04" = list(qmd_file_path_relative = "g06_asa/AAA_01_RUNNER_g06_asa.qmd",
+                        label_on_rendering = "View - Automatic Statistic Asesor (ASA)")
       )
       list_processed <- lapply(list_render_qmd_file, function(item) {
         item$qmd_file_path_abs_local <- normalizePath(file.path(path_val, item$qmd_file_path_relative), mustWork = FALSE)
@@ -292,15 +300,19 @@ mod_pipeline_server <- function(id, local_folder_tool_script, temp_folder_tool_s
     # 2. Creamos los renders individuales dinámicamente
     observe({
       req(rlist_item04_qmd_files()$is_done)
-      pkgs <- names(rlist_item04_qmd_files()$list_qmd)
+      flat_rlist_item04_qmd_files <- rlist_item04_qmd_files()
+      pkgs <- names(flat_rlist_item04_qmd_files$list_qmd)
 
       for(p in pkgs) {
         # Localizamos p para el scope del render
         local({
           pkg_id <- p
+          label_id <- flat_rlist_item04_qmd_files$list_qmd[[pkg_id]]$label_on_rendering
+
           output[[paste0("row_", pkg_id)]] <- renderUI({
             # ESTA ES LA MAGIA: Solo este render se dispara cuando render_status[[pkg_id]] cambia
-            render_file_row_server(pkg_id, render_status[[pkg_id]])
+            #render_file_row_server(pkg_id, render_status[[pkg_id]])
+            render_file_row_server(label_id, render_status[[pkg_id]])
           })
         })
       }
@@ -315,27 +327,27 @@ mod_pipeline_server <- function(id, local_folder_tool_script, temp_folder_tool_s
 # ==============================================================================
 # APP DE PRUEBA (SOLO PARA TEST)
 # ==============================================================================
-
-library(bslib)
-library(shiny)
-library(tidyverse)
-
-# Asumo que esta ruta existe y contiene la estructura necesaria
-path_test <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", package = "Rscience2027")
-
-ui <- page_fluid(
-  theme = bs_theme(version = 5, bg = "#0b1218", fg = "#ffffff", primary = "#00d4ff"),
-  mod_pipeline_ui("pipeline_1")
-)
-
-server <- function(input, output, session) {
-  # CORRECCIÓN AQUÍ: Usar los nombres de argumentos definidos en el módulo
-  mod_pipeline_server(
-    id = "pipeline_1",
-    local_folder_tool_script = path_test,
-    temp_folder_tool_script = path_test, # O la ruta que desees para el proceso
-    list_settings = NULL
-  )
-}
-
-shinyApp(ui, server)
+#
+# library(bslib)
+# library(shiny)
+# library(tidyverse)
+#
+# # Asumo que esta ruta existe y contiene la estructura necesaria
+# path_test <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", package = "Rscience2027")
+#
+# ui <- page_fluid(
+#   theme = bs_theme(version = 5, bg = "#0b1218", fg = "#ffffff", primary = "#00d4ff"),
+#   mod_pipeline_ui("pipeline_1")
+# )
+#
+# server <- function(input, output, session) {
+#   # CORRECCIÓN AQUÍ: Usar los nombres de argumentos definidos en el módulo
+#   mod_pipeline_server(
+#     id = "pipeline_1",
+#     local_folder_tool_script = path_test,
+#     temp_folder_tool_script = path_test, # O la ruta que desees para el proceso
+#     list_settings = NULL
+#   )
+# }
+#
+# shinyApp(ui, server)

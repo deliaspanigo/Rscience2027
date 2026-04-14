@@ -6,6 +6,9 @@ library(tidyverse)
 # 1. Cargar el paquete
 devtools::load_all()
 
+source(file = "mod_special_proccessing.R")
+
+
 # 2. Configuración de rutas robusta
 # Buscamos la carpeta inst/www/css que es el estándar de paquetes R
 path_www <- system.file("www", package = "Rscience2027")
@@ -28,25 +31,14 @@ ui <- page_fluid(
       href = paste0("RS-STYLES/css/style_000.css?v=", as.numeric(Sys.time())) # Nota el /css/ adicional si registraste 'www'
     )
   ),
-  mod_10_00_proccessing_ui("pipeline_1")
+  mod_special_proccessing_ui("pipeline_1")
 )
 
 server <- function(input, output, session) {
-
-  flat_module_proccessing_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
-                                                   "f01_shiny_show", "p01_05_proccessing", "f03_prod", "mod_special_proccessing.R" ,package = "Rscience2027")
-  flat_local_folder_tool_script <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", package = "Rscience2027")
-  flat_temp_folder_tool_script  <- flat_local_folder_tool_script
-
-  # the_folder_package <- system.file(package = "Rscience2027")
-  # the_folder_relative <- file.path(the_folder_package, "shiny", "fn03_tool_script", "tool_0001_script_002")
-  # the_folder_absolute <- normalizePath(the_folder_relative, mustWork = T)
-
-  mod_10_00_proccessing_server(
+  mod_special_proccessing_server(
     id = "pipeline_1",
-    module_proccessing_file_path = flat_module_proccessing_file_path,
-    local_folder_tool_script = flat_local_folder_tool_script,
-    temp_folder_tool_script  = flat_temp_folder_tool_script,
+    local_folder_tool_script = path_test,
+    temp_folder_tool_script = path_test,
     list_settings = NULL
   )
 }

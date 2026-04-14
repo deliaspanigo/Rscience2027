@@ -64,7 +64,7 @@ mod_rscience_engine_ui <- function(id) {
                 nav_panel_hidden("c_tool",   mod_02_02_00_tool_ui(id = ns("my_ns_tool"))),
                 nav_panel_hidden("c_script", mod_02_03_00_script_ui(id=ns("my_ns_script"))),
                 nav_panel_hidden("c_settings", mod_04_00_settings_ui(id = ns("my_ns_collector02_settings"))),
-                nav_panel_hidden("c_play", card(card_body("Consola..."))),
+                nav_panel_hidden("c_play", mod_10_00_proccessing_ui(id = ns("pipeline_1"))),
                 nav_panel_hidden("c_DEBUG",   uiOutput(ns("show_debug"))),
                 nav_panel_hidden("c_out", card(card_body("Visualizador..."))),
                 nav_panel_hidden("c_theory",  mod_03_A_theory_ui(ns("txt_1"))),
@@ -294,24 +294,34 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       #vector_target_file_name <- c("mod_special_settings.R", "mod_special_theory.R", "mod_special_bibliography.R", "mod_special_cite.R")
 
 
-      #target <- file.path(p, "f01_shiny_show", "p02_settings", "f03_prod", )
+      #target <- file.path(p, "f01_shiny_show", "p01_04_settings", "f03_prod", )
 
 
-      list_files$"file01" <- list()
-      list_files$"file01"$"position"    <- "file01"
-      list_files$"file01"$"file_name"   <- "mod_special_settings.R"
-      list_files$"file01"$"description" <- "Module for settings from selected tool-script."
-      list_files$"file01"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p02_settings", "f03_prod", list_files$"file01"$"file_name")
-      list_files$"file01"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p02_settings", "f03_prod", list_files$"file01"$"file_name")
-      list_files$"file01"$"check_local" <- file.exists(list_files$"file01"$"local_file_path")
-      list_files$"file01"$"check_temp"  <- file.exists(list_files$"file01"$"temp_file_path")
+      list_files$"file01_04_settings" <- list()
+      list_files$"file01_04_settings"$"position"    <- "file01_04_settings"
+      list_files$"file01_04_settings"$"file_name"   <- "mod_special_settings.R"
+      list_files$"file01_04_settings"$"description" <- "Module for settings from selected tool-script."
+      list_files$"file01_04_settings"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p01_04_settings", "f03_prod", list_files$"file01_04_settings"$"file_name")
+      list_files$"file01_04_settings"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p01_04_settings", "f03_prod", list_files$"file01_04_settings"$"file_name")
+      list_files$"file01_04_settings"$"check_local" <- file.exists(list_files$"file01_04_settings"$"local_file_path")
+      list_files$"file01_04_settings"$"check_temp"  <- file.exists(list_files$"file01_04_settings"$"temp_file_path")
+
+      list_files$"file01_05_proccsessing" <- list()
+      list_files$"file01_05_proccsessing"$"position"    <- "file01_05_proccsessing"
+      list_files$"file01_05_proccsessing"$"file_name"   <- "mod_special_proccessing.R"
+      list_files$"file01_05_proccsessing"$"description" <- "Module for settings from selected tool-script."
+      list_files$"file01_05_proccsessing"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p01_05_proccessing", "f03_prod", list_files$"file01_05_proccsessing"$"file_name")
+      list_files$"file01_05_proccsessing"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p01_05_proccessing", "f03_prod", list_files$"file01_05_proccsessing"$"file_name")
+      list_files$"file01_05_proccsessing"$"check_local" <- file.exists(list_files$"file01_05_proccsessing"$"local_file_path")
+      list_files$"file01_05_proccsessing"$"check_temp"  <- file.exists(list_files$"file01_05_proccsessing"$"temp_file_path")
+
 
       list_files$"file03_01_theory" <- list()
       list_files$"file03_01_theory"$"position"    <- "file03_01_theory"
       list_files$"file03_01_theory"$"file_name"   <- "mod_special_theory.R"
       list_files$"file03_01_theory"$"description" <- "Module theory for selected tool-script."
-      list_files$"file03_01_theory"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p01_01_theory", "f03_prod", list_files$"file03_01_theory"$"file_name")
-      list_files$"file03_01_theory"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p01_01_theory", "f03_prod", list_files$"file03_01_theory"$"file_name")
+      list_files$"file03_01_theory"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p03_01_theory", "f03_prod", list_files$"file03_01_theory"$"file_name")
+      list_files$"file03_01_theory"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p03_01_theory", "f03_prod", list_files$"file03_01_theory"$"file_name")
       list_files$"file03_01_theory"$"check_local" <- file.exists(list_files$"file03_01_theory"$"local_file_path")
       list_files$"file03_01_theory"$"check_temp"  <- file.exists(list_files$"file03_01_theory"$"temp_file_path")
 
@@ -320,8 +330,8 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       list_files$"file03_02_bibliography"$"position"    <- "file03_02_bibliography"
       list_files$"file03_02_bibliography"$"file_name"   <- "mod_special_bibliography.R"
       list_files$"file03_02_bibliography"$"description" <- "Module bibliography for selected tool-script."
-      list_files$"file03_02_bibliography"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p01_02_bibliography", "f03_prod", list_files$"file03_02_bibliography"$"file_name")
-      list_files$"file03_02_bibliography"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p01_02_bibliography", "f03_prod", list_files$"file03_02_bibliography"$"file_name")
+      list_files$"file03_02_bibliography"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p03_02_bibliography", "f03_prod", list_files$"file03_02_bibliography"$"file_name")
+      list_files$"file03_02_bibliography"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p03_02_bibliography", "f03_prod", list_files$"file03_02_bibliography"$"file_name")
       list_files$"file03_02_bibliography"$"check_local" <- file.exists(list_files$"file03_02_bibliography"$"local_file_path")
       list_files$"file03_02_bibliography"$"check_temp"  <- file.exists(list_files$"file03_02_bibliography"$"temp_file_path")
 
@@ -329,8 +339,8 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       list_files$"file03_03_cite"$"position"    <- "file03_03_cite"
       list_files$"file03_03_cite"$"file_name"   <- "mod_special_cite.R"
       list_files$"file03_03_cite"$"description" <- "Module cite for selected tool-script."
-      list_files$"file03_03_cite"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p01_03_cite", "f03_prod", list_files$"file03_03_cite"$"file_name")
-      list_files$"file03_03_cite"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p01_03_cite", "f03_prod", list_files$"file03_03_cite"$"file_name")
+      list_files$"file03_03_cite"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p03_03_cite", "f03_prod", list_files$"file03_03_cite"$"file_name")
+      list_files$"file03_03_cite"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p03_03_cite", "f03_prod", list_files$"file03_03_cite"$"file_name")
       list_files$"file03_03_cite"$"check_local" <- file.exists(list_files$"file03_03_cite"$"local_file_path")
       list_files$"file03_03_cite"$"check_temp"  <- file.exists(list_files$"file03_03_cite"$"temp_file_path")
 
@@ -496,8 +506,28 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
     })
   ##############################################################################################
 
+    HOOK_temp_file_path_porccessing  <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file01_05_proccsessing"$"temp_file_path" )
 
+      data$"file01_05_proccsessing"$"temp_file_path"
+    })
+    HOOK_local_file_path_porccessing <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file01_05_proccsessing"$"local_file_path" )
 
+      data$"file01_05_proccsessing"$"local_file_path"
+    })
+
+    mod_10_00_proccessing_server(
+      id = "pipeline_1",
+      module_proccessing_file_path = HOOK_temp_file_path_porccessing,
+      local_folder_tool_script = HOOK_local_folder_path_tool_script,
+      temp_folder_tool_script =  HOOK_temp_folder_path_tool_script,
+      list_settings = NULL
+    )
 
   ##############################################################################################
 
