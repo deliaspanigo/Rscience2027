@@ -159,10 +159,8 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
                                                vector_str_folder_tool_script = reactive(c("tool_0001_script_001", "tool_0001_script_002")),
                                                show_debug = internal_show_debug_general()) # Llamamos a la UI
 
-    ############################################################################################################################
 
-
-    # Colector 01 - Temporal folder and copying selected tool_script folder
+    # Collector01 - Temporal folder and copying selected tool_script folder from local to temp --------------------
     rlist_collector01 <- reactive({
       # 1. El guardia principal
       req(rlist_script())
@@ -203,22 +201,6 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
 
       return(output_list)
-    })
-
-    HOOK_local_folder_path_tool_script <- reactive({
-      # Solo si el colector tiene éxito
-      data <- rlist_collector01()
-      req(data$local_folder_tool_script$folder_path )
-
-      data$local_folder_tool_script$folder_path
-    })
-
-    HOOK_temp_folder_path_tool_script <- reactive({
-      # Solo si el colector tiene éxito
-      data <- rlist_collector01()
-      req(data$temp_folder_tool_script$folder_path )
-
-      data$temp_folder_tool_script$folder_path
     })
 
 
@@ -272,8 +254,9 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       )
     })
 
-    ############################################################################################################################
 
+
+    # Collector02 - Modules special files .R from local and temporal ---------------------------------------------
     rlist_collector02 <- reactive({
       req(HOOK_local_folder_path_tool_script(), HOOK_temp_folder_path_tool_script())
       flat_HOOK_local_folder_path_tool_script <- HOOK_local_folder_path_tool_script()
@@ -377,7 +360,114 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
           )
       )
     })
+
+
+    # OPT 01.04. Settings -----------------------------------------------------------------------------------------
+    HOOK_local_folder_path_tool_script <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector01()
+      req(data$local_folder_tool_script$folder_path )
+
+      data$local_folder_tool_script$folder_path
+    })
+
+    HOOK_temp_folder_path_tool_script <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector01()
+      req(data$temp_folder_tool_script$folder_path )
+
+      data$temp_folder_tool_script$folder_path
+    })
+
+    my_full_dataset <- reactive({
+      req(rlist_dataset())
+      flat_rlist_dataset <- rlist_dataset()
+      my_df <- flat_rlist_dataset$"df"
+      my_df
+    })
+
+    rlist_settings <- mod_04_00_settings_server(
+      id = "my_ns_collector02_settings",
+      df_input = my_full_dataset, #reactive(mtcars), # Asegúrate de que esto sea reactivo
+      folder_path_tool_script = HOOK_temp_folder_path_tool_script,
+      show_debug = internal_show_debug_general
+    )
+
+
+
+    # Collector03 - Objects for proccessing -----------------------------------------------------------------------
+    rlist_collector03 <- reactive({
+      internal_list <- rlist_settings()
+      internal_local_folder_path_tool <- HOOK_temp_folder_path_tool_script()
+
+      req(internal_list, internal_local_folder_path_tool)
+
+      my_list <- list()
+
+      my_list$"folder_script_tool" <- internal_local_folder_path_tool
+
+      my_list$"settings" <- internal_list$list_clean
+
+      my_list
+
+    })
+
+
+
+    output$debug_collector03 <- listviewer::renderJsonedit({
+      req(rlist_collector03())
+      internal_rlist_collector03 <- list(rlist_collector03())
+
+      listviewer::jsonedit(listdata = internal_rlist_collector03, mode = "text")
+    })
+
+    output$show_debug_external_collector03 <- renderUI({
+      # Si quieres ver el panel aunque esté vacío, quita el req() de aquí arriba
+      # y manéjalo internamente o deja que los jsonedit muestren NULL
+
+      div(class = "debug-section",
+          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
+
+          div(class = "section-label",
+              style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 10px;",
+              icon("bug"), " External Debug - Collector 01"),
+
+          div(class = "row",
+              div(class = "col-md-6",
+                  # El req() dentro del renderJsonedit ya se encarga de esperar los datos
+                  listviewer::jsoneditOutput(ns("debug_collector03"), height = "auto")
+              ),
+              div(class = "col-md-6",
+                  listviewer::jsoneditOutput(ns("debug_collector03"), height = "auto")
+              )
+          )
+      )
+    })
     ############################################################################
+
+
+    HOOK_temp_file_path_porccessing  <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file01_05_proccsessing"$"temp_file_path" )
+
+      data$"file01_05_proccsessing"$"temp_file_path"
+    })
+    HOOK_local_file_path_porccessing <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file01_05_proccsessing"$"local_file_path" )
+
+      data$"file01_05_proccsessing"$"local_file_path"
+    })
+    mod_10_00_proccessing_server(
+      id = "pipeline_1",
+      module_proccessing_file_path = HOOK_temp_file_path_porccessing,
+      local_folder_tool_script = HOOK_local_folder_path_tool_script,
+      temp_folder_tool_script =  HOOK_temp_folder_path_tool_script,
+      list_settings = NULL
+    )
+
 
     # OPT 03.01. Theory -------------------------------------------------------------------------------------------
     HOOK_temp_folder_path_theory  <- reactive({
@@ -446,88 +536,13 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
 
 
-    # 1.4. Ejecución del módulo
-    rlist_settings <- mod_04_00_settings_server(
-      id = "my_ns_collector02_settings",
-      df_input = reactive(mtcars), # Asegúrate de que esto sea reactivo
-      folder_path_tool_script = HOOK_temp_folder_path_tool_script,
-      show_debug = internal_show_debug_general()
-    )
+
 
 
   ##############################################################################################
-  # Collector 02
-  rlist_collector03 <- reactive({
-    internal_list <- rlist_settings()
-    internal_local_folder_path_tool <- HOOK_temp_folder_path_tool_script()
-
-    req(internal_list, internal_local_folder_path_tool)
-
-    my_list <- list()
-
-    my_list$"folder_script_tool" <- internal_local_folder_path_tool
-
-    my_list$"settings" <- internal_list$list_clean
-
-    my_list
-
-  })
-
-
-
-    output$debug_collector03 <- listviewer::renderJsonedit({
-      req(rlist_collector03())
-      internal_rlist_collector03 <- list(rlist_collector03())
-
-      listviewer::jsonedit(listdata = internal_rlist_collector03, mode = "text")
-    })
-
-    output$show_debug_external_collector03 <- renderUI({
-      # Si quieres ver el panel aunque esté vacío, quita el req() de aquí arriba
-      # y manéjalo internamente o deja que los jsonedit muestren NULL
-
-      div(class = "debug-section",
-          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
-
-          div(class = "section-label",
-              style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 10px;",
-              icon("bug"), " External Debug - Collector 01"),
-
-          div(class = "row",
-              div(class = "col-md-6",
-                  # El req() dentro del renderJsonedit ya se encarga de esperar los datos
-                  listviewer::jsoneditOutput(ns("debug_collector03"), height = "auto")
-              ),
-              div(class = "col-md-6",
-                  listviewer::jsoneditOutput(ns("debug_collector03"), height = "auto")
-              )
-          )
-      )
-    })
   ##############################################################################################
 
-    HOOK_temp_file_path_porccessing  <- reactive({
-      # Solo si el colector tiene éxito
-      data <- rlist_collector02()
-      req(data$"file01_05_proccsessing"$"temp_file_path" )
 
-      data$"file01_05_proccsessing"$"temp_file_path"
-    })
-    HOOK_local_file_path_porccessing <- reactive({
-      # Solo si el colector tiene éxito
-      data <- rlist_collector02()
-      req(data$"file01_05_proccsessing"$"local_file_path" )
-
-      data$"file01_05_proccsessing"$"local_file_path"
-    })
-
-    mod_10_00_proccessing_server(
-      id = "pipeline_1",
-      module_proccessing_file_path = HOOK_temp_file_path_porccessing,
-      local_folder_tool_script = HOOK_local_folder_path_tool_script,
-      temp_folder_tool_script =  HOOK_temp_folder_path_tool_script,
-      list_settings = NULL
-    )
 
   ##############################################################################################
 
