@@ -95,7 +95,9 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
         "pack04" = list(qmd_file_path_relative = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd",
                         label_on_rendering = "View - Shiny Outputs"),
         "pack05" = list(qmd_file_path_relative = "g06_asa/AAA_01_RUNNER_g06_asa.qmd",
-                        label_on_rendering = "View - Automatic Statistic Asesor (ASA)")
+                        label_on_rendering = "View - Automatic Statistic Asesor (ASA)"),
+        "pack06" = list(qmd_file_path_relative = "g07_save_plots/AAA_01_RUNNER_g07_save_plots.qmd",
+                        label_on_rendering = "Plots as png and html (Zip)")
       )
       list_processed <- lapply(list_render_qmd_file, function(item) {
         item$qmd_file_path_abs_local <- normalizePath(file.path(path_val, item$qmd_file_path_relative), mustWork = FALSE)

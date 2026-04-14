@@ -1,0 +1,533 @@
+---
+title: "Rscience - Anova - script03 - Anova - Model"
+format: 
+  html:
+#    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+---
+
+
+```{r}
+#| eval: true
+#| echo: true
+#| message: false
+#| warning: false
+library(dplyr)
+library(plotly)
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+# Libraries
+  library("htmlwidgets")
+  library("knitr")
+
+
+# General config
+options(width = 500)
+
+```
+
+```{r eval=TRUE, echo=FALSE}
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
+
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
+
+```{r eval=TRUE, echo=TRUE} 
+# load("R_obj_env_script01_anova_import_and_control.RData")
+# vector_all_obj_init <- ls(envir = .GlobalEnv)
+
+# 1. Definir la ruta del archivo
+path_rdata_file01 <- "R_obj_env_file01_anova_import_and_control.RData"
+path_rdata_file02 <- "R_obj_env_file02_anova_full_test.RData"
+
+
+# 4. Convertir el entorno a una lista
+list_obj_file01 <- fn_load_env_RData_hidden(path_rdata = path_rdata_file01)
+list_obj_file02 <- fn_load_env_RData_hidden(path_rdata = path_rdata_file02)
+
+
+
+```
+
+```{r eval=TRUE, echo=TRUE} 
+# From Script01
+var_name_rv <- list_obj_file01$var_name_rv
+var_name_factor <- list_obj_file01$var_name_factor
+my_minidataset <-  list_obj_file01$my_minidataset 
+df_factor_info <- list_obj_file01$df_factor_info
+vector_color_levels_new <- list_obj_file01$vector_color_levels_new
+alpha_value <- list_obj_file01$alpha_value
+
+# From Script02
+my_minidataset_ext <- list_obj_file02$my_minidataset_ext
+
+```
+
+```{r eval=TRUE, echo=TRUE} 
+
+rm(list_obj_file01)
+rm(list_obj_file02)
+vector_all_obj_init <- ls(envir = .GlobalEnv)
+#vector_all_obj_init <- ""
+```
+
+## Section 01 - Modelo de Anova
+Hay dos formas de definir el  modelo de anova. Detallamos cada modelo con su ecuacion y requisitos.
+
+```{r eval=TRUE, echo=FALSE} 
+
+str_model01 <- "y_{ij} = \\mu + \\tau_i + \\epsilon_{ij} \\quad\\quad\\quad\\quad \\epsilon_{ij} \\sim N(0, \\sigma^2)"
+
+str_model02 <- "y_{ij} = \\mu_i + \\epsilon_{ij} \\quad\\quad\\quad\\quad \\epsilon_{ij} \\sim N(0, \\sigma^2)"
+
+list_models_basic <- list(str_model01 = str_model01, 
+                          str_model02 = str_model02)
+
+```
+
+```{r, results='asis', echo=FALSE}
+
+cat(paste0("$$", str_model01, "$$"))
+
+```
+
+
+```{r, results='asis', echo=FALSE}
+
+cat(paste0("$$", str_model02, "$$"))
+
+```
+Error comun de los estudiantes de grado y posgrado detallar como modelo solo la ecuacion. El modelo es un pack indivisible de ecuacion y requisitos.
+
+
+$$\mu = \frac{\sum_{i=1}^{a} \sum_{j=1}^{n_i} y_{ij}}{N}$$
+
+$$\mu_{i} = \frac{\sum_{j=1}^{n_i} y_{ij}}{N_{i}}$$
+
+$$\tau_{i} = \mu_{i} - \mu$$
+$$\mu = \mu_{i} + \tau_{i} $$
+
+$\mu:$ La media poblacional de la variable respuesta.  
+$\mu_{i}:$ La media poblacional de la variable respuesta para cada nivel del factor.  
+$\tau_{i}:$ El efecto tau poblacional para cada nivel del factor.  
+$y:$ La variable respuesta.  
+$i:$ Cada nivel del factor.  
+$j:$ Cada repeticion dentro de un nivel del factor en particular.  
+$y_{ij}$: cada dato de la variable respuesta que se encuentra asociado a un nivel del factor i, del cual es la repeticion j.  
+$\epsilon:$ Error aleatorio. Variabilidad no explicada.  
+$\epsilon_{ij}:$ Error aleatorio, variabilidad no explidada asociada al dato del nivel i repeticion j.  
+
+## Section 02 - Estimaciones de los parametros del modelo
+
+```{r eval=TRUE, echo=TRUE} 
+value_est_mu    <- mean(my_minidataset_ext[,var_name_rv])
+vector_est_mean <- tapply(my_minidataset_ext[,var_name_rv], my_minidataset_ext[,var_name_factor], mean)
+vector_est_tau  <- vector_est_mean - value_est_mu
+vector_n <- tapply(my_minidataset_ext[,var_name_rv], my_minidataset_ext[,var_name_factor], length)
+  
+  df_est_parameters <- data.frame(
+    "order_i"  = 1:nlevels(my_minidataset_ext[,var_name_factor]),
+    "level"    = levels(my_minidataset_ext[,var_name_factor]),
+    "n"        = vector_n,
+    "est_mu"   = value_est_mu,
+    "est_tau"  = vector_est_tau,
+    "est_mean" = vector_est_mean,
+    "color"    = vector_color_levels_new
+  )
+
+#df_est_parameters$level <- as.factor(as.character(df_est_parameters$level))
+df_est_parameters$level <- factor(
+  x = df_est_parameters$level,       # La variable original de factor
+  levels = df_est_parameters$level  # El orden de los niveles que calculamos en el Paso 2
+)
+df_est_parameters
+```
+
+
+## Section 03 - Estimation model plot
+
+```{r, eval=TRUE, echo=TRUE}
+# Media global (para la línea de referencia)
+mu_global <- value_est_mu
+
+#################
+
+plot_model001 <- plotly::plot_ly() 
+  
+  
+plot_model001 <- plot_model001 %>%
+  plotly::add_trace(
+    data = df_est_parameters,
+    type = "scatter",
+    mode = "markers",
+    x = ~get("est_mean"),
+    y = ~get("order_i"),
+    color = ~get("level"),
+    colors = df_est_parameters$color,
+    marker = list(
+      size = 19,
+      symbol = "diamond",
+      line = list(color = "black", width = 1.5)
+    ),
+    
+    # === CUSTOMDATA CORREGIDO ===
+    # Pasamos las columnas necesarias como un dataframe/lista para acceder por índice
+    customdata = ~paste0(
+      "<b>Level order:</b> ", order_i, "<br>",
+      "<b>Level name:</b> ", level, "<br>",
+      "<b>Level Mean:</b> ", round(est_mean, 2), "<br>",
+      "<b>Tau:</b> ", round(est_tau, 4), "<br>",
+      "<b>Global Mean:</b> ", round(mu_global, 4), "<br>",
+      "<b>n:</b> ", n
+    ),
+    
+    hovertemplate = "%{customdata}<extra></extra>"
+  )
+
+# Línea vertical de Media Global (μ)
+plot_model001 <- plot_model001 %>% add_segments(
+  x = mu_global, 
+  xend = mu_global,
+  y = 0.5, 
+  yend = nlevels(my_minidataset_ext[, var_name_factor]) + 0.5,
+  line = list(color = "black", dash = "dash", width = 1.8),
+  name = "Media Global (μ)",
+  showlegend = TRUE
+) 
+
+# Segmentos grises que muestran el efecto Tau
+plot_model001 <- plot_model001 %>%  add_segments(
+  x = mu_global,
+  xend = df_est_parameters$est_mean,
+  y = df_est_parameters$order_i,
+  yend = df_est_parameters$order_i,
+  line = list(color = "gray75", width = 5),
+  showlegend = FALSE
+)
+
+# Etiquetas de Tau
+plot_model001 <- plot_model001 %>%  add_annotations(
+  x = ~(mu_global + est_mean) / 2,
+  y = ~order_i - 0.25,
+  text = ~paste0("τ = ", round(est_tau, 2)),
+  showarrow = FALSE,
+  font = list(size = 12, color = "black")
+)
+  
+# Layout final
+plot_model001 <- plot_model001 %>%  layout(
+  title = list(
+    text = "<b>plot_model001: Global mean, Level mean and Tau effects </b>",
+    x = 0.5,
+    xanchor = "center"
+  ),
+  xaxis = list(
+    title = paste("Variable Respuesta:", var_name_rv),
+    zeroline = FALSE
+  ),
+  yaxis = list(
+    title = paste0("Factor: ", var_name_factor),
+    tickvals = df_est_parameters$order_i,
+    ticktext = df_est_parameters$level,
+    autorange = "reversed",   # Primer nivel arriba
+    showgrid = TRUE,
+    gridcolor = "gray90",
+    zeroline = FALSE
+  ),
+  legend = list(
+    title = list(text = "<b>Niveles</b>"), # Negrita para que resalte
+    orientation = "v" # 'v' es vertical (derecha por defecto)
+  ),
+  margin = list(t = 80, b = 60)
+)
+plot_model001
+```
+
+```{r eval=TRUE, echo=TRUE}
+plot_model001 <- plotly::plotly_build(plot_model001)
+```     
+
+```{r, results='asis', echo=FALSE}
+
+fn_models_hidden <- function(){
+  
+  str_model01 <- "y_{ij} = \\mu + \\tau_i + \\epsilon_{ij} \\quad\\quad\\quad\\quad \\epsilon_{ij} \\sim N(0, \\sigma^2)"
+  str_model02 <- "y_{ij} = \\mu_i + \\epsilon_{ij} \\quad\\quad\\quad\\quad \\epsilon_{ij} \\sim N(0, \\sigma^2)"
+  
+  my_levels <- df_est_parameters$level
+  
+  output_list <- list()
+  output_list[["df_est_parameters"]] <- df_est_parameters
+  
+  for(selected_pos in 1:length(my_levels)){
+    
+    selected_level <- my_levels[selected_pos]
+    
+    output_list[[selected_level]] <- list()
+    
+    output_list[[selected_level]]$model01 <- list() 
+    output_list[[selected_level]]$model01$step01 <- str_model01
+    output_list[[selected_level]]$model01$step02 <- str_model01
+    output_list[[selected_level]]$model01$step03 <- str_model01
+    output_list[[selected_level]]$model01$step04 <- str_model01
+    
+    output_list[[selected_level]]$model02 <- list() 
+    output_list[[selected_level]]$model02$step01 <- str_model02
+    output_list[[selected_level]]$model02$step02 <- str_model02
+    output_list[[selected_level]]$model02$step03 <- str_model02
+
+    #####################################
+    selected_i <- df_est_parameters[selected_pos, "order_i"]
+    #selected_level <- df_est_parameters[selected_pos, "level"]
+    
+    selected_mu <- df_est_parameters[selected_pos, "est_mu"]
+    
+    selected_tau       <- df_est_parameters[selected_pos, "est_tau"]
+    selected_sign_tau  <- ifelse(test = selected_tau >=0, yes = "+", no = "-")
+    selected_abs_tau   <- abs(selected_tau)
+    
+    selected_mean      <- df_est_parameters[selected_pos, "est_mean"]
+    selected_sign_mean <- ifelse(test = selected_mean >=0, yes = "+", no = "-")
+    selected_abs_mean  <- abs(selected_mean)
+    
+    
+    selected_color <- df_est_parameters[selected_pos, "color"]
+    
+    ####################################
+    #  Mod Mod 01 - step02
+    the_new <- output_list[[selected_level]]$model01$step02
+    the_new <- gsub(pattern = "{ij}", replacement = paste0("{",selected_i, "j}"), x = the_new, fixed = TRUE)
+    the_new <- gsub(pattern = "_i",   replacement = paste0("_",selected_i),       x = the_new, fixed = TRUE)
+    output_list[[selected_level]]$model01$step02 <- the_new
+    
+    ####################################
+    #  Mod Mod 01 - step03
+    the_new <- output_list[[selected_level]]$model01$step03
+    the_new <- gsub(pattern = "{ij}",        replacement = paste0("{",selected_i, "j}"), x = the_new, fixed = TRUE)
+    the_new <- gsub(pattern = "= \\mu +",    replacement = paste0("= ",selected_mu, " +"), x = the_new, fixed = TRUE)
+    the_new <- gsub(pattern = "+ \\tau_i +", replacement = paste0(selected_sign_tau, " ",selected_abs_tau, " +"), x = the_new, fixed = TRUE)
+    output_list[[selected_level]]$model01$step03 <- the_new
+    
+    ####################################
+    #  Mod Mod 01 - step04
+    the_new <- output_list[[selected_level]]$model01$step04
+    the_new <- gsub(pattern = "{ij}",        replacement = paste0("{",selected_i, "j}"), x = the_new, fixed = TRUE)
+    the_new <- gsub(pattern = "= \\mu + \\tau_i +",    replacement = paste0("= ",selected_mean, " +"), x = the_new, fixed = TRUE)
+    output_list[[selected_level]]$model01$step04 <- the_new
+    
+    
+    
+    
+    ####################################
+    #  Mod Mod 02 - step02
+    the_new <- output_list[[selected_level]]$model02$step02
+    the_new <- gsub(pattern = "{ij}", replacement = paste0("{",selected_i, "j}"), x = the_new, fixed = TRUE)
+    the_new <- gsub(pattern = "_i",   replacement = paste0("_",selected_i),       x = the_new, fixed = TRUE)
+    output_list[[selected_level]]$model02$step02 <- the_new
+    
+    ####################################
+    #  Mod Mod 02 - step03
+    the_new <- output_list[[selected_level]]$model02$step03
+    the_new <- gsub(pattern = "{ij}",        replacement = paste0("{",selected_i, "j}"), x = the_new, fixed = TRUE)
+    the_new <- gsub(pattern = "= \\mu_i +",    replacement = paste0("= ",selected_mean, " +"), x = the_new, fixed = TRUE)
+    output_list[[selected_level]]$model02$step03 <- the_new
+    
+    
+    output_list[[selected_level]]$metadata <- list(selected_i = selected_i, 
+                                                   selected_level = selected_level, 
+                                                   selected_color = selected_color)
+  }
+  
+
+  
+  return(output_list)
+}
+list_my_models <- fn_models_hidden()
+
+```
+
+
+## Section 05 - Model01 by levels
+
+```{r, results='asis', echo=FALSE}
+# 1. Definimos el modelo base (SIN los $$ para poder manipularlo)
+# Usamos una sola barra para que al hacer cat se vea bien en LaTeX
+
+# 2. Imprimimos el encabezado de la tabla (OBLIGATORIO para Markdown)
+cat("| Orden | Nivel | Modelo Parametrizado |\n")
+cat("|:---:|:---|:---|\n")
+
+cat(paste0(
+    "| ", "---", 
+    " | ", "---", 
+    " | $", list_my_models[[1]]$model01$step01, "$ |\n"
+  ))
+
+for(row in 1:nrow(df_est_parameters)) {
+
+  selected_level   <- df_est_parameters$level[row]
+  selected_model <- list_my_models[[selected_level]]$model01$step03
+  selected_color <- list_my_models[[selected_level]]$metadata$selected_color
+  selected_i <- list_my_models[[selected_level]]$metadata$selected_i
+cat(paste0(
+    "| ", selected_i, 
+    " | <span style='color:", selected_color, "; font-weight:bold;'>", selected_level, "</span>",
+    " | $", selected_model, "$ |\n"
+  ))
+
+}
+
+
+
+cat("\n")
+```
+
+## Section 06 - Model02 by levels
+
+```{r, results='asis', echo=FALSE}
+# 1. Definimos el modelo base (SIN los $$ para poder manipularlo)
+# Usamos una sola barra para que al hacer cat se vea bien en LaTeX
+
+# 2. Imprimimos el encabezado de la tabla (OBLIGATORIO para Markdown)
+cat("| Orden | Nivel | Modelo Parametrizado |\n")
+cat("|:---:|:---|:---|\n")
+
+cat(paste0(
+    "| ", "---", 
+    " | ", "---", 
+    " | $", list_my_models[[1]]$model02$step01, "$ |\n"
+  ))
+
+for(row in 1:nrow(df_est_parameters)) {
+
+  selected_level   <- df_est_parameters$level[row]
+  selected_model <- list_my_models[[selected_level]]$model02$step03
+  selected_color <- list_my_models[[selected_level]]$metadata$selected_color
+  selected_i <- list_my_models[[selected_level]]$metadata$selected_i
+cat(paste0(
+    "| ", selected_i, 
+    " | <span style='color:", selected_color, "; font-weight:bold;'>", selected_level, "</span>",
+    " | $", selected_model, "$ |\n"
+  ))
+
+}
+
+
+
+cat("\n")
+```
+
+
+## Section 07 - Detalles de los valores tau
+
+### Suma ponderada de los valores tau
+Pro demostracion matematica, debe ocurrir siempre que la suma de los tau multiplicado por el n de su nivel del factor debe ser cero. Esto se denomina como suma ponderada de los tau. Esto ocurre siempre, ya sea que el  modelo este balanceado o no en repeticiones de los niveles del factor.
+$$\sum_{i=1}^{a} n_i \tau_i = 0$$
+
+
+
+```{r eval=TRUE, echo=TRUE} 
+sum(vector_n*vector_est_tau)
+```
+
+### Suma no ponderada de lso valores tau
+Pro demostracion matematica, en caso de que el n de todos los niveles del factor sea el mismo, la suma de los tau es cero. Esto ocurre solo cuando el modelo es balanceado en repeticiones de los niveles del factor. La suma no ponderada es un caos particular de suma ponderada con el mismo n en todos los niveles del factor.
+$$\sum_{i=1}^{a} \tau_i = 0$$
+
+
+
+Veamos con nuestros datos que obtenemos.
+```{r eval=TRUE, echo=TRUE} 
+sum(vector_est_tau)
+```
+
+```{r eval=TRUE, echo=TRUE} 
+check_balance_reps <- length(unique(vector_n)) == 1
+phrase_balance_yes <- "All levels have the same reps. The model is balanced on repetitions."
+phrase_balance_no <-  "Levels have diferentes amount of reps. The model is unbalanced on repetitions."
+phrase_balance_selected <- ifelse(test = check_balance_reps, yes = phrase_balance_yes, no = phrase_balance_no)
+cat(phrase_balance_selected)
+```
+
+## Section 08 - Posicion 'i' and 'j' de cada dato.
+
+```{r eval=TRUE, echo=TRUE} 
+
+vector_i_pos <- as.numeric(my_minidataset_ext[,var_name_factor])
+vector_j_pos <- ave(
+    x = my_minidataset_ext[,var_name_rv],            # Variable a contar (no importa cuál, solo para estructura)
+    FUN = seq_along,            # Función que asigna 1, 2, 3...
+    by = my_minidataset_ext[,var_name_factor]            # Agrupado por el factor (cyl)
+  )
+
+
+my_minidataset_model <- my_minidataset_ext
+my_minidataset_model$i_pos <- vector_i_pos
+my_minidataset_model$j_pos <- vector_j_pos
+
+
+head(my_minidataset_model, n = 5)
+```
+
+
+## Section 09 - Estimators on my_minidataset_model.
+Deetallamos ahora dentro de my_minidataset_model las estimaciones de cada parametro que corresponden para cada fila.
+```{r eval=TRUE, echo=TRUE} 
+
+my_minidataset_model$est_mu <- value_est_mu
+my_minidataset_model$est_tau  <- vector_est_tau[my_minidataset_model$i_pos]
+my_minidataset_model$est_mean <- vector_est_mean[my_minidataset_model$i_pos]
+my_minidataset_model$est_fitted <- my_minidataset_model$est_mean
+
+my_minidataset_model <- my_minidataset_model %>% dplyr::relocate(residuals, studres, .after = last_col())
+head(my_minidataset_model, n = 5)
+
+```
+
+La columna 'est_fitted' en este caso podria sonar redundante ya que es igual a la estimacion de la media, pero ocurrira en modelos lineales con mas terminos que necesitaremos tener una columna que sea la suma de todos las estimaciones realizadas, y en ese caso nos sera util. Mantenemos aqui la columna fitted para lograr coherencia con el resto de los modelos lineales en las salidas preparadas.
+
+
+
+
+## Section 10 - Visualizacion interactiva
+Ahora que tenemos todos los componentes del modelo, podemos ver cual es la estimacion de cada  componenete del modelo 
+para cada dato de nuestra variable respuesta. La siguiente interactividad permitira elegir un dato del minidataset y poder visualizar todos sus componentes.
+
+
+
+
+## Section 11 - Saving objects
+
+```{r eval=TRUE, echo=TRUE} 
+
+vector_all_obj_end <- ls(envir = .GlobalEnv)
+
+# Excluir los que NO quieres guardar
+vector_exclusion <- vector_all_obj_init
+vector_save_obj <- setdiff(vector_all_obj_end, vector_exclusion)
+
+# Guardar todo excepto los excluidos
+save(list = vector_save_obj, file = "R_obj_env_file03_anova_model.RData")
+
+```

@@ -1,0 +1,213 @@
+---
+title: "Rscience - Anova - script01 - Anova - Import and control"
+format: 
+  html:
+#    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+---
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+library("knitr")
+library("tools")
+```
+
+
+```{r eval=TRUE, echo=FALSE}
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
+
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
+
+
+# Folder - Quarto Original
+```{r eval=TRUE, echo=FALSE}
+
+target_folder_original_relative <- file.path("..", "f01_quarto_original")
+target_folder_original_absolute <- normalizePath(target_folder_original_relative)
+check_action01 <- dir.exists(target_folder_original_absolute)
+
+
+
+
+cat("Output folder--------------------------------------------------------- ", "\n",
+    "Target folder original relative: ", target_folder_original_relative, "\n",
+    "Target folder original absolute: ", target_folder_original_absolute, "\n",
+    "Target absolute exists:   ", check_action01, "\n")
+
+
+
+if(!check_action01){
+  cat("No existe la carpeta con los archivos qmd originales. Esto imposibilita continuar con el procesamiento. Que sucedio!!!????")
+  knitr::knit_exit()
+}
+```
+
+# Original QMD files
+```{r eval=TRUE, echo=FALSE}
+
+
+
+
+library(dplyr)
+
+# 1. Obtener rutas
+qmd_paths <- list.files(
+  path = target_folder_original_absolute, 
+  pattern = "\\.qmd$", 
+  recursive = TRUE, 
+  full.names = TRUE
+)
+
+# 2. Construir el DataFrame con el "Orden de Batalla"
+df_processing <- data.frame(
+  orden   = seq_along(qmd_paths),
+  nombre  = basename(qmd_paths),
+  path    = qmd_paths,
+  exists  = file.exists(qmd_paths),
+  stringsAsFactors = FALSE
+)
+
+# 3. Check General de Seguridad
+# all() devuelve TRUE solo si CADA UNO de los elementos es TRUE
+all_ready <- all(df_processing$exists) && nrow(df_processing) > 0
+
+# 4. Generar Frase Final
+frase_final <- if(all_ready) {
+  "✅ ALL SYSTEMS GO: Todos los archivos QMD detectados y listos para el motor Quarto."
+} else if (nrow(df_processing) == 0) {
+  "⚠️ ENGINE IDLE: No se encontraron archivos .qmd en la ruta especificada."
+} else {
+  "❌ CRITICAL ERROR: Algunos archivos QMD faltan o no son accesibles. Verifique el log."
+}
+
+# Ver resultados
+print(df_processing)
+message(frase_final)
+
+```
+
+
+
+# Folder - Quarto Mod
+```{r eval=TRUE, echo=FALSE}
+
+target_folder_mod_relative <- file.path("..", "f02_quarto_mod")
+target_folder_mod_absolute <- normalizePath(target_folder_mod_relative)
+check_action02 <- dir.exists(target_folder_mod_absolute)
+
+
+
+
+cat("Output folder--------------------------------------------------------- ", "\n",
+    "Target folder mod relative: ", target_folder_mod_relative, "\n",
+    "Target folder mod absolute: ", target_folder_mod_absolute, "\n",
+    "Target absolute exists:   ", check_action01, "\n")
+
+
+
+if(!check_action02){
+  cat("No existe la carpeta con los archivos qmd originales. Esto imposibilita continuar con el procesamiento. Que sucedio!!!????")
+  knitr::knit_exit()
+}
+```
+
+
+# Mod QMD files (Check previous -  must be empty)
+```{r eval=TRUE, echo=FALSE}
+
+
+
+
+library(dplyr)
+
+# 1. Obtener rutas
+qmd_paths <- list.files(
+  path = target_folder_original_absolute, 
+  pattern = "\\.qmd$", 
+  recursive = TRUE, 
+  full.names = TRUE
+)
+
+# 2. Construir el DataFrame con el "Orden de Batalla"
+df_processing <- data.frame(
+  orden   = seq_along(qmd_paths),
+  nombre  = basename(qmd_paths),
+  path    = qmd_paths,
+  exists  = file.exists(qmd_paths),
+  stringsAsFactors = FALSE
+)
+
+# 3. Check General de Seguridad
+# all() devuelve TRUE solo si CADA UNO de los elementos es TRUE
+all_ready <- all(df_processing$exists) && nrow(df_processing) > 0
+
+# # 4. Generar Frase Final
+# frase_final <- if(all_ready) {
+#   "⚠️ Error: Todos los archivos ya existen en la carpeta. La carpeta deberia estar vacia."
+# } else if (nrow(df_processing) == 0) {
+#   "✅ ENGINE IDLE: No se encontraron archivos .qmd en la ruta especificada."
+# } else {
+#   "❌ CRITICAL ERROR: Algunos archivos QMD faltan o no son accesibles. Verifique el log."
+# }
+
+# Ver resultados
+print(df_processing)
+#message(frase_final)
+
+```
+
+# Copying Files from origial to mod
+```{r eval=TRUE, echo=FALSE}
+
+# 1. Definir rutas
+str_folder_origin  <- target_folder_original_absolute
+str_folder_destiny <- target_folder_mod_absolute
+
+# 2. Listar solo los archivos (excluyendo carpetas)
+# full.names = TRUE es vital para que file.copy sepa de dónde vienen
+all_files <- list.files(str_folder_origin, full.names = TRUE, recursive = FALSE)
+only_files <- all_files[!dir.exists(all_files)]
+
+# 3. Asegurar que la carpeta de destino exista
+if (!dir.exists(str_folder_destiny)) {
+  dir.create(str_folder_destiny, recursive = TRUE)
+}
+
+# 4. Copiar archivos
+# overwrite = TRUE permite actualizar archivos si ya existen
+success <- file.copy(
+  from = only_files, 
+  to = str_folder_destiny, 
+  overwrite = TRUE, 
+  recursive = FALSE
+)
+
+# 5. Reporte final
+message(paste("Se copiaron", sum(success), "archivos correctamente."))
+
+```
+
+
+
+

@@ -69,7 +69,7 @@ mod_special_settings_server <- function(id, df_input, folder_path_tool_script, s
           detail = "Response variable",
           name = "var_name_rv",
           R_value = rlist_vars()$metadata$rv,
-          str_R = sprintf("'%s'", R_value),
+          str_R = sprintf('"%s"', R_value),
           str_quarto = '"mpg" ###SECURITY_SEAL###'
         ),
         factor = dplyr::lst(

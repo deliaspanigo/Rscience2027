@@ -301,7 +301,7 @@ check_run <- !all(c(check_all_plot_html, check_all_plot_png))
 
 if(check_run){
   
-  str_output_dir_relative <- file.path("output_plotly_html")
+  str_output_dir_relative <- file.path("output_plots")
   str_output_dir_absolute <- normalizePath(str_output_dir_relative, mustWork = F)
 
   cat("Iniciando procesamiento de pltly hacia html y png")

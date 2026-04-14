@@ -1,0 +1,199 @@
+---
+title: "Rscience - Anova - script01 - Anova - Import and control"
+format: 
+  html:
+    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+params:
+  clean_all: false
+    
+---
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+
+library("knitr")
+library("tools")
+```
+
+
+```{r eval=TRUE, echo=FALSE}
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
+
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
+
+
+# Local Output Folder
+```{r eval=TRUE, echo=FALSE}
+
+output_folder_path_relative <- file.path("output")
+output_folder_path_absolute <- normalizePath(output_folder_path_relative, mustWork = FALSE)
+
+check_action01 <- fn_local_create_new_folder(new_folder_path = output_folder_path_absolute)
+# output_folder_path_exists <-  dir.exists(output_folder_path_absolute)
+output_folder_path_exists <-  check_action01
+
+
+cat("Output folder--------------------------------------------------------- ", "\n",
+    "Local output folder relative: ", output_folder_path_relative, "\n",
+    "Local output folder absolute: ", output_folder_path_absolute, "\n",
+    "Local output folder exists:   ", output_folder_path_exists, "\n")
+
+
+
+if(!check_action01){
+  cat("No pudo crearse la carpeta. Esto imposibilita continuar con el procesamiento. Que sucedio!!!????")
+  knitr::knit_exit()
+}
+```
+
+# Cleanning Local Output Folder
+```{r eval=TRUE, echo=FALSE}
+
+# 1. Listar todos los archivos dentro de la carpeta
+# full.names = TRUE es clave para tener la ruta completa y que R sepa qué borrar
+
+if(params$clean_all){
+  
+  check_action02 <- fn_local_clean_folder_SECURITY(folder_path = output_folder_path_absolute)
+  if(!check_action02){
+    cat("Error grave 01: No pude limpiarse la carpeta. Que sucedio!!!????")
+    knitr::knit_exit()
+  }
+
+} else cat("Limpieza no permitida.")
+
+list_files_output_folder <- list.files(path = output_folder_path_absolute, recursive = T)
+
+cat("There are ", length(list_files_output_folder), "files inside the output folder.", "\n")
+print(list_files_output_folder)
+
+```
+
+# Input qmd file: 'file01_save_html_and_png.qmd'
+Este archivo verifica que existan todos los archivos .RData y los archivos .HTML correspondientes a cada .qmd.
+Si al menos uno de los .RData o .HTML no existe, vuelve a regenerar todos los archivos.
+```{r eval=TRUE, echo=FALSE}
+
+str_qmd_render_all_quarto_relative <- file.path("..", "f07_save_plots", "file01_save_html_and_png.qmd")
+str_qmd_render_all_quarto_absolute <- normalizePath(str_qmd_render_all_quarto_relative, mustWork = T)
+str_qmd_render_all_quarto_exists <- file.exists(str_qmd_render_all_quarto_absolute)
+
+if(str_qmd_render_all_quarto_exists){
+    cat("Rendering external qmd!")
+    fn_local_render_all_qmd(vector_qmd_file_path = str_qmd_render_all_quarto_absolute)
+    cat("Render ended!")
+} else  {
+  
+  cat("ERROR GRAVE 02 - El archivo qmd deberia existir pero no existe. Verifica el  nombre y el path.",
+        "Verificar!!!")
+    knitr::knit_exit()
+}
+```
+
+
+
+
+
+# Espected folder with plots
+Esta carpeta contiene los archivos qmd de codigo. Deben ser ejecutados para generar sus correspondientes HTML y RData.
+```{r eval=TRUE, echo=FALSE}
+
+# 1. Definir la carpeta base
+input_folder01_relative <- file.path("..", "f07_save_plots", "output_plots")
+input_folder01_absolute <- normalizePath(input_folder01_relative, mustWork = TRUE)
+input_folder01_exists <- dir.exists(input_folder01_absolute)
+
+cat("Input folder---------------------------------------------------------", "\n",
+    "Relative path: ", input_folder01_relative, "\n",
+    "Absolute path: ", input_folder01_absolute, "\n",
+    "Folder exists:", input_folder01_exists, "\n",
+    "---------------------------------------------------------------------------")
+
+
+if(!input_folder01_exists) {
+  cat("ERROR GRAVE - No se encontro la carpeta que debe contener a los archivos QMD y los archivos RData.",
+      "Varifica si el nombre de la carpeta es el correcto o algun problema en el path de la carpeta.")
+  knitr::knit_exit()
+}
+```
+
+
+
+
+
+
+# Zip files HTML
+```{r eval=TRUE, echo=FALSE}
+
+# 
+# # ==============================================================================
+# # 2. FUNCIÓN PARA ZIPEAR LOS HTML GENERADOS
+# # ==============================================================================
+# 
+# local_output_folder <- 
+# zip_file_path_relative <- file.path(".", "output")
+# zip_file_path_absolute <- normalizePath(path = zip_file_path_relative, mustWork = FALSE)
+# zip_file_exists01 <- file.exists(zip_file_path_absolute)
+
+# --- 1. Definir Rutas ---
+folder_to_zip <- input_folder01_absolute
+destination_folder <- output_folder_path_absolute # Esta ya es absoluta
+
+# Nombre del archivo final
+zip_file_name <- "plots_png_and_html.zip"
+# CRUCIAL: Forzamos que sea una ruta absoluta para que no se pierda al cambiar de WD
+full_zip_path <- normalizePath(file.path(destination_folder, zip_file_name), mustWork = FALSE)
+
+# --- 2. Crear carpeta de destino si no existe ---
+if (!dir.exists(destination_folder)) {
+  dir.create(destination_folder, recursive = TRUE)
+}
+
+# --- 3. Ejecutar el Zipeado ---
+old_wd <- getwd()
+# Obtenemos la ruta del padre de la carpeta a zipear
+target_parent <- dirname(normalizePath(folder_to_zip))
+
+cat("Cambiando WD a:", target_parent, "\n")
+setwd(target_parent)
+
+# Ejecutamos el zip. 
+# Como full_zip_path es ABSOLUTO, no importa que hayamos cambiado el WD.
+utils::zip(
+  zipfile = full_zip_path,
+  files   = basename(folder_to_zip)
+)
+
+# Volvemos siempre al directorio original
+setwd(old_wd)
+
+# --- 4. Verificación ---
+if (file.exists(full_zip_path)) {
+  cat("Éxito: Carpeta zipeada en", full_zip_path, "\n")
+} else {
+  stop("Error: No se pudo crear el archivo zip.")
+}
+
+``` 
+
