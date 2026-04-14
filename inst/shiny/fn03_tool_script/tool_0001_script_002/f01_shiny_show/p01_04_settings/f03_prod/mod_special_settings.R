@@ -64,44 +64,44 @@ mod_special_settings_server <- function(id, df_input, folder_path_tool_script, s
     rlist_all_inputs <- reactive({
       # Eliminado el dput que hacía print molesto
 
-      list(
-        rv = list(
+      dplyr::lst(
+        rv = dplyr::lst(
           detail = "Response variable",
           name = "var_name_rv",
           R_value = rlist_vars()$metadata$rv,
-          str_R = as.character(rlist_vars()$metadata$rv),
-          str_quarto = "_var_name_rv_"
+          str_R = sprintf("'%s'", R_value),
+          str_quarto = '"mpg" ###SECURITY_SEAL###'
         ),
-        factor = list(
+        factor = dplyr::lst(
           detail = "The Factor",
           name = "var_name_factor",
           R_value = rlist_vars()$metadata$factor,
-          str_R = as.character(rlist_vars()$metadata$factor),
-          str_quarto = "_var_name_factor_"
+          str_R = sprintf('"%s"', R_value),
+          str_quarto = '"cyl" ###SECURITY_SEAL###'
 
         ),
-        alpha_value = list(
+        alpha_value = dplyr::lst(
           detail = "Alpha value number",
           name = "alpha_value",
           R_value = rlist_vars()$metadata$alpha,
-          str_R = as.character(rlist_vars()$metadata$alpha),
-          str_quarto = "_alpha_value_"
+          str_R = as.character(R_value),
+          str_quarto = "0.05 ###SECURITY_SEAL###"
 
         ),
-        vector_new_order_levels = list(
+        vector_new_order_levels = dplyr::lst(
           detail = "Vector with levels in the new order",
           name = "vector_order_levels_new",
           R_value = rlist_levels()$data$nivel,
           # Sentencia con comillas simples y sin barras de escape visibles
-          str_R = chartr('"', "'", paste(deparse(rlist_levels()$data$nivel), collapse = "")),
-          str_quarto = "_vector_order_levels_new_"
+          str_R = sprintf("c(%s)",toString(sapply(R_value, function(x) sprintf('"%s"', x)))),
+          str_quarto = 'c("4", "6", "8") ###SECURITY_SEAL###'
         ),
-        vector_color = list(
+        vector_color = dplyr::lst(
           detail = "Vector with hex colors",
           name = "vector_color_levels_new",
           R_value = rlist_levels()$data$color,
-          str_R = chartr('"', "'", paste(deparse(rlist_levels()$data$color), collapse = "")),
-          str_quarto = "_vector_color_levels_new_"
+          str_R = sprintf("c(%s)",toString(sapply(R_value, function(x) sprintf('"%s"', x)))),
+          str_quarto = 'c("#FF0000", "#00FF00", "#0000FF") ###SECURITY_SEAL###'
         )
       )
     })

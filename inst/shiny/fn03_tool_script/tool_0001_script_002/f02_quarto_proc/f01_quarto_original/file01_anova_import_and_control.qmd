@@ -74,19 +74,19 @@ con todos los niveles del factor en el orden en el cual el usuario desea que los
 aparezcan en el informe, y un segundo vector para detallar un color por cada nivel del factor.
 ```{r eval=TRUE, echo=TRUE}
 # # # # # Section 03 - Settings ----------------------------------------------
-  var_name_rv     <-  "_var_name_rv_"
+  var_name_rv     <-  "mpg" ###SECURITY_SEAL###
   var_name_rv
 
-  var_name_factor <- "_var_name_factor_"
+  var_name_factor <- "cyl" ###SECURITY_SEAL###
   var_name_factor
 
-  alpha_value     <-  _alpha_value_
+  alpha_value     <-  0.05 ###SECURITY_SEAL###
   alpha_value
 
-  vector_order_levels_new <- _vector_order_levels_new_
+  vector_order_levels_new <- c("4", "6", "8") ###SECURITY_SEAL###
   vector_order_levels_new
   
-  vector_color_levels_new <- _vector_color_levels_new_
+  vector_color_levels_new <- c("#FF0000", "#00FF00", "#0000FF") ###SECURITY_SEAL###
   names(vector_color_levels_new) <- vector_order_levels_new
   vector_color_levels_new
   
