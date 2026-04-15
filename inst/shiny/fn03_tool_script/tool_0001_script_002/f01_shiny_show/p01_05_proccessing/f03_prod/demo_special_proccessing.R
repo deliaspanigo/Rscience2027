@@ -31,7 +31,9 @@ ui <- page_fluid(
       href = paste0("RS-STYLES/css/style_000.css?v=", as.numeric(Sys.time())) # Nota el /css/ adicional si registraste 'www'
     )
   ),
-  mod_special_proccessing_ui("pipeline_1")
+  mod_special_proccessing_ui("pipeline_1"),
+  mod_special_proccessing_DEBUG_ui("pipeline_1")
+
 )
 
 server <- function(input, output, session) {

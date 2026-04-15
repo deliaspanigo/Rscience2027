@@ -6,6 +6,13 @@ library(shinyjs)
 # MÓDULOS UI: PLACEHOLDERS DINÁMICOS
 # ==============================================================================
 
+mod_10_00_proccessing_DEBUG_ui <- function(id) {
+  ns <- NS(id)
+  tagList(
+    # Este uiOutput cargará todo lo que definiste en output$show_debug_external
+    uiOutput(ns("panel_debug_externo"))
+  )
+}
 
 
 mod_10_00_proccessing_ui <- function(id) {
@@ -62,35 +69,55 @@ mod_10_00_proccessing_server <- function(id, module_proccessing_file_path, local
     internal_local_folder_tool_script <- reactive({ if (is.function(local_folder_tool_script)) local_folder_tool_script() else local_folder_tool_script })
     internal_temp_folder_tool_script <- reactive({ if (is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script })
 
-    # Colócala fuera del mod_10_00_proccessing_server
-    ui_debug_layout_theory <- function(ns, prefix = "") {
-      # Creamos IDs únicos basados en el prefijo (ej: "ext_render_json_colector")
-      id_colector <- ns(paste0(prefix, "render_json_colector"))
-      id_submodulo <- ns(paste0(prefix, "render_json_submodulo"))
 
-      div(style = "margin-top: 20px; padding: 15px; background: #1a1a1a; border-radius: 8px;",
-          h4(icon("terminal"), "RScience Debug Console", style = "color: #00bc8c;"),
-          fluidRow(
-            column(6, tags$b("Colector"), listviewer::jsoneditOutput(id_colector, height = "300px")),
-            column(6, tags$b("Sub-Módulo"), listviewer::jsoneditOutput(id_submodulo, height = "300px"))
-          )
-      )
-    }
 
     www_folder <- system.file("www", package = "Rscience2027")
     if (www_folder == "") www_folder <- "www"
     try(addResourcePath("WWW-FOLDER", normalizePath(www_folder)), silent = TRUE)
 
 
+
     # --- 1. ESTADOS Y ENTORNOS (FALTABA ESTO) ---
     local_env <- reactiveVal(new.env(parent = .GlobalEnv))
-    rv <- reactiveValues(ready = FALSE, sub_data = NULL)
+
+    # data store
+    get_default_data <- function() {
+      list(
+        "details" = "*** RScience - Module Proccessing ***",
+        "my_sys_time" = Sys.time(),
+        "click_count" = 0, # Corregido el nombre si era click_count
+        "is_done" = FALSE,
+        "is_locked" = FALSE,
+        #"is_successful" = FALSE,
+        #"is_all_ok" = FALSE,
+        "error_msg" = NULL,
+        "module_special" = list(
+
+        )
+
+      )
+    }
+    reset_data_store <- function() {
+      defaults <- get_default_data()
+
+      # mapply recorre los nombres y valores de la lista de defaults
+      # y los asigna uno a uno al objeto reactiveValues
+      mapply(function(val, name) {
+        data_store[[name]] <- val
+      }, defaults, names(defaults))
+    }
+    data_store <- do.call(reactiveValues, get_default_data())
+
+    rv <- reactiveValues(ready = FALSE, special_module = list())
 
     # --- 2. METADATOS (Manejo de Path Vacío) ---
     # --- 2. METADATOS (Manejo de Path Vacío) ---
     internal_meta <- reactive({
-      # Aquí está el problema: internal es un reactive()
-      p <- if (is.function(internal_module_proccessing_file_path)) internal_module_proccessing_file_path() else internal_module_proccessing_file_path
+      req(internal_module_proccessing_file_path(), internal_module_proccessing_file_path())
+
+      flat_internal_module_proccessing_file_path <- internal_module_proccessing_file_path()
+
+      p <- internal_module_proccessing_file_path()
 
       if (is.null(p) || is.na(p) || p == "") { # Agregué is.na(p) por seguridad
         return(list(status = "WAITING_PATH", exists = FALSE))
@@ -117,7 +144,7 @@ mod_10_00_proccessing_server <- function(id, module_proccessing_file_path, local
           local_env(new_env)
 
           if (!is.null(new_env$mod_special_proccessing_server)) {
-            rv$sub_data <- new_env$mod_special_proccessing_server(id = "sub_proc",
+            rv$special_module <- new_env$mod_special_proccessing_server(id = "sub_proc",
                                                                   local_folder_tool_script = internal_local_folder_tool_script(),
                                                                   temp_folder_tool_script = internal_temp_folder_tool_script())
           }
@@ -129,7 +156,7 @@ mod_10_00_proccessing_server <- function(id, module_proccessing_file_path, local
         })
       } else {
         rv$ready <- FALSE
-        rv$sub_data <- NULL
+        rv$special_module <- NULL
       }
     }, ignoreInit = FALSE)
 
@@ -206,6 +233,13 @@ mod_10_00_proccessing_server <- function(id, module_proccessing_file_path, local
       env$mod_special_proccessing_ui(ns("sub_proc"))
     })
 
+    # output$debug_external <- renderUI({
+    #   req(rv$ready)
+    #   env <- local_env()
+    #   req(env$mod_special_proccessing_DEBUG_ui)
+    #   env$mod_special_proccessing_DEBUG_ui(ns("sub_proc"))
+    # })
+
     # --- 6. CONTROL DE NAVEGACIÓN (SWITCHER) ---
     observe({
       info <- internal_meta()
@@ -222,6 +256,7 @@ mod_10_00_proccessing_server <- function(id, module_proccessing_file_path, local
 
     # --- 7. SISTEMA DE DEBUG SIMPLIFICADO ---
 
+
     # Solo mostramos metadatos básicos para evitar errores de serialización JSON
     debug_payload <- reactive({
       list(
@@ -230,9 +265,15 @@ mod_10_00_proccessing_server <- function(id, module_proccessing_file_path, local
         files = list(
           local = internal_local_folder_tool_script(),
           temp =  internal_temp_folder_tool_script()
-        )
+        ),
+        data_store = reactiveValuesToList(data_store)
       )
     })
+
+    the_output <- reactive({
+      debug_payload()
+    })
+
 
     # Render Interno
     output$debug_internal <- renderUI({
@@ -244,6 +285,7 @@ mod_10_00_proccessing_server <- function(id, module_proccessing_file_path, local
     })
     output$json_int <- listviewer::renderJsonedit({
       listviewer::jsonedit(debug_payload())
+      listviewer::jsonedit(the_output())
     })
 
     # Render Externo
@@ -254,10 +296,10 @@ mod_10_00_proccessing_server <- function(id, module_proccessing_file_path, local
       )
     })
     output$json_ext <- listviewer::renderJsonedit({
-      listviewer::jsonedit(debug_payload())
+      listviewer::jsonedit(the_output())
     })
 
     # --- 8. RETORNO ---
-    return(reactive({ rv$sub_data }))
+    return(the_output)
   })
 }

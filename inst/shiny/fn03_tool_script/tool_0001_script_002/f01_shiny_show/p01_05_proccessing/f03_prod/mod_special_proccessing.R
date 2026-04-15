@@ -1,3 +1,11 @@
+mod_special_proccessing_DEBUG_ui <- function(id) {
+  ns <- NS(id)
+  tagList(
+    # Este uiOutput cargará todo lo que definiste en output$show_debug_external
+    uiOutput(ns("debug_external"))
+  )
+}
+
 mod_special_proccessing_ui <- function(id) {
   ns <- NS(id)
 
@@ -18,7 +26,9 @@ mod_special_proccessing_ui <- function(id) {
     uiOutput(ns("item02_folder_quarto_render")),
     uiOutput(ns("item03_qmd_files")),
     uiOutput(ns("item04_temp_folder_Rscience")),
-    uiOutput(ns("item05_quarto_exec")) # Ahora el antiguo 07 es el 05
+    uiOutput(ns("item05_quarto_exec")), # Ahora el antiguo 07 es el 05
+
+    uiOutput(ns("debug_internal_ui"))
   )
 }
 
@@ -40,6 +50,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     render_status <- reactiveValues()
     current_idx <- reactiveVal(0)
     current_pos_render <- reactiveVal(0)
+    super_DONE <- reactiveVal(FALSE)
 
     observeEvent(input$start_pipeline, {
       engine$started <- TRUE
@@ -86,8 +97,11 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       path_val <- internal_local_folder_tool_script()
       exists_val <- dir.exists(path_val)
       color_hex <- if(exists_val) "#00bc8c" else "#ff4b5c"
-      list(path = path_val, is_done = exists_val, text = if(exists_val) "FOLDER VERIFIED" else "PATH NOT FOUND",
-           color = color_hex, icon_name = if(exists_val) "check-circle" else "exclamation-triangle",
+      list(path = path_val,
+           is_done = exists_val,
+           text = if(exists_val) "FOLDER VERIFIED" else "PATH NOT FOUND",
+           color = color_hex,
+           icon_name = if(exists_val) "check-circle" else "exclamation-triangle",
            shadow = paste0("0 0 12px ", color_hex))
     }) %>% debounce(1000)
 
@@ -96,8 +110,12 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       path_val <- if(is.function(internal_temp_folder_tool_script)) internal_temp_folder_tool_script() else internal_temp_folder_tool_script
       exists_val <- dir.exists(path_val)
       color_hex <- if(exists_val) "#00bc8c" else "#ff4b5c"
-      list(path = path_val, is_done = exists_val, text = if(exists_val) "TEMP VERIFIED" else "TEMP NOT FOUND",
-           color = color_hex, icon_name = "microchip", shadow = paste0("0 0 12px ", color_hex))
+      list(path = path_val,
+           is_done = exists_val,
+           text = if(exists_val) "TEMP VERIFIED" else "TEMP NOT FOUND",
+           color = color_hex,
+           icon_name = "microchip",
+           shadow = paste0("0 0 12px ", color_hex))
     }) %>% debounce(1000)
 
     rlist_item03_quarto_proc <- reactive({
@@ -106,8 +124,12 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       path_folder_absolute <- normalizePath(file.path(path_val, "f02_quarto_proc"), mustWork = FALSE)
       exists_val <- dir.exists(path_folder_absolute)
       color_hex <- if(exists_val) "#00bc8c" else "#ff4b5c"
-      list(path = path_folder_absolute, is_done = exists_val, text = if(exists_val) "STRUCTURE OK" else "STRUCTURE MISSING",
-           color = color_hex, icon_name = "folder-tree", shadow = paste0("0 0 12px ", color_hex))
+      list(path = path_folder_absolute,
+           is_done = exists_val,
+           text = if(exists_val) "STRUCTURE OK" else "STRUCTURE MISSING",
+           color = color_hex,
+           icon_name = "folder-tree",
+           shadow = paste0("0 0 12px ", color_hex))
     }) %>% debounce(1000)
 
     rlist_item04_qmd_files <- reactive({
@@ -144,24 +166,12 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
 
       req(rlist_item04_qmd_files()$is_done)
       flat_rlist_item04_qmd_files <- rlist_item04_qmd_files()
-      flat_rlist_item04_qmd_files$is_done
-
+      flat_is_done <- flat_rlist_item04_qmd_files$is_done
+      list(is_done = flat_is_done)
     }) %>% debounce(1000)
 
 
-    # super_DONE <- reactive({
-    #
-    #   req(rlist_item05_proccessing()$is_done)
-    #   rlist_item05_proccessing <- rlist_item05_proccessing()
-    #   rlist_item05_proccessing$is_done
-    #
-    # }) %>% debounce(1000)
 
-    # observeEvent(super_DONE(),{
-    #
-    #   internal_super_DONE <- super_DONE()
-    #   data_store$is_done <- internal_super_DONE
-    # })
 
     # --------------------------------------------------------------------------
     # 2. MOTOR DINÁMICO (Anterior 07, ahora vinculado al 04)
@@ -196,7 +206,8 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       list(
         idx = idx,
         pkg_name = pkg_name,
-        path = details[[pkg_name]]$qmd_file_path_abs_local
+        path = details[[pkg_name]]$qmd_file_path_abs_local,
+        max_idx = length(pkg_names)
       )
     }) %>% debounce(1000) # El delay que te gusta
 
@@ -208,6 +219,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       selected_pkg_name <- flat_pack$pkg_name
       selected_idx <- flat_pack$idx
       selected_path <- flat_pack$path
+      selected_max_idx <- flat_pack$max_idx
 
       isolate({
         tryCatch({
@@ -227,10 +239,19 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
           render_status[[selected_pkg_name]] <- "error"
         })
         # Avanzamos el índice
-        current_idx(selected_idx + 1)
+        if(selected_idx < selected_max_idx) current_idx(selected_idx + 1) else if(selected_idx == selected_max_idx) {
+        super_DONE(TRUE)
+
+        }
       })
     })
 
+    observeEvent(super_DONE(), {
+
+      data_store$is_done   <- super_DONE()
+      data_store$is_locked <- super_DONE()
+
+    })
     # --------------------------------------------------------------------------
     # 3. RENDERS UI
     # --------------------------------------------------------------------------
@@ -378,10 +399,44 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     })
 
     #-----------------------------------------------------------------------------------------------
+    # --- 6. DEBUG LOGIC ---
+    the_output <- reactive({
+      reactiveValuesToList(data_store)
+    })
+
+    output$json_internal <- listviewer::renderJsonedit({
+      req(internal_show_debug())
+      listviewer::jsonedit(the_output(), mode = "view")
+    })
+
+    # --- 4. DEBUG GLOBAL ---
+    output$debug_internal_ui <- renderUI({
+      req(internal_show_debug())
+      div(class = "rs-card-wrapper mt-3",
+          style = "border: 1px dashed #00d4ff; background: #0b1218;",
+          h6("GLOBAL OUTPUT MONITOR (mod_special_settings)", style="color: #00d4ff; font-weight:800;"),
+          listviewer::jsoneditOutput(ns("json_internal"), height = "auto")
+      )
+    })
+
+    #######
+    output$json_external <- listviewer::renderJsonedit({
+      listviewer::jsonedit(the_output(), mode = "view")
+    })
+
+    # --- 4. DEBUG GLOBAL ---
+    output$debug_external <- renderUI({
+      div(class = "rs-card-wrapper mt-3",
+          style = "border: 1px dashed #00d4ff; background: #0b1218;",
+          h6("GLOBAL OUTPUT MONITOR (mod_special_settings)", style="color: #00d4ff; font-weight:800;"),
+          listviewer::jsoneditOutput(ns("json_external"), height = "auto")
+      )
+    })
 
 
     #-----------------------------------------------------------------------------------------------
 
+    return(the_output)
   })
 }
 
