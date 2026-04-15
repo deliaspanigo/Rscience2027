@@ -38,9 +38,7 @@ mod_02_01_dataset_ui <- function(id) {
                       div(class = "col-md-4",
                           div(id = ns("label_source"), class = "section-label", "Source Type"),
                           selectInput(inputId = ns("source_dataset"), label = NULL,
-                                      choices = c("Select a source..." = "",
-                                                  "01 - Local File" = "local_file",
-                                                  "02 - R Example" = "R_dataset"),
+                                      choices = c("Select a source..." = ""),
                                       width = "100%")
                       ),
                       div(class = "col-md-8",
@@ -101,6 +99,15 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
     # Engine Control
     engine_state <- mod_07_00_engine_control_server("main_switch", show_debug = internal_show_debug)
 
+    # Data sources details -----------------------------------------------------
+    vector_hard_source <- c("Select a source..." = "",
+                            "01 - Local File" = "local_file",
+                            "02 - R Example" = "R_dataset")
+
+    observe({
+      updateSelectInput(session = session, inputId = "source_dataset", choices = vector_hard_source)
+    })
+
     # --- REACTIVE VALUES ---
     get_default_data <- function() {
       list(
@@ -111,9 +118,17 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
         "is_locked" = FALSE,
         "error_msg" = NULL,
         "metadata" = list(
-          selected_source = NULL, name_mod = NULL, rows = NULL, cols = NULL, "my_sys_time" = NULL
-        ),
-        "df" = NULL
+          selected_external_source = NULL,
+          selected_internal_source = NULL,
+          code_import_internal = "",
+          code_import_external = "",
+          name_mod = NULL,
+          rows = NULL,
+          cols = NULL,
+          my_sys_time = Sys.time(),
+          df = data.frame()
+        )
+
       )
     }
     reset_data_store <- function() {
@@ -128,6 +143,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
     data_store <- do.call(reactiveValues, get_default_data())
 
     # --- LÓGICA DE IMPORTACIÓN ---
+    # Here is for option seleccition and define is_done...
     import_logic <- function() {
       source <- input$source_dataset
       if (source == "") {
@@ -141,25 +157,93 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
           req(input$file_input)
           path <- input$file_input$datapath
           ext <- tolower(tools::file_ext(input$file_input$name))
+          selected_file_name <- basename(path)
+          selected_sep <- input$sep
+          selected_dec <- input$dec
+
+          check_sep_dec_no_equal <- selected_sep != selected_dec
+          if(check_sep_dec_no_equal == FALSE) {
+            showNotification(paste("Friendly message: ", "Separator and decimal must be differentes."), type = "warning")
+            return()
+          }
+
+
 
           if (ext %in% c("csv", "tsv", "txt")) {
-            temp_df <- vroom::vroom(path, delim = input$sep, show_col_types = FALSE)
+
+            # 1. Definimos la plantilla con palabras clave fáciles de identificar
+            template_multi <- "vroom::vroom(file = '{FILE_PATH}',
+                                      delim = '{SEP}',
+                                      locale = vroom::locale(decimal_mark = '{DEC}'),
+                                      show_col_types = FALSE,
+                                      col_names = TRUE,
+                                      na = c('', 'NA'))"
+
+            # 2. Realizamos las sustituciones
+            import_code_external <- template_multi
+            import_code_external <- gsub("{FILE_PATH}", selected_file_name, import_code_external, fixed = TRUE)
+            import_code_external <- gsub("{SEP}", selected_sep, import_code_external, fixed = TRUE)
+            import_code_external <- gsub("{DEC}", selected_dec, import_code_external, fixed = TRUE)
+
+            # 2. Realizamos las sustituciones
+            import_code_internal <- template_multi
+            import_code_internal <- gsub("{FILE_PATH}", path, import_code_internal, fixed = TRUE)
+            import_code_internal <- gsub("{SEP}", selected_sep, import_code_internal, fixed = TRUE)
+            import_code_internal <- gsub("{DEC}", selected_dec, import_code_internal, fixed = TRUE)
+
+
+
+            # 3. Ejecutamos el código final
+            data_store$metadata$code_import_external <-import_code_external
+            data_store$metadata$code_import_internal <-import_code_internal
+            temp_df <- eval(parse(text = import_code_internal))
             data_store$metadata$name_mod <- input$file_input$name
+
+
           } else if (ext == "xlsx") {
             req(input$excel_sheet)
-            temp_df <- readxl::read_excel(path, sheet = input$excel_sheet)
+            # 1. Definimos la plantilla (Template)
+            excel_template <- "temp_df <- readxl::read_excel(path = '{FILE_PATH}',
+                                   sheet = '{SHEET}',
+                                   col_names = TRUE)"
+
+            # 2. Realizamos las sustituciones
+            import_code_excel_external <- excel_template
+            import_code_excel_external <- gsub("{FILE_PATH}", selected_file_name, import_code_excel_external, fixed = TRUE)
+            import_code_excel_external <- gsub("{SHEET}", input$excel_sheet, import_code_excel_external, fixed = TRUE)
+
+            # 2. Realizamos las sustituciones
+            import_code_excel_internal <- excel_template
+            import_code_excel_internal <- gsub("{FILE_PATH}", path, import_code_excel_internal, fixed = TRUE)
+            import_code_excel_internal <- gsub("{SHEET}", input$excel_sheet, import_code_excel_internal, fixed = TRUE)
+
+            # 3. Ejecutamos el código
+            # 3. Ejecutamos el código final
+            data_store$metadata$code_import_external <- import_code_excel_external
+            data_store$metadata$code_import_internal <- import_code_excel_internal
+            temp_df <- eval(parse(text = import_code_excel_internal))
             data_store$metadata$name_mod <- paste0(input$file_input$name, " [", input$excel_sheet, "]")
           }
-        } else {
+        } else if (source == "R_dataset") {
           req(input$selected_R_dataset)
-          temp_df <- get(input$selected_R_dataset, "package:datasets")
+          selected_R_dataset <- input$selected_R_dataset
+
+          import_Rdataset <- "get('{DATASET_NAME}', 'package:datasets')"
+          import_code_Rdataset <- import_Rdataset
+          import_code_Rdataset <- gsub("{DATASET_NAME}", selected_R_dataset, import_code_Rdataset, fixed = TRUE)
+
+          data_store$metadata$code_import_external <- import_code_Rdataset
+          data_store$metadata$code_import_internal <- import_code_Rdataset
+          temp_df <- eval(parse(text = import_code_Rdataset))
           data_store$metadata$name_mod <- paste(input$selected_R_dataset, "(R)")
+        } else {
+            # AGREGAR ALGO PARA CUANDO NO DETECTA NINGUNA SOURCE VALIDA
         }
 
-        data_store$df <- as.data.frame(temp_df)
-        data_store$metadata$rows <- nrow(data_store$df)
-        data_store$metadata$cols <- ncol(data_store$df)
-        data_store$metadata$"my_sys_time" <- format(Sys.time(), "%H:%M:%S")
+        data_store$metadata$df <- as.data.frame(temp_df)
+        data_store$metadata$rows <- nrow(data_store$metadata$df)
+        data_store$metadata$cols <- ncol(data_store$metadata$df)
+        data_store$metadata$"my_sys_time" <- Sys.time()
         data_store$is_done <- TRUE
 
         toggle_import_controls(TRUE)
@@ -171,18 +255,39 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
     }
 
     # --- OBSERVER PRINCIPAL ---
+    # Here is for running import logic and define is_locked...
     observeEvent(engine_state(), {
-      state <- engine_state()$mode
-      data_store$click_count <- data_store$click_count + 1
 
-      if (state == "lock") {
+      flat_engine_state <- engine_state()
+      control_state <- flat_engine_state$mode
+
+      data_store$click_count <- data_store$click_count + 1
+      data_store$"my_sys_time" = Sys.time()
+      data_store$metadata$selected_internal_source <- input$"source_dataset"
+      data_store$metadata$selected_external_source <- names(vector_hard_source)[vector_hard_source == input$"source_dataset"]
+
+      if (control_state == "unlock") {
+        toggle_import_controls(FALSE)
+        data_store$is_locked <- FALSE
+
+        reset_data_store()
+        return()
+      }
+
+      if (control_state == "lock") {
         import_logic()
-        if(data_store$is_done){
+
+        if(data_store$is_done == TRUE){
           data_store$is_locked <- TRUE
-        } else {
+          return()
+        }
+
+        if(data_store$is_done == FALSE) {
           data_store$is_locked <- FALSE
           showNotification("Selection is not completed... Status Unlock", type = "warning")
           reset_data_store()
+
+          ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### -----
           shinyjs::delay(1000, {
             shinyWidgets::updateRadioGroupButtons(
               session = session,
@@ -190,22 +295,19 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
               selected = "unlock"
             )
           })
+          ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### -----
+          return()
         }
-      } else if (state == "unlock") {
-        toggle_import_controls(FALSE)
-        data_store$is_locked <- FALSE
-
-        reset_data_store()
-        # unblock_opts()
-      } else if (state == "reset") {
-        reset_all()
-        # block_opts()
       }
+
+      if (control_state == "reset") {
+        reset_all()
+        return()
+      }
+
     })
 
     # --- FUNCIONES DE ACCIÓN ---
-
-
     toggle_import_controls <- function(lock_it) {
       vector_obj <- c("root_id" = "import_container",
                       "header_id"  = "the_header",
@@ -283,17 +385,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
 
     }
 
-    # block_opts <- function(){
-    #   root_id <- "import_container"
-    #   input_panel_id <- "main_input_col"
-    #   # shinyjs::addClass(root_id , "rs-block-invisible")
-    # }
-    #
-    # unblock_opts <- function(){
-    #   root_id <- "import_container"
-    #   input_panel_id <- "main_input_col"
-    #   # shinyjs::removeClass(root_id , "rs-block-invisible")
-    # }
+
 
 
     # --- RENDERS ---
@@ -327,7 +419,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
     })
 
     output$import_summary <- renderUI({
-      has_data <- !is.null(data_store$df) && data_store$is_done
+      has_data <- !is.null(data_store$metadata$df) && data_store$is_done
       state_class <- if(has_data) "rs-status-locked" else "rs-status-waiting"
       div(class = paste("rs-minimal-bar", state_class),
           div(class = "status-segment",
@@ -354,15 +446,27 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
                                     div(id = ns("label_sheet"), class = "section-label", "Excel Sheet Selection"),
                                     selectInput(ns("excel_sheet"), NULL, choices = sheets, width = "100%")))
       } else if (ext %in% c("csv", "tsv", "txt")) {
-        div(class = "row mt-2", div(class = "col-12",
-                                    div(id = ns("label_sep"), class = "section-label", "Delimiter / Separator"),
-                                    selectInput(ns("sep"), NULL, choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab (\t)" = "\t"), selected = ",", width = "100%")))
+        div(class = "row mt-2",
+            div(class = "col-4",
+              div(id = ns("label_sep"), class = "section-label", "Delimiter / Separator"),
+              selectInput(inputId = ns("sep"),
+                          label =  NULL,
+                          choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab (\t)" = "\t"),
+                          selected = ";", width = "100%")),
+            div(class = "col-4",
+                div(id = ns("label_dec"), class = "section-label", "Decimal"),
+                selectInput(inputId = ns("dec"),
+                            label =  NULL,
+                            choices = c("Comma (,)" = ",", "Dot (.)" = "."),
+                            selected = ".", width = "100%")))
       }
     })
 
     output$preview <- renderDT({
-      req(data_store$df)
-      datatable(data_store$df, options = list(scrollX = TRUE, scrollY = "400px", scrollCollapse = TRUE, pageLength = 5, dom = 'ftpi'))
+      req(data_store$metadata$df)
+      flat_df <- data_store$metadata$df
+
+      datatable(flat_df, options = list(scrollX = TRUE, scrollY = "400px", scrollCollapse = TRUE, pageLength = 5, dom = 'ftpi'))
     })
 
 
