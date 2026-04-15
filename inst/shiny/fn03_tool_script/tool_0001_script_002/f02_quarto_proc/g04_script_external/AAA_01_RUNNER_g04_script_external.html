@@ -2223,12 +2223,12 @@ vertical-align: -.125em;
 <h1>Local Output Folder</h1>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>Folder created!Confirmed, folder exists!</code></pre>
+<pre><code>Confirmed, folder exists!</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Output folder---------------------------------------------------------  
  Local output folder relative:  output 
- Local output folder absolute:  output 
+ Local output folder absolute:  /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_proc/g04_script_external/output 
  Local output folder exists:    TRUE </code></pre>
 </div>
 </div>
@@ -2240,10 +2240,16 @@ vertical-align: -.125em;
 <pre><code>Limpieza no permitida.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>There are  0 files inside the output folder. </code></pre>
+<pre><code>There are  7 files inside the output folder. </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>character(0)</code></pre>
+<pre><code>[1] &quot;R_scripts.zip&quot;                         
+[2] &quot;script01_anova_import_and_control.R&quot;   
+[3] &quot;script02_anova_full_test.R&quot;            
+[4] &quot;script03_anova_model.R&quot;                
+[5] &quot;script04_anova_descriptive_rv.R&quot;       
+[6] &quot;script05_anova_descriptive_residuals.R&quot;
+[7] &quot;script06_anova_asa.R&quot;                  </code></pre>
 </div>
 </div>
 </section>
@@ -2279,20 +2285,20 @@ vertical-align: -.125em;
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>  order                              file_name file_exists
-1     1    script01_anova_import_and_control.R       FALSE
-2     2             script02_anova_full_test.R       FALSE
-3     3                 script03_anova_model.R       FALSE
-4     4        script04_anova_descriptive_rv.R       FALSE
-5     5 script05_anova_descriptive_residuals.R       FALSE
-6     6                   script06_anova_asa.R       FALSE
-                                      file_path
-1    output/script01_anova_import_and_control.R
-2             output/script02_anova_full_test.R
-3                 output/script03_anova_model.R
-4        output/script04_anova_descriptive_rv.R
-5 output/script05_anova_descriptive_residuals.R
-6                   output/script06_anova_asa.R
-Not all R files exists.Check all R:  FALSE </code></pre>
+1     1    script01_anova_import_and_control.R        TRUE
+2     2             script02_anova_full_test.R        TRUE
+3     3                 script03_anova_model.R        TRUE
+4     4        script04_anova_descriptive_rv.R        TRUE
+5     5 script05_anova_descriptive_residuals.R        TRUE
+6     6                   script06_anova_asa.R        TRUE
+                                                                                                                                                                   file_path
+1    /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_proc/g04_script_external/output/script01_anova_import_and_control.R
+2             /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_proc/g04_script_external/output/script02_anova_full_test.R
+3                 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_proc/g04_script_external/output/script03_anova_model.R
+4        /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_proc/g04_script_external/output/script04_anova_descriptive_rv.R
+5 /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_proc/g04_script_external/output/script05_anova_descriptive_residuals.R
+6                   /home/legion/bulk/MyGithub/Rscience2027/inst/shiny/fn03_tool_script/tool_0001_script_002/f02_quarto_proc/g04_script_external/output/script06_anova_asa.R
+All R files exists.Check all R:  TRUE </code></pre>
 </div>
 </div>
 </section>
@@ -2302,16 +2308,16 @@ Not all R files exists.Check all R:  FALSE </code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>       order  label check
 QMD        1    QMD  TRUE
-R init     2 R init FALSE</code></pre>
+R init     2 R init  TRUE</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Not all files exists. Render will start soon.</code></pre>
+<pre><code>All the espected files exists.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Check all Universe:  FALSE </code></pre>
+<pre><code>Check all Universe:  TRUE </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Will we run render???:  TRUE </code></pre>
+<pre><code>Will we run render???:  FALSE </code></pre>
 </div>
 </div>
 </section>
@@ -2322,17 +2328,7 @@ R init     2 R init FALSE</code></pre>
 <pre><code>Previous rendering...</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Fase 1: Verificando coherencia de nombres...
-Fase 2: Generando archivos .R...
-  ✓ Generado: script01_anova_import_and_control.R 
-  ✓ Generado: script02_anova_full_test.R 
-  ✓ Generado: script03_anova_model.R 
-  ✓ Generado: script04_anova_descriptive_rv.R 
-  ✓ Generado: script05_anova_descriptive_residuals.R 
-  ✓ Generado: script06_anova_asa.R 
-
-¡Proceso terminado!
-Rendering QMD finished!</code></pre>
+<pre><code>Avoiding render QMD files. All R script exists!</code></pre>
 </div>
 </div>
 </section>
@@ -2362,7 +2358,7 @@ All R files exists.Check all R:  TRUE </code></pre>
 <h1>Zip file R scripts</h1>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] &quot;./output/R_scripts.zip&quot;</code></pre>
+<pre><code>El archivo zip para RData ya existe y no sera generado de nuevo.</code></pre>
 </div>
 </div>
 </section>

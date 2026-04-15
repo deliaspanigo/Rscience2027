@@ -23,9 +23,11 @@ mod_special_proccessing_ui <- function(id) {
 }
 
 
-mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_folder_tool_script, list_settings) {
+mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_folder_tool_script, list_settings, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    internal_show_debug <- reactive(if(is.function(show_debug)) show_debug() else show_debug)
 
     internal_local_folder_tool_script <- reactive(if(is.function(local_folder_tool_script)) local_folder_tool_script() else local_folder_tool_script)
     internal_temp_folder_tool_script  <- reactive(if(is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script)
@@ -50,8 +52,34 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     }
 
     # --------------------------------------------------------------------------
-    # 1. LÓGICA REACTIVA (Items 01 a 04)
+    # 1. LÓGICA REACTIVA (Items 01 a 05)
     # --------------------------------------------------------------------------
+    # --- REACTIVE VALUES ---
+    get_default_data <- function() {
+      list(
+        "details" = "*** RScience - Module Special Proccessing ***",
+        "my_sys_time" = Sys.time(),
+        "click_count" = 0, # Corregido el nombre si era click_count
+        "is_done" = FALSE,
+        "is_locked" = FALSE,
+        #"is_successful" = FALSE,
+        #"is_all_ok" = FALSE,
+        "error_msg" = NULL,
+        "metadata" = list(
+        )
+
+      )
+    }
+    reset_data_store <- function() {
+      defaults <- get_default_data()
+
+      # mapply recorre los nombres y valores de la lista de defaults
+      # y los asigna uno a uno al objeto reactiveValues
+      mapply(function(val, name) {
+        data_store[[name]] <- val
+      }, defaults, names(defaults))
+    }
+    data_store <- do.call(reactiveValues, get_default_data())
 
     rlist_item01_local_folder_tool_script <- reactive({
       req(engine$started)
@@ -106,18 +134,35 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       })
       all_exist <- all(sapply(list_processed, function(x) x$exists_local))
       color_hex <- if(all_exist) "#00bc8c" else "#f39c12"
-      list(is_done = all_exist, text = if(all_exist) "ALL RUNNERS READY" else "SOME RUNNERS MISSING",
+      list(is_done = all_exist,
+           text = if(all_exist) "ALL RUNNERS READY" else "SOME RUNNERS MISSING",
            color = color_hex, icon_name = "check-double", shadow = paste0("0 0 12px ", color_hex),
            list_qmd = list_processed)
     }) %>% debounce(1000)
 
     rlist_item05_proccessing <- reactive({
 
-      req(rlist_item03_quarto_proc()$is_done)
-      flat_rlist_item03_quarto_proc <- rlist_item03_quarto_proc()
-      flat_rlist_item03_quarto_proc$is_done
+      req(rlist_item04_qmd_files()$is_done)
+      flat_rlist_item04_qmd_files <- rlist_item04_qmd_files()
+      flat_rlist_item04_qmd_files$is_done
 
     }) %>% debounce(1000)
+
+
+    # super_DONE <- reactive({
+    #
+    #   req(rlist_item05_proccessing()$is_done)
+    #   rlist_item05_proccessing <- rlist_item05_proccessing()
+    #   rlist_item05_proccessing$is_done
+    #
+    # }) %>% debounce(1000)
+
+    # observeEvent(super_DONE(),{
+    #
+    #   internal_super_DONE <- super_DONE()
+    #   data_store$is_done <- internal_super_DONE
+    # })
+
     # --------------------------------------------------------------------------
     # 2. MOTOR DINÁMICO (Anterior 07, ahora vinculado al 04)
     # --------------------------------------------------------------------------
@@ -331,6 +376,12 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
         })
       }
     })
+
+    #-----------------------------------------------------------------------------------------------
+
+
+    #-----------------------------------------------------------------------------------------------
+
   })
 }
 

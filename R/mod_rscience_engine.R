@@ -386,7 +386,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
     # Collector03 - Objects for proccessing -----------------------------------------------------------------------
     rlist_collector03 <- reactive({
 
-      internal_rlist_dataset <- rlist_dataset()
+      #internal_rlist_dataset <- rlist_dataset()
       internal_list_settings <- rlist_settings()
       internal_local_folder_path_tool <- HOOK_temp_folder_path_tool_script()
 
@@ -396,8 +396,8 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
       my_list$"folder_script_tool" <- internal_local_folder_path_tool
 
-      my_list$"dataset" <- list(code_import_external = internal_rlist_dataset$metadata$code_import_external,
-                                code_import_internal = internal_rlist_dataset$metadata$code_import_internal)
+      # my_list$"dataset" <- list(code_import_external = internal_rlist_dataset$metadata$code_import_external,
+      #                           code_import_internal = internal_rlist_dataset$metadata$code_import_internal)
 
       my_list$"settings" <- internal_list_settings$list_clean
 

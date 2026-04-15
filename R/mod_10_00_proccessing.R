@@ -6,11 +6,7 @@ library(shinyjs)
 # MÓDULOS UI: PLACEHOLDERS DINÁMICOS
 # ==============================================================================
 
-mod_10_00_proccessing_DEBUG_ui <- function(id) {
-  ns <- NS(id)
-  # Este uiOutput debe coincidir con el ID del server
-  uiOutput(ns("panel_debug_externo"))
-}
+
 
 mod_10_00_proccessing_ui <- function(id) {
   ns <- NS(id)
@@ -121,7 +117,7 @@ mod_10_00_proccessing_server <- function(id, module_proccessing_file_path, local
           local_env(new_env)
 
           if (!is.null(new_env$mod_special_proccessing_server)) {
-            rv$sub_data <- new_env$mod_special_proccessing_server(id = "sub_theory",
+            rv$sub_data <- new_env$mod_special_proccessing_server(id = "sub_proc",
                                                                   local_folder_tool_script = internal_local_folder_tool_script(),
                                                                   temp_folder_tool_script = internal_temp_folder_tool_script())
           }
@@ -207,7 +203,7 @@ mod_10_00_proccessing_server <- function(id, module_proccessing_file_path, local
       req(rv$ready)
       env <- local_env()
       req(env$mod_special_proccessing_ui)
-      env$mod_special_proccessing_ui(ns("sub_theory"))
+      env$mod_special_proccessing_ui(ns("sub_proc"))
     })
 
     # --- 6. CONTROL DE NAVEGACIÓN (SWITCHER) ---
