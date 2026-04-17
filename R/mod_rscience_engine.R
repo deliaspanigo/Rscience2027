@@ -43,7 +43,7 @@ mod_rscience_engine_ui <- function(id) {
                     div(id=ns("c_DEBUG"), class="phase-card", icon("play"), span(" DEBUG"))
                 ),
                 div(class="pack-group",
-                    div(id=ns("c_out"), class="phase-card", icon("desktop"), span(" Visualizer"))
+                    div(id=ns("c_shiny_output"), class="phase-card", icon("desktop"), span(" Visualizer"))
                 ),
                 div(class="pack-group",
                     div(id=ns("c_theory"), class="phase-card", icon("book"), span(" Theory")),
@@ -66,7 +66,7 @@ mod_rscience_engine_ui <- function(id) {
                 nav_panel_hidden("c_settings", mod_04_00_settings_ui(id = ns("my_ns_collector02_settings"))),
                 nav_panel_hidden("c_play", mod_10_00_proccessing_ui(id = ns("pipeline_1"))),
                 nav_panel_hidden("c_DEBUG",   uiOutput(ns("show_debug"))),
-                nav_panel_hidden("c_out", card(card_body("Visualizador..."))),
+                nav_panel_hidden("c_shiny_output", mod_11_A_shiny_output_ui(id = ns("pipeline_333"))),
                 nav_panel_hidden("c_theory",  mod_03_A_theory_ui(ns("txt_1"))),
                 nav_panel_hidden("c_bibliography",mod_03_B_bibliography_ui(ns("txt_2"))),
                 nav_panel_hidden("c_cite",mod_03_C_cite_ui(ns("txt_3"))),
@@ -104,7 +104,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
     # Listado maestro de todas las tarjetas para los listeners
     all_cards <- c("c_data", "c_tool", "c_script", "c_settings", "c_play", "c_DEBUG",
-                   "c_out", "c_theory", "c_bibliography", "c_cite", "c_faqs")
+                   "c_shiny_output", "c_theory", "c_bibliography", "c_cite", "c_faqs")
 
     # 1. Lógica de Cambio de Pestaña y Brillo
     observeEvent(input$active_card, {
@@ -290,6 +290,18 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       list_files$"file01_05_proccsessing"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p01_05_proccessing", "f03_prod", list_files$"file01_05_proccsessing"$"file_name")
       list_files$"file01_05_proccsessing"$"check_local" <- file.exists(list_files$"file01_05_proccsessing"$"local_file_path")
       list_files$"file01_05_proccsessing"$"check_temp"  <- file.exists(list_files$"file01_05_proccsessing"$"temp_file_path")
+      ###########################################################################################################
+      list_files$"file02_01_shiny_output" <- list()
+      list_files$"file02_01_shiny_output"$"position"    <- "file02_01_shiny_output"
+      list_files$"file02_01_shiny_output"$"file_name"   <- "mod_special_shiny_output.R"
+      list_files$"file02_01_shiny_output"$"description" <- "Module for settings from selected tool-script."
+      list_files$"file02_01_shiny_output"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p02_01_shiny_output", "f03_prod", list_files$"file02_01_shiny_output"$"file_name")
+      list_files$"file02_01_shiny_output"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p02_01_shiny_output", "f03_prod", list_files$"file02_01_shiny_output"$"file_name")
+      list_files$"file02_01_shiny_output"$"check_local" <- file.exists(list_files$"file02_01_shiny_output"$"local_file_path")
+      list_files$"file02_01_shiny_output"$"check_temp"  <- file.exists(list_files$"file02_01_shiny_output"$"temp_file_path")
+
+
+      ###########################################################################################################
 
 
       list_files$"file03_01_theory" <- list()
@@ -338,7 +350,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
           div(class = "section-label",
               style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 10px;",
-              icon("bug"), " External Debug - Collector 01"),
+              icon("bug"), " External Debug - Collector 02 - All Module Special"),
 
           div(class = "row",
               div(class = "col-md-6",
@@ -419,7 +431,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
           div(class = "section-label",
               style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 10px;",
-              icon("bug"), " External Debug - Collector 01"),
+              icon("bug"), " External Debug - Collector 03"),
 
           div(class = "row",
               div(class = "col-md-6",
@@ -449,14 +461,19 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
       data$"file01_05_proccsessing"$"local_file_path"
     })
-    mod_10_00_proccessing_server(
+
+
+    rlist_proccessing <- mod_10_00_proccessing_server(
       id = "pipeline_1",
       module_proccessing_file_path = HOOK_temp_file_path_proccessing,
       local_folder_tool_script = HOOK_local_folder_path_tool_script,
       temp_folder_tool_script =  HOOK_temp_folder_path_tool_script,
       list_settings = NULL
     )
-
+    HOOK_proccessing_is_done <- reactive({
+      req(rlist_proccessing())
+      rlist_proccessing()$is_done
+      })
 
     # OPT 03.01. Theory -------------------------------------------------------------------------------------------
     HOOK_temp_folder_path_theory  <- reactive({
@@ -520,7 +537,37 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
 
 
+    # OPT 02.01. Shiny Outputs -------------------------------------------------------------------------------------------
+    HOOK_temp_folder_path_shiny_output  <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file03_03_cite"$"temp_file_path" )
 
+      data$"file03_03_cite"$"temp_file_path"
+    })
+    HOOK_local_folder_path_cite <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file03_03_cite"$"local_file_path" )
+
+      data$"file03_03_cite"$"local_file_path"
+    })
+
+    flat_module_shiny_output_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
+                                                      "f01_shiny_show", "p02_01_shiny_output", "f03_prod", "mod_special_shiny_output.R" ,
+                                                      package = "Rscience2027")
+
+    file_path <- reactive(system.file("test_shiny_output", "f05_shiny_output", "tab01_control.html", package = "Rscience2027"))
+    rlist_shiny_output <- mod_11_A_shiny_output_server(
+      id = "pipeline_333",
+      module_shiny_output_file_path = flat_module_shiny_output_file_path,
+      local_folder_tool_script = HOOK_temp_folder_path_shiny_output,
+      temp_folder_tool_script  = HOOK_local_folder_path_cite,
+      super_label = "Visualizador de Archivo",
+      file_path = file_path,
+      show_file = HOOK_proccessing_is_done
+
+    )
 
 
   ##############################################################################################
