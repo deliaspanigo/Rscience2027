@@ -41,7 +41,8 @@ server <- function(input, output, session) {
     id = "pipeline_1",
     local_folder_tool_script = path_test,
     temp_folder_tool_script = path_test,
-    list_settings = NULL
+    list_settings = NULL,
+    show_debug = T
   )
 }
 

@@ -402,7 +402,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     # --- 6. DEBUG LOGIC ---
     the_output <- reactive({
       reactiveValuesToList(data_store)
-    })
+    })  %>% debounce(1000)
 
     output$json_internal <- listviewer::renderJsonedit({
       req(internal_show_debug())

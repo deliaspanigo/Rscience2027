@@ -34,7 +34,9 @@ ui <- page_fluid(
 server <- function(input, output, session) {
 
   flat_module_proccessing_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
-                                                   "f01_shiny_show", "p01_05_proccessing", "f03_prod", "mod_special_proccessing.R" ,package = "Rscience2027")
+                                                   "f01_shiny_show", "p01_05_proccessing", "f03_prod", "mod_special_proccessing.R" ,
+                                                   package = "Rscience2027")
+
   flat_local_folder_tool_script <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", package = "Rscience2027")
   flat_temp_folder_tool_script  <- flat_local_folder_tool_script
 
