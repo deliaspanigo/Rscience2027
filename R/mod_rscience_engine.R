@@ -45,7 +45,8 @@ mod_rscience_engine_ui <- function(id) {
                 div(class="pack-group",
                     div(id=ns("c_script_and_comments"), class="phase-card", icon("desktop"), span(" Scripts and Comments")),
                     div(id=ns("c_shiny_output"),        class="phase-card", icon("desktop"), span(" Shiny Output")),
-                    div(id=ns("c_asa"),                 class="phase-card", icon("desktop"), span(" ASA"))
+                    div(id=ns("c_asa"),                 class="phase-card", icon("desktop"), span(" ASA")),
+                    div(id=ns("c_pdf"),                 class="phase-card", icon("desktop"), span(" PDF"))
 
                 ),
                 div(class="pack-group",
@@ -73,6 +74,7 @@ mod_rscience_engine_ui <- function(id) {
                 nav_panel_hidden("c_script_and_comments", mod_11_A_script_and_comments_ui(id = ns("pipeline_333"))),
                 nav_panel_hidden("c_shiny_output", mod_11_B_shiny_output_ui(id = ns("pather_shiny_output"))),
                 nav_panel_hidden("c_asa",          mod_11_C_asa_ui(id = ns("pather_asa"))),
+                nav_panel_hidden("c_pdf",          mod_11_D_pdf_ui(id = ns("pather_pdf"))),
 
                 nav_panel_hidden("c_theory",  mod_03_A_theory_ui(ns("txt_1"))),
                 nav_panel_hidden("c_bibliography",mod_03_B_bibliography_ui(ns("txt_2"))),
@@ -111,7 +113,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
     # Listado maestro de todas las tarjetas para los listeners
     all_cards <- c("c_data", "c_tool", "c_script", "c_settings", "c_play", "c_DEBUG",
-                   "c_script_and_comments", "c_shiny_output", "c_asa",
+                   "c_script_and_comments", "c_shiny_output", "c_asa", "c_pdf",
                    "c_theory", "c_bibliography", "c_cite", "c_faqs")
 
     # 1. Lógica de Cambio de Pestaña y Brillo
@@ -325,6 +327,16 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       list_files$"file02_03_asa"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p02_03_asa", "f03_prod", list_files$"file02_03_asa"$"file_name")
       list_files$"file02_03_asa"$"check_local" <- file.exists(list_files$"file02_03_asa"$"local_file_path")
       list_files$"file02_03_asa"$"check_temp"  <- file.exists(list_files$"file02_03_asa"$"temp_file_path")
+
+      list_files$"file02_04_pdf" <- list()
+      list_files$"file02_04_pdf"$"position"    <- "file02_04_pdf"
+      list_files$"file02_04_pdf"$"file_name"   <- "mod_special_pdf.R"
+      list_files$"file02_04_pdf"$"description" <- "Module for asa from selected tool-script."
+      list_files$"file02_04_pdf"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p02_04_pdf", "f03_prod", list_files$"file02_04_pdf"$"file_name")
+      list_files$"file02_04_pdf"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p02_04_pdf", "f03_prod", list_files$"file02_04_pdf"$"file_name")
+      list_files$"file02_04_pdf"$"check_local" <- file.exists(list_files$"file02_04_pdf"$"local_file_path")
+      list_files$"file02_04_pdf"$"check_temp"  <- file.exists(list_files$"file02_04_pdf"$"temp_file_path")
+
 
       ###########################################################################################################
 
@@ -654,6 +666,40 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
     rlist_asa <-       mod_11_C_asa_server(
       id = "pather_asa",
       module_asa_file_path = HOOK_file_path_pather_module_asa_temp,
+      temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
+      show_file                     = TRUE,
+      show_debug                    = TRUE
+    )
+
+
+    ##############################################################################################
+
+
+
+    # OPT 02.01. Shiny Outputs -------------------------------------------------------------------------------------------
+    HOOK_file_path_pather_module_pdf_temp  <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file02_04_pdf"$"temp_file_path" )
+
+      data$"file02_04_pdf"$"temp_file_path"
+    })
+    HOOK_file_path_pather_module_pdf_local <- reactive({
+      # Solo si el colector tiene éxito
+      data <- rlist_collector02()
+      req(data$"file02_04_pdf"$"local_file_path" )
+
+      data$"file02_04_pdf"$"local_file_path"
+    })
+
+    # flat_module_script_and_comments_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
+    #                                                   "f01_shiny_show", "p02_01_shiny_output", "f03_prod", "mod_special_shiny_output.R" ,
+    #                                                   package = "Rscience2027")
+
+    # file_path <- reactive(system.file("test_shiny_output", "f05_shiny_output", "tab01_control.html", package = "Rscience2027"))
+    rlist_pdf <-       mod_11_D_pdf_server(
+      id = "pather_pdf",
+      module_pdf_file_path = HOOK_file_path_pather_module_pdf_temp,
       temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
       show_file                     = TRUE,
       show_debug                    = TRUE
