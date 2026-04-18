@@ -293,7 +293,7 @@
       affiliation: [],
       email: [] ),
     ),
-  date: [2026-04-07],
+  date: [2026-04-18],
   sectionnumbering: "1.1.a",
   toc_title: [Table of contents],
   toc_depth: 3,
@@ -365,7 +365,7 @@ It is NOT valid to draw conclusions from the ANOVA test. This dataset must be an
 
 It is NOT valid to draw conclusions from the ANOVA test. As the model requirements are not met, the ANOVA and Tukey analyses must be discarded, irrespective of the statistical values obtained. The literal and decontextualized interpretation of the ANOVA test and the Tukey test is detailed below for demonstrative purposes only, but holds no validity for drawing conclusions from them.
 
-The p-value for the ANOVA test is 4.97891917440017e-09. The alpha value is 0.05. The p-value is less than the alpha value. The null hypothesis of equal means for the ANOVA test is rejected. There are statistically significant differences in at least one level of the factor. By rejecting the null hypothesis, the ANOVA test guarantees statistically significant differences in at least one level of the factor with the lowest mean and the level of the factor with the highest mean.
+The p-value for the ANOVA test is 4.97891917440023e-09. The alpha value is 0.05. The p-value is less than the alpha value. The null hypothesis of equal means for the ANOVA test is rejected. There are statistically significant differences in at least one level of the factor. By rejecting the null hypothesis, the ANOVA test guarantees statistically significant differences in at least one level of the factor with the lowest mean and the level of the factor with the highest mean.
 
 Since the ANOVA null hypothesis is rejected, the use of a multiple comparison test to accompany the ANOVA test is valid.
 
