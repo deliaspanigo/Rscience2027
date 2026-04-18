@@ -43,7 +43,7 @@ mod_rscience_engine_ui <- function(id) {
                     div(id=ns("c_DEBUG"), class="phase-card", icon("play"), span(" DEBUG"))
                 ),
                 div(class="pack-group",
-                    div(id=ns("c_script_and_comments"), class="phase-card", icon("desktop"), span(" Visualizer"))
+                    div(id=ns("c_script_and_comments"), class="phase-card", icon("desktop"), span(" Scripts and Comments"))
                 ),
                 div(class="pack-group",
                     div(id=ns("c_theory"), class="phase-card", icon("book"), span(" Theory")),
@@ -295,8 +295,8 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       list_files$"file02_01_script_and_comments"$"position"    <- "file02_01_script_and_comments"
       list_files$"file02_01_script_and_comments"$"file_name"   <- "mod_special_script_and_comments.R"
       list_files$"file02_01_script_and_comments"$"description" <- "Module for settings from selected tool-script."
-      list_files$"file02_01_script_and_comments"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p02_01_shiny_output", "f03_prod", list_files$"file02_01_script_and_comments"$"file_name")
-      list_files$"file02_01_script_and_comments"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p02_01_shiny_output", "f03_prod", list_files$"file02_01_script_and_comments"$"file_name")
+      list_files$"file02_01_script_and_comments"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p02_01_script_and_comments", "f03_prod", list_files$"file02_01_script_and_comments"$"file_name")
+      list_files$"file02_01_script_and_comments"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p02_01_script_and_comments", "f03_prod", list_files$"file02_01_script_and_comments"$"file_name")
       list_files$"file02_01_script_and_comments"$"check_local" <- file.exists(list_files$"file02_01_script_and_comments"$"local_file_path")
       list_files$"file02_01_script_and_comments"$"check_temp"  <- file.exists(list_files$"file02_01_script_and_comments"$"temp_file_path")
 
@@ -553,9 +553,9 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       data$"file02_01_script_and_comments"$"local_file_path"
     })
 
-    flat_module_script_and_comments_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
-                                                      "f01_shiny_show", "p02_01_shiny_output", "f03_prod", "mod_special_shiny_output.R" ,
-                                                      package = "Rscience2027")
+    # flat_module_script_and_comments_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
+    #                                                   "f01_shiny_show", "p02_01_shiny_output", "f03_prod", "mod_special_shiny_output.R" ,
+    #                                                   package = "Rscience2027")
 
     # file_path <- reactive(system.file("test_shiny_output", "f05_shiny_output", "tab01_control.html", package = "Rscience2027"))
     rlist_shiny_output <-       mod_11_A_script_and_comments_server(

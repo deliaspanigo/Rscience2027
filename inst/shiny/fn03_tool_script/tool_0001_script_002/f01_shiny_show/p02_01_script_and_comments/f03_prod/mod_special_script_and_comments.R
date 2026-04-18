@@ -33,12 +33,12 @@ mod_special_script_and_comments_server <- function(id,
 
       # Lista fija de archivos y sus etiquetas
       list(
-        list(file = "file01_anova_import_and_control.html",    label = "Import & Control", super = "ANOVA Step 1"),
-        list(file = "file02_anova_full_test.html",             label = "Full Test",        super = "ANOVA Step 2"),
-        list(file = "file03_anova_model.html",                 label = "Model Results",    super = "ANOVA Step 3"),
-        list(file = "file04_anova_descriptive_rv.html",        label = "Model Results",    super = "ANOVA Step 3"),
-        list(file = "file05_anova_descriptive_residuals.html", label = "Model Results",    super = "ANOVA Step 3"),
-        list(file = "file06_anova_asa.html",                   label = "Model Results",    super = "ANOVA Step 3")
+        list(file = "file01_anova_import_and_control.html",    label = "Import & Control", super = "Import & Control"),
+        list(file = "file02_anova_full_test.html",             label = "Anova Full Test",  super = "Anova Full Test"),
+        list(file = "file03_anova_model.html",                 label = "Model",            super = "Model"),
+        list(file = "file04_anova_descriptive_rv.html",        label = "Descriptive RV",   super = "Descriptive RV"),
+        list(file = "file05_anova_descriptive_residuals.html", label = "Residuals",        super = "Residuals"),
+        list(file = "file06_anova_asa.html",                   label = "ASA",              super = "ASA")
 
       ) |>
         lapply(function(x) {
