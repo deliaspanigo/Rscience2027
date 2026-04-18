@@ -43,7 +43,7 @@ mod_rscience_engine_ui <- function(id) {
                     div(id=ns("c_DEBUG"), class="phase-card", icon("play"), span(" DEBUG"))
                 ),
                 div(class="pack-group",
-                    div(id=ns("c_shiny_output"), class="phase-card", icon("desktop"), span(" Visualizer"))
+                    div(id=ns("c_script_and_comments"), class="phase-card", icon("desktop"), span(" Visualizer"))
                 ),
                 div(class="pack-group",
                     div(id=ns("c_theory"), class="phase-card", icon("book"), span(" Theory")),
@@ -66,7 +66,7 @@ mod_rscience_engine_ui <- function(id) {
                 nav_panel_hidden("c_settings", mod_04_00_settings_ui(id = ns("my_ns_collector02_settings"))),
                 nav_panel_hidden("c_play", mod_10_00_proccessing_ui(id = ns("pipeline_1"))),
                 nav_panel_hidden("c_DEBUG",   uiOutput(ns("show_debug"))),
-                nav_panel_hidden("c_shiny_output", mod_11_A_shiny_output_ui(id = ns("pipeline_333"))),
+                nav_panel_hidden("c_script_and_comments", mod_11_A_script_and_comments_ui(id = ns("pipeline_333"))),
                 nav_panel_hidden("c_theory",  mod_03_A_theory_ui(ns("txt_1"))),
                 nav_panel_hidden("c_bibliography",mod_03_B_bibliography_ui(ns("txt_2"))),
                 nav_panel_hidden("c_cite",mod_03_C_cite_ui(ns("txt_3"))),
@@ -104,7 +104,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
     # Listado maestro de todas las tarjetas para los listeners
     all_cards <- c("c_data", "c_tool", "c_script", "c_settings", "c_play", "c_DEBUG",
-                   "c_shiny_output", "c_theory", "c_bibliography", "c_cite", "c_faqs")
+                   "c_script_and_comments", "c_theory", "c_bibliography", "c_cite", "c_faqs")
 
     # 1. Lógica de Cambio de Pestaña y Brillo
     observeEvent(input$active_card, {
@@ -291,14 +291,14 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       list_files$"file01_05_proccsessing"$"check_local" <- file.exists(list_files$"file01_05_proccsessing"$"local_file_path")
       list_files$"file01_05_proccsessing"$"check_temp"  <- file.exists(list_files$"file01_05_proccsessing"$"temp_file_path")
       ###########################################################################################################
-      list_files$"file02_01_shiny_output" <- list()
-      list_files$"file02_01_shiny_output"$"position"    <- "file02_01_shiny_output"
-      list_files$"file02_01_shiny_output"$"file_name"   <- "mod_special_shiny_output.R"
-      list_files$"file02_01_shiny_output"$"description" <- "Module for settings from selected tool-script."
-      list_files$"file02_01_shiny_output"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p02_01_shiny_output", "f03_prod", list_files$"file02_01_shiny_output"$"file_name")
-      list_files$"file02_01_shiny_output"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p02_01_shiny_output", "f03_prod", list_files$"file02_01_shiny_output"$"file_name")
-      list_files$"file02_01_shiny_output"$"check_local" <- file.exists(list_files$"file02_01_shiny_output"$"local_file_path")
-      list_files$"file02_01_shiny_output"$"check_temp"  <- file.exists(list_files$"file02_01_shiny_output"$"temp_file_path")
+      list_files$"file02_01_script_and_comments" <- list()
+      list_files$"file02_01_script_and_comments"$"position"    <- "file02_01_script_and_comments"
+      list_files$"file02_01_script_and_comments"$"file_name"   <- "mod_special_script_and_comments.R"
+      list_files$"file02_01_script_and_comments"$"description" <- "Module for settings from selected tool-script."
+      list_files$"file02_01_script_and_comments"$"local_file_path" <- file.path(local_folder_path, "f01_shiny_show", "p02_01_shiny_output", "f03_prod", list_files$"file02_01_script_and_comments"$"file_name")
+      list_files$"file02_01_script_and_comments"$"temp_file_path"  <- file.path(temp_folder_path,  "f01_shiny_show", "p02_01_shiny_output", "f03_prod", list_files$"file02_01_script_and_comments"$"file_name")
+      list_files$"file02_01_script_and_comments"$"check_local" <- file.exists(list_files$"file02_01_script_and_comments"$"local_file_path")
+      list_files$"file02_01_script_and_comments"$"check_temp"  <- file.exists(list_files$"file02_01_script_and_comments"$"temp_file_path")
 
 
       ###########################################################################################################
@@ -538,35 +538,32 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
 
 
     # OPT 02.01. Shiny Outputs -------------------------------------------------------------------------------------------
-    HOOK_temp_folder_path_shiny_output  <- reactive({
+    HOOK_file_path_pather_module_script_and_comments_temp  <- reactive({
       # Solo si el colector tiene éxito
       data <- rlist_collector02()
-      req(data$"file03_03_cite"$"temp_file_path" )
+      req(data$"file02_01_script_and_comments"$"temp_file_path" )
 
-      data$"file03_03_cite"$"temp_file_path"
+      data$"file02_01_script_and_comments"$"temp_file_path"
     })
-    HOOK_local_folder_path_cite <- reactive({
+    HOOK_file_path_pather_module_script_and_comments_local <- reactive({
       # Solo si el colector tiene éxito
       data <- rlist_collector02()
-      req(data$"file03_03_cite"$"local_file_path" )
+      req(data$"file02_01_script_and_comments"$"local_file_path" )
 
-      data$"file03_03_cite"$"local_file_path"
+      data$"file02_01_script_and_comments"$"local_file_path"
     })
 
-    flat_module_shiny_output_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
+    flat_module_script_and_comments_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
                                                       "f01_shiny_show", "p02_01_shiny_output", "f03_prod", "mod_special_shiny_output.R" ,
                                                       package = "Rscience2027")
 
-    file_path <- reactive(system.file("test_shiny_output", "f05_shiny_output", "tab01_control.html", package = "Rscience2027"))
-    rlist_shiny_output <- mod_11_A_shiny_output_server(
+    # file_path <- reactive(system.file("test_shiny_output", "f05_shiny_output", "tab01_control.html", package = "Rscience2027"))
+    rlist_shiny_output <-       mod_11_A_script_and_comments_server(
       id = "pipeline_333",
-      module_shiny_output_file_path = flat_module_shiny_output_file_path,
-      local_folder_tool_script = HOOK_temp_folder_path_shiny_output,
-      temp_folder_tool_script  = HOOK_local_folder_path_cite,
-      super_label = "Visualizador de Archivo",
-      file_path = file_path,
-      show_file = HOOK_proccessing_is_done
-
+      module_script_and_comments_file_path = HOOK_file_path_pather_module_script_and_comments_temp,
+      temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
+      show_file                     = TRUE,
+      show_debug                    = TRUE
     )
 
 
