@@ -27,7 +27,7 @@ mod_02_01_dataset_ui <- function(id) {
 
           # --- ELEMENTOS A LA IZQUIERDA ---
           div(class = "section-label",
-              style = "margin: 0; white-space: nowrap; font-size: 1.2rem; font-weight: 700; color: #8b949e;",
+              style = "margin: 0; white-space: nowrap; font-size: 1.2rem; font-weight: 700; color: #00d4ff;",
               icon("database"), " DATASET"
           ),
 
@@ -56,7 +56,6 @@ mod_02_01_dataset_ui <- function(id) {
                   style = "padding: 20px; border-radius: 15px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);",
 
                   div(id = ns("label_source"), class = "section-label mb-2",
-                      style = "color: #58a6ff; font-size: 0.8rem; text-transform: uppercase;",
                       "Source Type"),
 
                   selectInput(inputId = ns("source_dataset"), label = NULL,
@@ -452,10 +451,10 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
       req(internal_show_debug())
 
       div(class = "debug-section",
-          style = "margin-top: 30px; border: 1px dashed #ef4444; padding: 20px; border-radius: 12px; background: rgba(255, 0, 0, 0.05);",
+          style = "margin-top: 30px; border: 1px dashed #ffffff; padding: 20px; border-radius: 12px; background: rgba(255, 0, 0, 0.05);",
 
           # Título de la sección Debug
-          div(style = "color: #ef4444; font-weight: bold; margin-bottom: 15px;",
+          div(style = "color: #ffffff; font-weight: bold; margin-bottom: 15px;",
               icon("bug"), " RS-INTERNAL DEBUGGER"),
 
           # Contenedor de columnas
