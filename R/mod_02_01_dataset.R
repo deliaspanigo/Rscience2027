@@ -147,7 +147,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
         name_mod = NULL,
         rows = NULL,
         cols = NULL,
-        my_timestamp = timestamp(),
+        my_timestamp = Sys.time(),
         df = data.frame()
       )
     }
@@ -162,7 +162,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
     get_default_RValues_data_store <- function() {
       list(
         "details" = "*** RScience - Import Engine ***",
-        "my_timestamp" = timestamp(),
+        "my_timestamp" = Sys.time(),
         "click_count" = 0,
         "is_done" = FALSE,
         "is_locked" = FALSE,
@@ -369,7 +369,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
       RValues_data_store$is_done <- TRUE
       RValues_data_store$metadata_dataset <- reactiveValuesToList(RValues_metadata_dataset)
       RValues_data_store$metadata_control_btn <- rlist_control_btn()
-      RValues_data_store$my_timestamp <- timestamp()
+      RValues_data_store$my_timestamp <- Sys.time()
     })
 
     # 7. Renders ---------------------------------------------------------------

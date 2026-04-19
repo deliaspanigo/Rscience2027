@@ -162,6 +162,7 @@ mod_07_00_engine_control_server <- function(id,
     observeEvent(input$btn_unlock_ghost, {
       data_store$mode <- "unlock"
       data_store$sys_status <- "SYSTEM UNLOCKED"
+      data_store$timestamp <- Sys.time()
       update_visuals("unlock")
     })
 
@@ -171,6 +172,8 @@ mod_07_00_engine_control_server <- function(id,
         data_store$mode <- if(data_store$mode == "unlock") "lock" else "unlock"
         data_store$sys_status <- if(data_store$mode == "lock") "SYSTEM SECURED" else "SYSTEM UNLOCKED"
         data_store$click_count <- data_store$click_count + 1
+        data_store$timestamp <- Sys.time()
+
       }
     })
 
@@ -179,6 +182,7 @@ mod_07_00_engine_control_server <- function(id,
       if(data_store$mode != "refresh") {
         data_store$mode <- "refresh"
         data_store$sys_status <- "RESETTING..."
+        data_store$timestamp <- Sys.time()
 
         # Sincronizamos el toggle a naranja
         update_visuals("refresh")
@@ -189,6 +193,7 @@ mod_07_00_engine_control_server <- function(id,
         shinyjs::delay(1500, {
           data_store$mode <- "unlock"
           data_store$sys_status <- "SYSTEM UNLOCKED"
+          data_store$timestamp <- Sys.time()
 
           shinyjs::removeClass("btn_refresh", "refreshing-anim")
           shinyjs::removeClass("hub_body", "hub-refreshing")
@@ -204,6 +209,8 @@ mod_07_00_engine_control_server <- function(id,
       the_mode <- data_store$mode
       is_locked <- the_mode == "lock"
       data_store$is_locked <- is_locked
+      data_store$timestamp <- Sys.time()
+
     })
 
     output$debug_internal_json <- listviewer::renderJsonedit({
