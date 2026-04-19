@@ -111,16 +111,21 @@ mod_02_01_dataset_DEBUG_ui <- function(id) {
 # ==============================================================================
 # IMPORT MODULE SERVER - v.0.1.0 (CORRECTED)
 # ==============================================================================
+# ==============================================================================
+# IMPORT MODULE SERVER - v.0.1.1 (FIXED & SYNCED)
+# ==============================================================================
 mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     internal_show_debug <- reactive(if(is.function(show_debug)) show_debug() else show_debug)
 
-    # Engine Control
-    rlist_control_btn <- mod_07_00_engine_control_server("main_switch", show_debug = internal_show_debug, show_ghost = FALSE)
+    # 1. Engine Control Instance
+    rlist_control_btn <- mod_07_00_engine_control_server("main_switch",
+                                                         show_debug = internal_show_debug,
+                                                         show_ghost = FALSE)
 
-    # Data sources details -----------------------------------------------------
+    # 2. Data sources setup ----------------------------------------------------
     vector_hard_source <- c("Select a source..." = "",
                             "01 - Local File" = "local_file",
                             "02 - R Example" = "R_dataset")
@@ -129,483 +134,286 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
       updateSelectInput(session = session, inputId = "source_dataset", choices = vector_hard_source)
     })
 
-    # Metadata - Dataset --------------------------------------------------------------------
+    # 3. Metadata & Data Store Initializers ------------------------------------
     get_default_metadata_dataset <- function() {
-        list(
-            description = "*** Rscience - Dataset details ***",
-            my_timestamp = timestamp(),
-            is_done = FALSE,
-            is_locked = FALSE,
-            selected_external_source = NULL,
-            selected_internal_source = NULL,
-            code_import_internal = "",
-            code_import_external = "",
-            name_mod = NULL,
-            rows = NULL,
-            cols = NULL,
-            my_timestamp = timestamp(),
-            df = data.frame()
+      list(
+        description = "*** Rscience - Dataset details ***",
+        is_done = FALSE,
+        is_locked = FALSE,
+        selected_external_source = NULL,
+        selected_internal_source = NULL,
+        code_import_internal = "",
+        code_import_external = "",
+        name_mod = NULL,
+        rows = NULL,
+        cols = NULL,
+        my_timestamp = timestamp(),
+        df = data.frame()
       )
     }
-    reset_default_metadata_dataset <- function() {
-      defaults <- get_default_metadata_dataset()
 
-      # mapply recorre los nombres y valores de la lista de defaults
-      # y los asigna uno a uno al objeto reactiveValues
-      mapply(function(val, name) {
-        RValues_metadata_dataset[[name]] <- val
-      }, defaults, names(defaults))
-    }
     RValues_metadata_dataset <- do.call(reactiveValues, get_default_metadata_dataset())
 
+    reset_default_metadata_dataset <- function() {
+      defaults <- get_default_metadata_dataset()
+      mapply(function(val, name) { RValues_metadata_dataset[[name]] <- val }, defaults, names(defaults))
+    }
 
-    # Metadata - Dataset --------------------------------------------------------------------
     get_default_RValues_data_store <- function() {
       list(
         "details" = "*** RScience - Import Engine ***",
         "my_timestamp" = timestamp(),
-        "click_count" = 0, # Corregido el nombre si era click_count
+        "click_count" = 0,
         "is_done" = FALSE,
         "is_locked" = FALSE,
         "error_msg" = NULL,
         "metadata_control_btn" = list(),
         "metadata_dataset" = list()
-
       )
     }
-    reset_RValues_data_store <- function() {
-      defaults <- get_default_RValues_data_store()
 
-      # mapply recorre los nombres y valores de la lista de defaults
-      # y los asigna uno a uno al objeto reactiveValues
-      mapply(function(val, name) {
-        RValues_data_store[[name]] <- val
-      }, defaults, names(defaults))
-    }
     RValues_data_store <- do.call(reactiveValues, get_default_RValues_data_store())
 
+    reset_RValues_data_store <- function() {
+      defaults <- get_default_RValues_data_store()
+      mapply(function(val, name) { RValues_data_store[[name]] <- val }, defaults, names(defaults))
+    }
 
+    # 4. UI Actions (Visual Locks) ---------------------------------------------
+    toggle_import_controls <- function(lock_it) {
+      vector_obj <- c("root_id" = "import_container", "menu_id" = "the_menu",
+                      "summary_id" = "the_summary", "view_id" = "the_view")
 
-    # --- LÓGICA DE IMPORTACIÓN --------------------------------------------------------------------
-    # Here is for option seleccition and define is_done...
+      if (lock_it) {
+        shinyjs::removeClass(vector_obj["summary_id"], "pack-style-unlock pack-style-reset")
+        shinyjs::addClass(vector_obj["summary_id"], "pack-style-lock")
+        shinyjs::removeClass(vector_obj["menu_id"], "rs-clean-block")
+        shinyjs::addClass(vector_obj["menu_id"], "rs-block-smoke")
+      } else {
+        lapply(vector_obj, function(id) {
+          shinyjs::removeClass(id, "pack-style-lock pack-style-reset")
+          shinyjs::addClass(id, "pack-style-unlock")
+        })
+        shinyjs::removeClass(vector_obj["menu_id"], "rs-block-smoke")
+      }
+    }
+
+    # 5. Core Import Logic -----------------------------------------------------
     import_logic <- function() {
-
-      reset_default_metadata_dataset()
-      reset_RValues_data_store()
-
       source <- input$source_dataset
       if (source == "") {
         showNotification("Please select a source first.", type = "warning")
-
         return()
       }
 
       tryCatch({
-
+        # Lógica para Local File (CSV/Excel)
         if (source == "local_file") {
           req(input$file_input)
           path <- input$file_input$datapath
           ext <- tolower(tools::file_ext(input$file_input$name))
-          selected_file_name <- basename(path)
-          selected_sep <- input$sep
-          selected_dec <- input$dec
-
-          check_sep_dec_no_equal <- selected_sep != selected_dec
-          if(check_sep_dec_no_equal == FALSE) {
-            showNotification(paste("Friendly message: ", "Separator and decimal must be differentes."), type = "warning")
-            return()
-          }
-
-
 
           if (ext %in% c("csv", "tsv", "txt")) {
+            req(input$sep, input$dec)
+            if(input$sep == input$dec) {
+              showNotification("Separator and decimal must be different.", type = "warning")
+              return()
+            }
 
-            # 1. Definimos la plantilla con palabras clave fáciles de identificar
-            template_multi <- "vroom::vroom(file = '{FILE_PATH}',
-                                      delim = '{SEP}',
-                                      locale = vroom::locale(decimal_mark = '{DEC}'),
-                                      show_col_types = FALSE,
-                                      col_names = TRUE,
-                                      na = c('', 'NA'))"
+            code_template <- "vroom::vroom(file = '{P}', delim = '{S}', locale = vroom::locale(decimal_mark = '{D}'), show_col_types = FALSE)"
+            RValues_metadata_dataset$code_import_external <- gsub("{P}", input$file_input$name, code_template, fixed = TRUE)
+            RValues_metadata_dataset$code_import_internal <- gsub("{P}", path, code_template, fixed = TRUE)
+            # Reemplazar SEP y DEC...
+            RValues_metadata_dataset$code_import_internal <- gsub("{S}", input$sep, RValues_metadata_dataset$code_import_internal, fixed = TRUE)
+            RValues_metadata_dataset$code_import_internal <- gsub("{D}", input$dec, RValues_metadata_dataset$code_import_internal, fixed = TRUE)
 
-            # 2. Realizamos las sustituciones
-            import_code_external <- template_multi
-            import_code_external <- gsub("{FILE_PATH}", selected_file_name, import_code_external, fixed = TRUE)
-            import_code_external <- gsub("{SEP}", selected_sep, import_code_external, fixed = TRUE)
-            import_code_external <- gsub("{DEC}", selected_dec, import_code_external, fixed = TRUE)
-
-            # 2. Realizamos las sustituciones
-            import_code_internal <- template_multi
-            import_code_internal <- gsub("{FILE_PATH}", path, import_code_internal, fixed = TRUE)
-            import_code_internal <- gsub("{SEP}", selected_sep, import_code_internal, fixed = TRUE)
-            import_code_internal <- gsub("{DEC}", selected_dec, import_code_internal, fixed = TRUE)
-
-
-
-            # 3. Ejecutamos el código final
-            RValues_metadata_dataset$code_import_external <-import_code_external
-            RValues_metadata_dataset$code_import_internal <-import_code_internal
-            #temp_df <- eval(parse(text = import_code_internal))
             RValues_metadata_dataset$name_mod <- input$file_input$name
-
 
           } else if (ext == "xlsx") {
             req(input$excel_sheet)
-            # 1. Definimos la plantilla (Template)
-            excel_template <- "readxl::read_excel(path = '{FILE_PATH}',
-                                   sheet = '{SHEET}',
-                                   col_names = TRUE)"
+            excel_template <- "readxl::read_excel(path = '{P}', sheet = '{S}')"
+            excel_template_internal <- excel_template
+            excel_template_internal <- gsub("{P}", input$file_input$name, excel_template_internal, fixed = TRUE)
+            excel_template_internal <- gsub("{S}", input$excel_sheet, excel_template_internal, fixed = TRUE)
+            RValues_metadata_dataset$code_import_external <- excel_template_internal
 
-            # 2. Realizamos las sustituciones
-            import_code_excel_external <- excel_template
-            import_code_excel_external <- gsub("{FILE_PATH}", selected_file_name, import_code_excel_external, fixed = TRUE)
-            import_code_excel_external <- gsub("{SHEET}", input$excel_sheet, import_code_excel_external, fixed = TRUE)
+            excel_template_external <- excel_template
+            excel_template_external <- gsub("{P}", path, excel_template_external, fixed = TRUE)
+            excel_template_external <- gsub("{S}", input$excel_sheet, excel_template_external, fixed = TRUE)
+            RValues_metadata_dataset$code_import_internal <- excel_template_external
 
-            # 2. Realizamos las sustituciones
-            import_code_excel_internal <- excel_template
-            import_code_excel_internal <- gsub("{FILE_PATH}", path, import_code_excel_internal, fixed = TRUE)
-            import_code_excel_internal <- gsub("{SHEET}", input$excel_sheet, import_code_excel_internal, fixed = TRUE)
-
-            # 3. Ejecutamos el código
-            # 3. Ejecutamos el código final
-            RValues_metadata_dataset$code_import_external <- import_code_excel_external
-            RValues_metadata_dataset$code_import_internal <- import_code_excel_internal
-            #temp_df <- eval(parse(text = import_code_excel_internal))
             RValues_metadata_dataset$name_mod <- paste0(input$file_input$name, " [", input$excel_sheet, "]")
           }
         } else if (source == "R_dataset") {
           req(input$selected_R_dataset)
-          selected_R_dataset <- input$selected_R_dataset
-
-          import_Rdataset <- "get('{DATASET_NAME}', 'package:datasets')"
-          import_code_Rdataset <- import_Rdataset
-          import_code_Rdataset <- gsub("{DATASET_NAME}", selected_R_dataset, import_code_Rdataset, fixed = TRUE)
-
-          RValues_metadata_dataset$code_import_external <- import_code_Rdataset
-          RValues_metadata_dataset$code_import_internal <- import_code_Rdataset
-          #temp_df <- eval(parse(text = import_code_Rdataset))
+          r_code <- sprintf("get('%s', 'package:datasets')", input$selected_R_dataset)
+          RValues_metadata_dataset$code_import_internal <- r_code
+          RValues_metadata_dataset$code_import_external <- r_code
           RValues_metadata_dataset$name_mod <- paste(input$selected_R_dataset, "(R)")
-        } else {
-            # AGREGAR ALGO PARA CUANDO NO DETECTA NINGUNA SOURCE VALIDA
         }
 
-        # Si llegamos aca, es que todo fue exitoso.
-        str_import_internal <- RValues_metadata_dataset$code_import_internal
-        RValues_metadata_dataset$df <- eval(parse(text = str_import_internal))
-        RValues_metadata_dataset$df <- as.data.frame(RValues_metadata_dataset$df)
+        # Ejecución y guardado en Metadata
+        df_temp <- eval(parse(text = RValues_metadata_dataset$code_import_internal))
+        RValues_metadata_dataset$df <- as.data.frame(df_temp)
         RValues_metadata_dataset$rows <- nrow(RValues_metadata_dataset$df)
         RValues_metadata_dataset$cols <- ncol(RValues_metadata_dataset$df)
-        RValues_metadata_dataset$"my_timestamp" <- timestamp()
         RValues_metadata_dataset$is_done <- TRUE
 
         toggle_import_controls(TRUE)
-        showNotification(paste("Imported:", RValues_metadata_dataset$name_mod), type = "message")
-
+        showNotification(paste("Success:", RValues_metadata_dataset$name_mod), type = "message")
 
       }, error = function(e) {
         showNotification(paste("Import Error:", e$message), type = "error")
+        RValues_metadata_dataset$is_done <- FALSE
       })
     }
 
-    # functions
-    # --- FUNCIONES DE ACCIÓN --------------------------------------------------------------------
-    toggle_import_controls <- function(lock_it) {
-      vector_obj <- c("root_id" = "import_container",
-                      "menu_id" = "the_menu",
-                      "control_id" = "the_control",
-                      "summary_id" = "the_summary",
-                      "view_id" = "the_view")
+    # 6. Observers -------------------------------------------------------------
 
-      selected_root <- "import_container"
-      selected_summary <-vector_obj["summary_id"]
-      selected_menu <-vector_obj["menu_id"]
+    # Reset automático si cambia la fuente
+    observeEvent(input$source_dataset, {
+      req(input$source_dataset)
+      shinyjs::click(ns("main_switch-unlock_ghost"))
+      toggle_import_controls(FALSE)
+    })
 
-      if (lock_it) {
-        # Hay que bloquar...
-        # Pasamos a modo LOCK (Verde)
-        ## Summary al estado Lock (VERDE)
-        shinyjs::removeClass(selected_summary, "pack-style-unlock pack-style-reset")   # Quitamos los colores...
-        shinyjs::addClass(selected_summary, "pack-style-lock") # Aplicamos el color de lock
-
-        ## Bloqueamos el menu de seleccion
-        shinyjs::removeClass(selected_menu, "rs-clean-block")   # Quitamos el clean...
-        shinyjs::addClass(selected_menu, "rs-block-smoke")      # Aplicamos block...
-        shinyjs::removeClass(selected_menu, "neon-glow-RUN")    # Quitamos el neon...
-
-
-      } else {
-        # Hay que desplockear
-        # Pasamos a modo UNLOCK (Cian)
-
-        # Limpiamos los colores de todos...
-        lapply(vector_obj, function(selected_id) {
-          shinyjs::removeClass(selected_id, "pack-style-lock  pack-style-reset")
-          shinyjs::addClass(selected_id, "pack-style-unlock")
-        })
-
-        # Cambios varios
-        #shinyjs::addClass(selected_menu, "neon-glow-RUN")  # aplicamos el neon
-        shinyjs::removeClass(selected_menu, "rs-block-smoke") # Quitamos el block smote
-        shinyjs::removeClass(selected_menu, "rs-block-invisible") # Quitamos el block invisible del menu
-        shinyjs::removeClass(selected_root, "rs-block-invisible") # Quitamos el block invisible de la pagina principal
-
-
-      }
-    }
-
-    reset_all <- function() {
-      vector_obj <- c("root_id" = "import_container",
-                      "menu_id" = "the_menu",
-                      "control_id" = "the_control",
-                      "summary_id" = "the_summary",
-                      "view_id" = "the_view")
-
-      #  Descatados...
-      selected_root <- "import_container"
-      selected_menu <- vector_obj["menu_id"]
-
-      # Cambios por reset
-      shinyjs::removeClass(selected_menu, "rs-block-smoke")  # Quitamos smoke (por las dudas...)
-      shinyjs::addClass(selected_menu, "neon-glow-RUN")      # colocamos el neon...
-
-      shinyjs::addClass(selected_root, "rs-block-invisible") # Bloqueamos todo hasta que finalice el reseteo...
-
-
-
-      reset_RValues_data_store()  # Reseteo interno del reactive vallues...
-      #shinyjs::reset(selected_menu) # Reseteamos las opciones del menu a default
-      shinyjs::reset(selected_menu)
-
-
-      # Mandamos a todos lso colores de reset....
-      lapply(vector_obj, function(selected_id) {
-        shinyjs::removeClass(selected_id, "pack-style-lock pack-style-unlock pack-style-reset")
-        shinyjs::addClass(selected_id, "pack-style-reset")
-      })
-
-
-    }
-
-
-
-    # --- OBSERVER PRINCIPAL ---
-    # Here is for running import logic and define is_locked...
+    # Escucha al Motor (Play / Unlock / Reset)
     observeEvent(rlist_control_btn(), {
+      state <- rlist_control_btn()$mode
 
-      flat_rlist_control_btn <- rlist_control_btn()
-      control_state <- flat_rlist_control_btn$mode
-
-      #RValues_data_store$click_count <- RValues_data_store$click_count + 1
-      RValues_metadata_dataset$"my_timestamp" = timestamp()
-      RValues_metadata_dataset$selected_internal_source <- input$"source_dataset"
-      RValues_metadata_dataset$selected_external_source <- names(vector_hard_source)[vector_hard_source == input$"source_dataset"]
-
-      if (control_state == "unlock") {
-
+      if (state == "unlock") {
         reset_default_metadata_dataset()
         reset_RValues_data_store()
         toggle_import_controls(FALSE)
-
-        return()
-      }
-
-      if (control_state == "lock") {
+      } else if (state == "lock") {
         import_logic()
 
-
-
-        if(RValues_data_store$is_done == TRUE){
-          RValues_data_store$is_locked <- TRUE
-          return()
-        }
-
-        if(RValues_metadata_dataset$is_done == FALSE) {
-          RValues_metadata_dataset$is_locked <- FALSE
-          showNotification("Selection is not completed... Status Unlock", type = "warning")
-          reset_RValues_data_store()
-
-
-          shinyjs::delay(1000, {
-            shinyjs::click("main_switch-btn_unlock_ghost")
-          })
-          ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### -----
-          return()
-        }
-      }
-
-      if (control_state == "reset") {
-        reset_default_metadata_dataset()
+        # Si falló la importación, forzamos el regreso a Unlock
+        if(!RValues_metadata_dataset$is_done) {
+          shinyjs::delay(500, shinyjs::click(ns("main_switch-unlock_ghost")))
+        } else RValues_data_store$is_locked <- TRUE
+      } else if (state == "reset") {
         reset_RValues_data_store()
-        reset_all()
-
-
-        return()
-      }
-
-    })
-
-
-    observeEvent(list(rlist_control_btn(), RValues_metadata_dataset), {
-
-      flat_rlist_control_btn <- rlist_control_btn()
-      is_locked <- flat_rlist_control_btn$is_locked
-
-      flat_metadata_dataset <- reactiveValuesToList(RValues_metadata_dataset)
-      is_done_df <- flat_metadata_dataset$is_done
-      req(is_locked, is_done_df)
-      if(is_locked && is_done_df){
-
-        RValues_data_store$"my_timestamp" <- timestamp()
-        RValues_data_store$"click_count"  <- RValues_data_store$"click_count" + 1
-        RValues_data_store$"is_done"      <- TRUE
-        RValues_data_store$"is_locked"    <- TRUE
-        RValues_data_store$"metadata_control_btn" <- flat_rlist_control_btn
-        RValues_data_store$"metadata_dataset"  <- flat_metadata_dataset
-
-
-        #reset_default_metadata_dataset()
-      }
-
-    })
-
-
-
-    # --- RENDERS ---
-    output$import_header <- renderUI({
-      state <- rlist_control_btn()$mode
-      if (state == "lock" && RValues_data_store$is_done) {
-        div(class = "selection-header confirmed", span("DATASET - ", icon("lock"), " - IMPORTED AND LOCKED"), span(class="header-id", "LOCK"))
-      } else if (state == "unlock") {
-        div(class = "selection-header active-selection", span("DATASET - ", icon("lock-open"), " - READY FOR SELECTION"), span(class="header-id", "UNLOCK"))
-      } else {
-        div(class = "selection-header waiting-mode", span("DATASET - ", icon("bolt"), " - WAITING..."))
+        reset_default_metadata_dataset()
+        updateSelectInput(session, "source_dataset", selected = "")
+        toggle_import_controls(FALSE)
       }
     })
 
+    # Sincronización Metadata -> Data Store (Final)
+    observe({
+      req(RValues_metadata_dataset$is_done)
+
+      RValues_data_store$is_done <- TRUE
+      RValues_data_store$metadata_dataset <- reactiveValuesToList(RValues_metadata_dataset)
+      RValues_data_store$metadata_control_btn <- rlist_control_btn()
+      RValues_data_store$my_timestamp <- timestamp()
+    })
+
+    # 7. Renders ---------------------------------------------------------------
     output$menu01_local_file <- renderUI({
       req(input$source_dataset == 'local_file')
       tagList(
-        div(id = ns("label_selection"), class = "section-label", "Data Selection"),
+        div(class = "section-label", "Data Selection"),
         fileInput(ns("file_input"), NULL, buttonLabel = "Browse...", width = "100%")
       )
     })
 
     output$menu02_RData <- renderUI({
       req(input$source_dataset == 'R_dataset')
-      tagList(
-        div(id = ns("label_selection"), class = "section-label", "Data Selection"),
-        selectInput(ns("selected_R_dataset"), NULL,
-                    choices = c("(Select source first)" = "", "mtcars", "iris", "airquality"),
-                    width = "100%")
-      )
-    })
-
-    output$import_summary <- renderUI({
-      has_data <- !is.null(RValues_data_store$metadata_dataset$df) && RValues_data_store$is_done
-      state_class <- if(has_data) "rs-status-locked" else "rs-status-waiting"
-      div(class = paste("rs-minimal-bar", state_class),
-          div(class = "status-segment",
-              div(class = "led-indicator"),
-              span(class = "status-text", if(has_data) "DATASET CONFIRMED" else "AWAITING CONFIRMATION...")),
-          div(class = "info-segment",
-              span(class = "info-label", "FILE:"),
-              span(class = "info-val", if(has_data) RValues_data_store$metadata_dataset$name_mod else "---")),
-          div(class = "info-segment",
-              span(class = "info-label", "ROWS:"),
-              span(class = "info-val", if(has_data) RValues_data_store$metadata_dataset$rows else "0")),
-          div(class = "info-segment",
-              span(class = "info-label", "COLS:"),
-              span(class = "info-val", if(has_data) RValues_data_store$metadata_dataset$cols else "0"))
-      )
+      selectInput(ns("selected_R_dataset"), "Select Dataset",
+                  choices = c("Select a dataset" = "", "mtcars", "iris", "airquality"), width = "100%")
     })
 
     output$options_ui <- renderUI({
       req(input$source_dataset == "local_file", input$file_input)
       ext <- tolower(tools::file_ext(input$file_input$name))
+
       if (ext == "xlsx") {
         sheets <- readxl::excel_sheets(input$file_input$datapath)
-        div(class = "row mt-2", div(class = "col-12",
-                                    div(id = ns("label_sheet"), class = "section-label", "Excel Sheet Selection"),
-                                    selectInput(ns("excel_sheet"), NULL, choices = sheets, width = "100%")))
+        div(class = "mt-2",
+            div(class = "section-label", "Excel Sheet Selection"),
+            selectInput(ns("excel_sheet"), NULL, choices = sheets, width = "100%")
+        )
       } else if (ext %in% c("csv", "tsv", "txt")) {
-        div(class = "row mt-2",
-            div(class = "col-4",
-              div(id = ns("label_sep"), class = "section-label", "Delimiter / Separator"),
-              selectInput(inputId = ns("sep"),
-                          label =  NULL,
-                          choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab (\t)" = "\t"),
-                          selected = ";", width = "100%")),
-            div(class = "col-4",
-                div(id = ns("label_dec"), class = "section-label", "Decimal"),
-                selectInput(inputId = ns("dec"),
-                            label =  NULL,
+        # Contenedor vertical (sin flex)
+        div(style = "display: block; width: 100%; margin-top: 15px;",
+
+            # Bloque Separador (Arriba)
+            div(style = "margin-bottom: 15px;",
+                div(class = "section-label", style = "font-size: 0.75rem;", "Separator"),
+                selectInput(ns("sep"), NULL,
+                            choices = c("Comma (,)" = ",", "Semicolon (;)" = ";", "Tab (\t)" = "\t"),
+                            selected = ";", width = "100%")
+            ),
+
+            # Bloque Decimal (Abajo)
+            div(style = "margin-bottom: 5px;",
+                div(class = "section-label", style = "font-size: 0.75rem;", "Decimal"),
+                selectInput(ns("dec"), NULL,
                             choices = c("Comma (,)" = ",", "Dot (.)" = "."),
-                            selected = ".", width = "100%")))
+                            selected = ".", width = "100%")
+            )
+        )
       }
     })
 
+
+    output$import_summary <- renderUI({
+      has_data <- RValues_data_store$is_done
+      div(class = "rs-minimal-bar",
+          span("FILE: ", strong(if(has_data) RValues_data_store$metadata_dataset$name_mod else "---")),
+          span(" | ROWS: ", strong(if(has_data) RValues_data_store$metadata_dataset$rows else "0"))
+      )
+    })
+
     output$preview <- renderDT({
-      req(RValues_data_store$metadata_dataset$df)
-      flat_df <- RValues_data_store$metadata_dataset$df
-
-      datatable(flat_df, options = list(scrollX = TRUE, scrollY = "400px", scrollCollapse = TRUE, pageLength = 5, dom = 'ftpi'))
+      req(RValues_data_store$is_done)
+      datatable(RValues_data_store$metadata_dataset$df,
+                options = list(scrollX = TRUE, pageLength = 5, dom = 'ltpi'))
     })
 
-
-    # # # DEBUG
-    output$debug_control_btn <- listviewer::renderJsonedit({
-      req(internal_show_debug())
-      flat_control_btn <- rlist_control_btn()
-      listviewer::jsonedit(listdata = flat_control_btn, mode = "text")
-    })
-
-    output$debug_metadata_dataset <- listviewer::renderJsonedit({
-      req(internal_show_debug())
-      flat_metadata_dataset <- reactiveValuesToList(RValues_metadata_dataset)
-      listviewer::jsonedit(listdata = flat_metadata_dataset, mode = "text")
-    })
-
+    # 8. Debug Sections --------------------------------------------------------
     output$debug_data_store <- listviewer::renderJsonedit({
       req(internal_show_debug())
-      flat_data_store <- reactiveValuesToList(RValues_data_store)
-      listviewer::jsonedit(listdata = flat_data_store, mode = "text")
+      listviewer::jsonedit(reactiveValuesToList(RValues_data_store), mode = "text")
+    })
+
+    # 8. Debug Sections --------------------------------------------------------
+    output$debug_control <- listviewer::renderJsonedit({
+      req(internal_show_debug())
+      flat_rlist_control_btn <- rlist_control_btn()
+      listviewer::jsonedit(flat_rlist_control_btn, mode = "text")
     })
 
     output$show_debug <- renderUI({
       req(internal_show_debug())
 
       div(class = "debug-section",
-          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px;",
+          style = "margin-top: 30px; border: 1px dashed #ef4444; padding: 20px; border-radius: 12px; background: rgba(255, 0, 0, 0.05);",
 
-          # Título de la sección
-          div(class = "section-label",
-              style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 15px;",
-              icon("bug"), " Internal Debug - Dataset"
-          ),
+          # Título de la sección Debug
+          div(style = "color: #ef4444; font-weight: bold; margin-bottom: 15px;",
+              icon("bug"), " RS-INTERNAL DEBUGGER"),
 
-          # Contenedor de Columnas
+          # Contenedor de columnas
           div(class = "row",
-              div(class = "col-md-4",
-                  span(style = "color: #8b949e; font-size: 0.8rem;", "Data store - Dataset:"),
-                  listviewer::jsoneditOutput(ns("debug_data_store"), height = "auto")
+
+              # Columna Izquierda: Data Store
+              div(class = "col-md-6",
+                  span(style = "color: #8b949e; font-size: 0.75rem; text-transform: uppercase;", "Data Store:"),
+                  listviewer::jsoneditOutput(ns("debug_data_store"), height = "350px")
               ),
-              # Columna 1: Metadata
-              div(class = "col-md-4",
-                  span(style = "color: #8b949e; font-size: 0.8rem;", "Metadata - Dataset:"),
-                  listviewer::jsoneditOutput(ns("debug_metadata_dataset"), height = "auto")
-              ),
-              # Columna 2: Control Button
-              div(class = "col-md-4",
-                  span(style = "color: #8b949e; font-size: 0.8rem;", "Control Engine State - Dataset:"),
-                  listviewer::jsoneditOutput(ns("debug_control_btn"), height = "auto")
+
+              # Columna Derecha: Control Engine
+              div(class = "col-md-6",
+                  span(style = "color: #8b949e; font-size: 0.75rem; text-transform: uppercase;", "Control Engine:"),
+                  listviewer::jsoneditOutput(ns("debug_control"), height = "350px")
               )
           )
       )
     })
 
-
-
-    # # # OUTPUT
     return(reactive({ reactiveValuesToList(RValues_data_store) }))
   })
 }
