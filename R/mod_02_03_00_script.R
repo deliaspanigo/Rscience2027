@@ -15,8 +15,19 @@ mod_02_03_00_script_ui <- function(id) {
   tagList(
     div(id = ns("total_script_container"), class = "container-fluid",
 
-        # 1. Cabecera Dinámica
-        div(id = ns("header_section"), uiOutput(ns("script_header_ui"))),
+        # --- CABECERA (ENGINE CONTROL) ---
+        div(id = ns("the_control"),
+            style = "display: flex; align-items: center; justify-content: flex-start; gap: 20px; margin-bottom: 25px;",
+            div(class = "section-label",
+                style = "margin: 0; white-space: nowrap; font-size: 1.2rem; font-weight: 700; color: #00d4ff;",
+                icon("code"), " Script"
+            ),
+            mod_07_00_toggle_ui(ns("main_switch")),
+            div(style = "flex-grow: 1;"),
+            mod_07_00_label_ui(ns("main_switch")),
+            mod_07_00_refresh_ui(ns("main_switch")),
+            mod_07_00_unlock_ghost_ui(ns("main_switch"))
+        ),
 
         div(class = "row g-3 align-items-center", style="margin-top:5px;",
             # 2. Selector de Script
@@ -25,12 +36,6 @@ mod_02_03_00_script_ui <- function(id) {
                     div(style = "font-weight: 800; text-transform: uppercase; margin-bottom: 5px; font-size: 0.8rem; color: #00d4ff;",
                         "Script Tool Selection"),
                     radioButtons(ns("tool_selector"), label = NULL, choices = c("Buscando scripts..." = ""), width = "100%")
-                )
-            ),
-            # 3. Control del Motor
-            div(class = "col-md-5",
-                div(class = "action-row-right",
-                    mod_07_00_engine_control_ui(ns("script_switch"))
                 )
             )
         ),
@@ -43,7 +48,7 @@ mod_02_03_00_script_ui <- function(id) {
         ),
 
         # 5. Panel de Debug Dinámico
-        uiOutput(ns("show_debug_internal"))
+        uiOutput(ns("show_debug"))
     )
   )
 }
@@ -61,7 +66,10 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
       val
     }) %>% shiny::debounce(150)
 
-    engine_state <- mod_07_00_engine_control_server("script_switch", show_debug = internal_show_debug)
+    rlist_control_btn <- mod_07_00_engine_control_server("main_switch",
+                                                         show_debug = internal_show_debug,
+                                                         show_ghost = FALSE)
+
 
     get_default_data <- function() {
       list(
@@ -189,8 +197,8 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
 
     # --- 4. LÓGICA DEL MOTOR (SYNC) ---
 
-    observeEvent(engine_state(), {
-      state <- engine_state()$mode
+    observeEvent(rlist_control_btn(), {
+      state <- rlist_control_btn()$mode
       req(state, input$tool_selector)
 
       internal_rlist_selected_script_folder <- rlist_selected_script_folder()
@@ -241,48 +249,53 @@ mod_02_03_00_script_server <- function(id, vector_str_folder_tool_script = NULL,
 
     # --- 5. RENDERS Y DEBUG ---
 
-    output$script_header_ui <- renderUI({
-      sel <- input$tool_selector
-      locked <- data_store$is_locked
-      done <- is_done_val()
 
-      if (locked) {
-        div(class = "selection-header confirmed", span(icon("lock"), paste(" CONFIRMED:", sel)))
-      } else if (done) {
-        div(class = "selection-header active-selection", span(icon("lock-open"), paste(" SELECTED:", sel)))
-      } else {
-        div(class = "selection-header waiting-mode", span(icon("bolt"), " Waiting selection..."))
-      }
-    })
 
-    output$debug_internal <- listviewer::renderJsonedit({
+    output$debug_script <- listviewer::renderJsonedit({
       req(internal_show_debug())
       listviewer::jsonedit(listdata = reactiveValuesToList(data_store), mode = "text")
     })
 
-    output$show_debug_internal <- renderUI({
+    output$debug_control <- listviewer::renderJsonedit({
       req(internal_show_debug())
-      div(class = "debug-section", style = "background: rgba(0,0,0,0.2); padding: 10px;",
-          div(class = "section-label", icon("bug"), " Internal Debug - Script"),
-          listviewer::jsoneditOutput(ns("debug_internal"), height = "auto"))
+      flat_rlist_control_btn <- rlist_control_btn()
+      listviewer::jsonedit(listdata = flat_rlist_control_btn, mode = "text")
     })
 
-    output$debug_external <- listviewer::renderJsonedit({
-      listviewer::jsonedit(listdata = reactiveValuesToList(data_store), mode = "text")
-    })
+    output$show_debug <- renderUI({
+      req(internal_show_debug())
 
-    output$show_debug_external <- renderUI({
-      div(style = "background: #1a1a1a; padding: 15px; border-radius: 8px;",
+      div(class = "debug-section",
+          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; margin-top: 20px;",
+
+          # Título de la sección (ocupa todo el ancho)
+          div(class = "section-label",
+              style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 15px; color: #ffab70;",
+              icon("bug"), " Internal Debug - Script"),
+
+          # Fila de columnas
           div(class = "row",
+
+              # Columna Izquierda: Script
               div(class = "col-md-6",
-                  div(class = "section-label", icon("bug"), " External Debug - Script"),
-                  listviewer::jsoneditOutput(ns("debug_external"), height = "400px")),
+                  div(style = "font-size: 0.75rem; color: #8b949e; margin-bottom: 5px; font-weight: 600;",
+                      "SCRIPT STATE"),
+                  listviewer::jsoneditOutput(ns("debug_script"), height = "auto")
+              ),
+
+              # Columna Derecha: Control
               div(class = "col-md-6",
-                  mod_07_00_engine_control_DEBUG_ui(id = ns("script_switch")))
-          ),
-          DT::DTOutput(ns("debug_df_tmp"))
+                  div(style = "font-size: 0.75rem; color: #8b949e; margin-bottom: 5px; font-weight: 600;",
+                      "CONTROL ENGINE"),
+                  listviewer::jsoneditOutput(ns("debug_control"), height = "auto")
+              )
+          )
       )
     })
+
+
+
+
 
     # --- 6. RETORNO REACTIVO ---
     the_output <- reactive({ reactiveValuesToList(data_store) })

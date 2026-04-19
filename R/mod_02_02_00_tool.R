@@ -6,25 +6,37 @@ library(listviewer)
 library(shiny)
 library(shinyjs)
 
-mod_02_02_00_tool_DEBUG_ui <- function(id) {
-  ns <- NS(id)
-  tagList(
-    uiOutput(ns("show_debug_external"))
-  )
-}
+
 
 mod_02_02_00_tool_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
+    # CSS para asegurar que el scroll sea fluido y no se corte
+    # Cambia esto en mod_02_02_00_tool_ui:
+    tags$style(HTML(paste0("
+        #", ns("total_explorer_container"), " {
+          height: auto;
+          /* Elimina o reduce el min-height */
+          min-height: 200px;
+          overflow-y: visible;
+          padding-bottom: 20px;
+        }
+        .debug-section {
+          /* Un min-height de 400px es mucho si sumas el árbol arriba */
+          min-height: 200px;
+          margin-bottom: 20px;
+        }
+      "))),
+
     div(id = ns("total_explorer_container"), class = "container-fluid",
 
-        # --- CABECERA (ENGINE CONTROL) ---
+        # --- CABECERA ---
         div(id = ns("the_control"),
             style = "display: flex; align-items: center; justify-content: flex-start; gap: 20px; margin-bottom: 25px;",
             div(class = "section-label",
                 style = "margin: 0; white-space: nowrap; font-size: 1.2rem; font-weight: 700; color: #00d4ff;",
-                icon("database"), " TOOL"
+                icon("screwdriver-wrench"), " TOOL" # Actualizado el icono a uno más técnico
             ),
             mod_07_00_toggle_ui(ns("main_switch")),
             div(style = "flex-grow: 1;"),
@@ -33,37 +45,28 @@ mod_02_02_00_tool_ui <- function(id) {
             mod_07_00_unlock_ghost_ui(ns("main_switch"))
         ),
 
-        # --- FILA DE INFORMACIÓN Y ACCIONES (DOS COLUMNAS FORZADAS) ---
-        div(
-          style = "display: flex; flex-wrap: nowrap; gap: 10px; width: 100%; margin-top: 5px; margin-bottom: 5px;",
-
-          # COLUMNA IZQUIERDA (60%)
-          div(id = ns("info_section"),
-              style = "flex: 0 0 100%; min-width: 0;", # 'min-width: 0' evita que el contenido desborde el flex
-              div(class = "path-display-area",
-                  uiOutput(ns("path_chips_ui"))
-              )
-          )
+        # --- PATH CHIPS ---
+        div(style = "width: 100%; margin-bottom: 10px;",
+            div(id = ns("info_section"),
+                class = "path-display-area",
+                uiOutput(ns("path_chips_ui"))
+            )
         ),
 
-        # Separador
-        ##div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
-
-        # 4. El Árbol
+        # --- EL ÁRBOL ---
         div(class = "map-section",
             div(id = ns("tree_wrapper"), class = "map-wrapper",
                 mod_02_02_01_tree_ui(ns("inner_tree"))
             )
         ),
 
+        # --- BANNER DE INFORMACIÓN ---
         uiOutput(ns("scripts_info_banner")),
 
-        # Separador Inferior
-        ##div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
-
-        # 5. Debug Panel
-        div(style = "margin-top: 10px; max-height: 200px; overflow-y: auto;",
-            uiOutput(ns("show_debug_internal"))
+        # --- DEBUG PANEL (CORREGIDO) ---
+        # Eliminamos el max-height y el overflow-y:auto de aquí
+        div(style = "margin-top: 4px;",
+            uiOutput(ns("show_debug"))
         )
     )
   )
@@ -101,6 +104,7 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
         "is_done" = FALSE,
         "is_locked" = FALSE,
         "error_msg" = NULL,
+        "metadata_control" = list(),
         "metadata_tree" = list()
       )
     }
@@ -126,7 +130,8 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
 
       # 1. CAPTURA DE ESTADO DISPARADOR
       # Solo reaccionamos al cambio de modo del switch
-      state <- rlist_control_btn()$mode
+      flat_rlist_control_btn <- rlist_control_btn()
+      state <- flat_rlist_control_btn$mode
 
       # 2. AISLAMIENTO DEL CONTEXTO (Snapshot)
       # Usamos isolate para tomar la 'foto' del árbol sin crear dependencia reactiva.
@@ -165,6 +170,7 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
             # Sincronizamos con el data_store principal
             data_store$is_done   <- is_done()
             data_store$is_locked <- is_locked()
+            data_store$metadata_control <- flat_rlist_control_btn
             data_store$metadata_tree      <- tree_snapshot # Guardamos la versión fija del árbol
             data_store$mode      <- "lock"
             data_store$click_count <- data_store$click_count + 1
@@ -261,49 +267,60 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
       div(class = "info-banner-blue",
           style = "line-height: 1.8; padding: 15px; border-radius: 8px; font-size: 0.95rem;",
           div(icon("sitemap", style = "color: #1890ff; width: 25px;"),
-              span("RScience System: ", style = "font-weight: 800; color: #1a202c;"),
+              span("Selected Node - Tools: ", style = "font-weight: 800; color: #ffffff;"),
               span(sprintf("There are %d tools available in this branch.", tree_data$n_tools))),
           div(style = paste0("margin-top: 5px; border-top: 1px solid rgba(24, 144, 255, 0.2); color:", status_color, ";"),
               icon("microchip", style = paste0("color:", status_color, "; width: 25px;")),
-              span("Current Selection: ", style = "font-weight: 800;"),
+              span("Selected Node - Script: ", style = "font-weight: 800;"),
               span(sprintf("%d scripts for '%s'.", tree_data$n_script, tree_data$selected_node_name_mod)))
       )
     })
 
 
     # # # DEBUG
-    output$debug_internal <- listviewer::renderJsonedit({
+    output$debug_tool <- listviewer::renderJsonedit({
       req(internal_show_debug())
       listviewer::jsonedit(listdata = reactiveValuesToList(data_store), mode = "text")
     })
 
-    output$show_debug_internal <- renderUI({
+    output$debug_control <- listviewer::renderJsonedit({
       req(internal_show_debug())
-      div(class = "debug-section", style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
-          div(class = "section-label", style = "justify-content: flex-start !important; gap: 8px;", icon("bug"), " Internal Debug - Dataset"),
-          listviewer::jsoneditOutput(ns("debug_internal"), height = "auto"))
+      req(rlist_control_btn())
+      flat_rlist_control_btn <- rlist_control_btn()
+
+      listviewer::jsonedit(listdata = flat_rlist_control_btn, mode = "text")
     })
 
-    output$debug_external <- listviewer::renderJsonedit({
-      listviewer::jsonedit(listdata = reactiveValuesToList(data_store), mode = "text")
-    })
+    output$show_debug <- renderUI({
+      req(internal_show_debug())
 
-    output$show_debug_external <- renderUI({
-      div(style = "background: #1a1a1a; padding: 15px; border-radius: 8px;",
-          div(class = "row",
-              div(class = "col-md-4",
-                  div(class = "section-label", style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 15px;", icon("bug"), " External Debug - Dataset"),
-                  listviewer::jsoneditOutput(ns("debug_external"), height = "500px")),
-              div(class = "col-md-4",
-                  div(style = "border-left: 1px solid #333; padding-left: 15px; height: 100%;",
-                      mod_07_00_engine_control_DEBUG_ui(id = ns("main_switch")))),
-              div(class = "col-md-4",
-                  div(style = "border-left: 1px solid #333; padding-left: 15px; height: 100%;",
-                      mod_02_02_01_tree_DEBUG_ui(id = ns("inner_tree")))))
+      div(class = "debug-section",
+          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; margin-top: 20px;",
+
+          # Título de la sección
+          div(class = "section-label",
+              style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 15px; color: #ffab70;",
+              icon("bug"), " Internal Debug - Dataset"),
+
+          # Contenedor de dos columnas
+          div(style = "display: flex; gap: 20px; align-items: flex-start;",
+
+              # Columna 1: Tool
+              div(style = "flex: 1; min-width: 0;",
+                  div(style = "font-size: 0.7rem; color: #8b949e; margin-bottom: 5px;", "TOOL STATE"),
+                  listviewer::jsoneditOutput(ns("debug_tool"), height = "auto")
+              ),
+
+              # Columna 2: Control
+              div(style = "flex: 1; min-width: 0;",
+                  div(style = "font-size: 0.7rem; color: #8b949e; margin-bottom: 5px;", "CONTROL ENGINE"),
+                  listviewer::jsoneditOutput(ns("debug_control"), height = "auto")
+              )
           )
-
-
+      )
     })
+
+
 
 
     return(reactive({ reactiveValuesToList(data_store) }))

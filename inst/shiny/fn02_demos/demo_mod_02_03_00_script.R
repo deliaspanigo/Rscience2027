@@ -1,20 +1,18 @@
 library(shiny)
-library(jsonlite)
-library(dplyr)
+library(bslib)
+library(shinyjs)
+library(listviewer)
+
 
 devtools::load_all()
 
-# 1. CARGAR RECURSOS (Esto es lo que faltaba)
-# Registro de recursos CSS
 # Registro de recursos CSS
 css_folder <- system.file("www", "css", package = "Rscience2027")
 if (css_folder == "") css_folder <- "www/css"
 try(addResourcePath("RS-STYLES", normalizePath(css_folder)), silent = TRUE)
 
 
-# ==========================================
-# 3. APP PRINCIPAL
-# ==========================================
+# UI con disposición vertical (Interactividad -> Debug)
 ui <- bslib::page_fluid(
   theme = bs_theme(version = 5, bg = "#0b1218", fg = "#ffffff", primary = "#00d4ff"),
 
@@ -28,20 +26,24 @@ ui <- bslib::page_fluid(
     )
   ),
 
-  mod_02_02_00_tool_ui("my_tool"),
-  mod_02_02_00_tool_DEBUG_ui("my_tool")
+  mod_02_03_00_script_ui("test_id"),
+  card(
+    style = "border-color: #005555;", # Un borde sutil de color para indicar zona de debug
+    #card_header(span(icon("bug"), " Console & Metadata Debugger")),
+    mod_02_03_00_script_DEBUG_ui("test_id")
+
+
+  )
 )
 
 server <- function(input, output, session) {
-  # Resultado final de todo el flujo
-  resultado_final <- mod_02_02_00_tool_server(id = "my_tool", show_debug = T)
-
-  observe({
-    req(resultado_final()$confirmado)
-    print("--- SELECCIÓN FINAL RECIBIDA EN APP ---")
-    print(resultado_final()$datos$path)
-  })
+  # Llamada al server del módulo
+  # El retorno 'datos_out' es el que fluye hacia el Collector 01 después
+  datos_out <- mod_02_03_00_script_server(
+    id = "test_id",
+    vector_str_folder_tool_script = reactive(c("tool_0001_script_001", "tool_0001_script_002")),
+    show_debug = TRUE
+  )
 }
 
 shinyApp(ui, server)
-

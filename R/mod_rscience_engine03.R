@@ -94,7 +94,7 @@ mod_rscience_engine03_ui <- function(id) {
 
             div(class = "rs-nav-group",
                 actionButton(ns("c_data"),     label = list(icon("database"), "Dataset"), class = "nav-btn-custom active"),
-                actionButton(ns("c_tool"),     label = list(icon("gear"), "Tool"),        class = "nav-btn-custom"),
+                actionButton(ns("c_tool"),     label = list(icon("tools"), "Tool"),        class = "nav-btn-custom"),
                 actionButton(ns("c_script"),   label = list(icon("code"), "Script"),      class = "nav-btn-custom"),
                 actionButton(ns("c_settings"), label = list(icon("sliders"), "Settings"), class = "nav-btn-custom"),
                 actionButton(ns("c_play"),     label = list(icon("play"), "Run"),          class = "nav-btn-custom"),
