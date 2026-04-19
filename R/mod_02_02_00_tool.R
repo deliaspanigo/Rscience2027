@@ -16,46 +16,50 @@ mod_02_02_00_tool_DEBUG_ui <- function(id) {
 mod_02_02_00_tool_ui <- function(id) {
   ns <- NS(id)
 
-
-
   tagList(
-
     div(id = ns("total_explorer_container"), class = "container-fluid",
 
-        # 1. Cabecera (Se bloquea)
-        div(id = ns("header_section"), uiOutput(ns("tools_header"))),
-
-        div(class = "row g-3 align-items-center", style="margin-top:5px;",
-            # 2 y 3. Path y Banner (Se bloquean)
-            div(id = ns("info_section"), class = "col-md-7",
-                div(class = "path-display-area", uiOutput(ns("path_chips_ui"))),
-                uiOutput(ns("scripts_info_banner"))
+        # --- CABECERA (ENGINE CONTROL) ---
+        div(id = ns("the_control"),
+            style = "display: flex; align-items: center; justify-content: flex-start; gap: 20px; margin-bottom: 25px;",
+            div(class = "section-label",
+                style = "margin: 0; white-space: nowrap; font-size: 1.2rem; font-weight: 700; color: #00d4ff;",
+                icon("database"), " TOOL"
             ),
+            mod_07_00_toggle_ui(ns("main_switch")),
+            div(style = "flex-grow: 1;"),
+            mod_07_00_label_ui(ns("main_switch")),
+            mod_07_00_refresh_ui(ns("main_switch")),
+            mod_07_00_unlock_ghost_ui(ns("main_switch"))
+        ),
 
-            # ESTE NO SE BLOQUEA: El control del motor
-            div(class = "col-md-5",
-                div(class = "action-row-right",
-                    mod_07_00_engine_control_ui(ns("main_switch"))
-                )
-            )
+        # --- FILA DE INFORMACIÓN Y ACCIONES (DOS COLUMNAS FORZADAS) ---
+        div(
+          style = "display: flex; flex-wrap: nowrap; gap: 10px; width: 100%; margin-top: 5px; margin-bottom: 5px;",
+
+          # COLUMNA IZQUIERDA (60%)
+          div(id = ns("info_section"),
+              style = "flex: 0 0 100%; min-width: 0;", # 'min-width: 0' evita que el contenido desborde el flex
+              div(class = "path-display-area",
+                  uiOutput(ns("path_chips_ui"))
+              )
+          )
         ),
 
         # Separador
-        div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
+        ##div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
 
-        # 4. El Árbol (Se bloquea)
+        # 4. El Árbol
         div(class = "map-section",
             div(id = ns("tree_wrapper"), class = "map-wrapper",
                 mod_02_02_01_tree_ui(ns("inner_tree"))
             )
         ),
 
+        uiOutput(ns("scripts_info_banner")),
+
         # Separador Inferior
-        div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
-
-
-
-
+        ##div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
 
         # 5. Debug Panel
         div(style = "margin-top: 10px; max-height: 200px; overflow-y: auto;",
@@ -73,7 +77,9 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
 
 
     # 1. Componentes e Invocaciones
-    engine_state <- mod_07_00_engine_control_server("main_switch", show_debug = show_debug)
+    rlist_control_btn <- mod_07_00_engine_control_server("main_switch",
+                                                         show_debug = internal_show_debug,
+                                                         show_ghost = FALSE)
     rlist_tree   <- mod_02_02_01_tree_server("inner_tree")
 
     is_done      <- reactiveVal(FALSE)
@@ -116,11 +122,11 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
     # ==========================================================================
     # OBSERVADOR DE ESTADO DEL MOTOR (LOCK / UNLOCK / RESET)
     # ==========================================================================
-    observeEvent(engine_state(), {
+    observeEvent(rlist_control_btn(), {
 
       # 1. CAPTURA DE ESTADO DISPARADOR
       # Solo reaccionamos al cambio de modo del switch
-      state <- engine_state()$mode
+      state <- rlist_control_btn()$mode
 
       # 2. AISLAMIENTO DEL CONTEXTO (Snapshot)
       # Usamos isolate para tomar la 'foto' del árbol sin crear dependencia reactiva.
@@ -240,26 +246,7 @@ mod_02_02_00_tool_server <- function(id, show_debug = FALSE) {
     }, ignoreInit = TRUE)
 
     # --- RENDERS ---
-    output$tools_header <- renderUI({
-      tree_data <- rlist_tree()
-      current_name <- if(!is.null(tree_data$selected_node_name_mod) && tree_data$selected_node_name != "Rscience") {
-        tree_data$selected_node_name_mod
-      } else { NULL }
 
-      if (is_locked()) {
-        div(class = "selection-header confirmed",
-            span(icon("lock"), paste(" TOOL CONFIRMED:", current_name)),
-            span(class = "header-id", "STATUS: LOCK"))
-      } else if (!is.null(current_name)) {
-        div(class = "selection-header active-selection",
-            span(icon("lock-open"), paste(" SELECTED TOOL:", current_name)),
-            span(class = "header-id", "STATUS: UNLOCK"))
-      } else {
-        div(class = "selection-header waiting-mode",
-            span(icon("bolt"), " Waiting for tool selection..."),
-            span(class = "header-id", "STATUS: WAITING"))
-      }
-    })
 
     output$path_chips_ui <- renderUI({
       partes <- unlist(strsplit(path_estable(), " / "))

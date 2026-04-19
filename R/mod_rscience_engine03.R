@@ -864,19 +864,19 @@ ui <- fluidPage(
   mod_rscience_engine03_ui("mi_analisis_01")
   #)
 )
-
-# 3. SERVER DE LA APP
-server <- function(input, output, session) {
-
-  # Llamamos al server del módulo
-  # Guardamos el retorno en un reactivo por si queremos usar los datos en la app
-  mod_rscience_engine03_server(id = "mi_analisis_01", show_debug_tab = F, show_debug_general = F)
-
-  # # Ejemplo de cómo acceder a los datos desde fuera del módulo
-  # observe({
-  #   req(datos_importados()$is_done)
-  #   message("App principal detectó carga de: ", datos_importados()$metadata$name_mod)
-  # })
-}
-
-shinyApp(ui, server)
+#
+# # 3. SERVER DE LA APP
+# server <- function(input, output, session) {
+#
+#   # Llamamos al server del módulo
+#   # Guardamos el retorno en un reactivo por si queremos usar los datos en la app
+#   mod_rscience_engine03_server(id = "mi_analisis_01", show_debug_tab = F, show_debug_general = F)
+#
+#   # # Ejemplo de cómo acceder a los datos desde fuera del módulo
+#   # observe({
+#   #   req(datos_importados()$is_done)
+#   #   message("App principal detectó carga de: ", datos_importados()$metadata$name_mod)
+#   # })
+# }
+#
+# shinyApp(ui, server)
