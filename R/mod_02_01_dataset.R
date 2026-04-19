@@ -200,80 +200,113 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
 
     # 5. Core Import Logic -----------------------------------------------------
     import_logic <- function() {
+      # 1. Recuperar la fuente seleccionada
       source <- input$source_dataset
-      if (source == "") {
+
+      # ============================================================================
+      # VALIDACIÓN 01: SOURCE SELECTION
+      # ============================================================================
+      if (is.null(source) || source == "") {
         showNotification("Please select a source first.", type = "warning")
-        ####============================================================================
+        # Forzamos el regreso a 'unlock' en el motor
         shinyjs::delay(500, shinyjs::click("main_switch-btn_unlock_ghost"))
-        ####============================================================================
         return()
       }
 
       tryCatch({
-        # Lógica para Local File (CSV/Excel)
+        # ============================================================================
+        # VALIDACIÓN 02: PARÁMETROS ESPECÍFICOS POR FUENTE
+        # ============================================================================
+
+        # --- CASO: LOCAL FILE (CSV/Excel) ---
         if (source == "local_file") {
-          req(input$file_input, input$file_input$datapath)
+          if (is.null(input$file_input)) {
+            showNotification("No file uploaded. Please browse for a file.", type = "warning")
+            shinyjs::delay(500, shinyjs::click("main_switch-btn_unlock_ghost"))
+            return()
+          }
+
           selected_file_path <- input$file_input$datapath
           selected_file_name <- input$file_input$name
-
-          ext <- tolower(tools::file_ext(input$file_input$name))
+          ext <- tolower(tools::file_ext(selected_file_name))
 
           if (ext %in% c("csv", "tsv", "txt")) {
-            req(input$sep, input$dec)
-            if(input$sep == input$dec) {
+            # Validar parámetros de delimitación
+            if (is.null(input$sep) || is.null(input$dec)) return()
+            if (input$sep == input$dec) {
               showNotification("Separator and decimal must be different.", type = "warning")
+              shinyjs::delay(500, shinyjs::click("main_switch-btn_unlock_ghost"))
               return()
             }
 
+            # Generar código para VROOM
             code_template <- "vroom::vroom(file = '{P}', delim = '{S}', locale = vroom::locale(decimal_mark = '{D}'), show_col_types = FALSE)"
             RValues_metadata_dataset$code_import_external <- gsub("{P}", selected_file_name, code_template, fixed = TRUE)
             RValues_metadata_dataset$code_import_internal <- gsub("{P}", selected_file_path, code_template, fixed = TRUE)
-            # Reemplazar SEP y DEC...
+
+            # Inyectar separadores
             RValues_metadata_dataset$code_import_internal <- gsub("{S}", input$sep, RValues_metadata_dataset$code_import_internal, fixed = TRUE)
             RValues_metadata_dataset$code_import_internal <- gsub("{D}", input$dec, RValues_metadata_dataset$code_import_internal, fixed = TRUE)
 
-            RValues_metadata_dataset$name_mod <- input$file_input$name
+            RValues_metadata_dataset$name_mod <- selected_file_name
 
           } else if (ext == "xlsx") {
-            req(input$excel_sheet, input$file_input, input$file_input$datapath)
+            # Validar hoja de Excel
+            if (is.null(input$excel_sheet) || input$excel_sheet == "") {
+              showNotification("Please select a sheet from the Excel file.", type = "warning")
+              shinyjs::delay(500, shinyjs::click("main_switch-btn_unlock_ghost"))
+              return()
+            }
 
             selected_sheet <- input$excel_sheet
-
-
             excel_template <- "readxl::read_excel(path = '{P}', sheet = '{S}')"
-            excel_template_internal <- excel_template
-            excel_template_internal <- gsub("{P}", selected_file_name, excel_template_internal, fixed = TRUE)
-            excel_template_internal <- gsub("{S}", selected_sheet, excel_template_internal, fixed = TRUE)
-            RValues_metadata_dataset$code_import_external <- excel_template_internal
 
-            excel_template_external <- excel_template
-            excel_template_external <- gsub("{P}", selected_file_path, excel_template_external, fixed = TRUE)
-            excel_template_external <- gsub("{S}", selected_sheet, excel_template_external, fixed = TRUE)
-            RValues_metadata_dataset$code_import_internal <- excel_template_external
+            RValues_metadata_dataset$code_import_external <- gsub("{P}", selected_file_name, excel_template, fixed = TRUE)
+            RValues_metadata_dataset$code_import_external <- gsub("{S}", selected_sheet, RValues_metadata_dataset$code_import_external, fixed = TRUE)
+
+            RValues_metadata_dataset$code_import_internal <- gsub("{P}", selected_file_path, excel_template, fixed = TRUE)
+            RValues_metadata_dataset$code_import_internal <- gsub("{S}", selected_sheet, RValues_metadata_dataset$code_import_internal, fixed = TRUE)
 
             RValues_metadata_dataset$name_mod <- paste0(selected_file_name, " [", selected_sheet, "]")
           }
+
+          # --- CASO: R DATASET (datasets package) ---
         } else if (source == "R_dataset") {
-          req(input$selected_R_dataset)
+          if (is.null(input$selected_R_dataset) || input$selected_R_dataset == "") {
+            showNotification("Please select an R example dataset.", type = "warning")
+            shinyjs::delay(500, shinyjs::click("main_switch-btn_unlock_ghost"))
+            return()
+          }
+
           r_code <- sprintf("get('%s', 'package:datasets')", input$selected_R_dataset)
           RValues_metadata_dataset$code_import_internal <- r_code
           RValues_metadata_dataset$code_import_external <- r_code
           RValues_metadata_dataset$name_mod <- paste(input$selected_R_dataset, "(R)")
         }
 
-        # Ejecución y guardado en Metadata
+        # ============================================================================
+        # EJECUCIÓN DEL IMPORT (EVALUACIÓN)
+        # ============================================================================
+        # Solo llegamos aquí si todas las validaciones de arriba pasaron con éxito
         df_temp <- eval(parse(text = RValues_metadata_dataset$code_import_internal))
+
+        # Actualizar estado reactivo de los datos
         RValues_metadata_dataset$df <- as.data.frame(df_temp)
         RValues_metadata_dataset$rows <- nrow(RValues_metadata_dataset$df)
         RValues_metadata_dataset$cols <- ncol(RValues_metadata_dataset$df)
         RValues_metadata_dataset$is_done <- TRUE
 
+        # Bloquear interfaz (UI Lock) y confirmar éxito
         toggle_import_controls(TRUE)
         showNotification(paste("Success:", RValues_metadata_dataset$name_mod), type = "message")
 
       }, error = function(e) {
-        showNotification(paste("Import Error 01:", e$message), type = "error")
+        # Captura errores críticos (ej: archivo mal formado, paquetes faltantes)
+        showNotification(paste("Import Error:", e$message), type = "error")
         RValues_metadata_dataset$is_done <- FALSE
+
+        # Reset del motor tras el fallo técnico
+        shinyjs::delay(500, shinyjs::click("main_switch-btn_unlock_ghost"))
       })
     }
 
