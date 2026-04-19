@@ -22,6 +22,14 @@ mod_special_script_and_comments_server <- function(id,
       if (is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script
     })
 
+    internal_show_file <- reactive({
+      if (is.function(show_file)) show_file() else show_file
+    })
+
+    internal_show_debug <- reactive({
+      if (is.function(show_debug)) show_debug() else show_debug
+    })
+
     # --- 2. HARDCODE DE ARCHIVOS ---
     # Definimos aquí la estructura fija de lo que este módulo debe mostrar
     data_config <- reactive({
@@ -78,7 +86,7 @@ mod_special_script_and_comments_server <- function(id,
                   )
               ),
               # Renderizado del Iframe
-              if(it$exists && isTRUE(show_file)) {
+              if(it$exists && isTRUE(internal_show_file())) {
                 resource_name <- paste0(res_prefix, "_", i)
                 addResourcePath(prefix = resource_name, directoryPath = normalizePath(dirname(it$full_path)))
 

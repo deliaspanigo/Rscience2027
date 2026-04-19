@@ -1,11 +1,11 @@
 # 1. Preparar y Guardar los cambios (incluyendo el DESCRIPTION limpio)
 git add .
-git commit -m "Release: Version 0.7.13"
+git commit -m "Release: Version 0.8.0"
 
 # 2. Etiquetar la versión
 # Borramos el tag local por si acaso ya se creó con error antes
-git tag -d v0.7.13 2>/dev/null
-git tag -a v0.7.13 -m "Versión estable 0.7.13 del paquete - script"
+git tag -d v0.8.0 2>/dev/null
+git tag -a v0.8.0 -m "Versión estable 0.8.0 del paquete - FORTIS"
 
 # 3. Subir cambios y etiquetas a GitHub
 git push origin main --follow-tags

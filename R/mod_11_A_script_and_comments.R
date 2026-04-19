@@ -68,6 +68,10 @@ mod_11_A_script_and_comments_server <- function(id,
       if (is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script
     })
 
+    internal_show_file <- reactive({if (is.function(show_file)) show_file() else show_file})
+    internal_show_debug <- reactive({if (is.function(debug)) debug() else debug})
+
+
     local_env  <- reactiveVal(NULL)
     data_store <- reactiveValues(
       details = "*** RScience - Module Processing ***",
@@ -110,8 +114,8 @@ mod_11_A_script_and_comments_server <- function(id,
       rv$special_module <- env$mod_special_script_and_comments_server(
         id                      = "sub_proc",
         temp_folder_tool_script = internal_temp_folder,
-        show_file               = show_file,
-        show_debug              = show_debug
+        show_file               = internal_show_file,
+        show_debug              = internal_show_debug
       )
     })
 

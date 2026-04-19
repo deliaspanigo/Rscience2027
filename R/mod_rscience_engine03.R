@@ -218,8 +218,14 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
 
 
     # OPT 01.03. Script -------------------------------------------------------------------------------------------
+    HOOK_vector_id_tool_script <- reactive({
+      req(rlist_tool())
+      flat_rlist_tool <- rlist_tool()
+      flat_rlist_tool$metadata_tree$script_id
+      })
+
     rlist_script <-   mod_02_03_00_script_server(id="my_ns_script",
-                                                 vector_str_folder_tool_script = reactive(c("tool_0001_script_001", "tool_0001_script_002")),
+                                                 vector_str_folder_tool_script = HOOK_vector_id_tool_script,
                                                  show_debug = internal_show_debug_general()) # Llamamos a la UI
 
 
@@ -473,7 +479,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
     my_full_dataset <- reactive({
       req(rlist_dataset())
       flat_rlist_dataset <- rlist_dataset()
-      my_df <- flat_rlist_dataset$metadata$"df"
+      my_df <- flat_rlist_dataset$metadata_dataset$"df"
       my_df
     })
     rlist_settings <- mod_04_00_settings_server(
@@ -648,11 +654,22 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
     #                                                   package = "Rscience2027")
 
     # file_path <- reactive(system.file("test_shiny_output", "f05_shiny_output", "tab01_control.html", package = "Rscience2027"))
+
+    pack01 <- reactive({
+      list(HOOK_file_path_pather_module_script_and_comments_temp = HOOK_file_path_pather_module_script_and_comments_temp(),
+           HOOK_temp_folder_path_tool_script = HOOK_temp_folder_path_tool_script(),
+           HOOK_proccessing_is_done = HOOK_proccessing_is_done(),
+           file_existes = file.exists(HOOK_file_path_pather_module_script_and_comments_temp())
+           )
+    })
+
+    observe(print(pack01()))
+
     rlist_script_and_comments <-       mod_11_A_script_and_comments_server(
       id = "pipeline_333",
-      module_script_and_comments_file_path = HOOK_file_path_pather_module_script_and_comments_temp,
-      temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
-      show_file                     = TRUE,
+      module_script_and_comments_file_path = reactive(pack01()$HOOK_file_path_pather_module_script_and_comments_temp),
+      temp_folder_tool_script       = reactive(pack01()$HOOK_temp_folder_path_tool_script), # El hijo lo usará de base
+      show_file                     = reactive(pack01()$HOOK_proccessing_is_done),
       show_debug                    = F
     )
 
@@ -687,7 +704,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       id = "pather_shiny_output",
       module_shiny_output_file_path = HOOK_file_path_pather_module_shiny_output_temp,
       temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
-      show_file                     = TRUE,
+      show_file                     = HOOK_proccessing_is_done,
       show_debug                    = T
     )
 
@@ -720,7 +737,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       id = "pather_asa",
       module_asa_file_path = HOOK_file_path_pather_module_asa_temp,
       temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
-      show_file                     = TRUE,
+      show_file                     = HOOK_proccessing_is_done,
       show_debug                    = T
     )
 
@@ -754,7 +771,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       id = "pather_pdf",
       module_pdf_file_path = HOOK_file_path_pather_module_pdf_temp,
       temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
-      show_file                     = TRUE,
+      show_file                     = HOOK_proccessing_is_done,
       show_debug                    = T
     )
 
@@ -774,11 +791,11 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
           icon = icon("book"),
           mod_02_01_dataset_DEBUG_ui(id=ns("my_ns_dataset"))
         ),
-        nav_panel(
-          title = "Tool",
-          icon = icon("book"),
-          mod_02_02_00_tool_DEBUG_ui(id=ns("my_ns_tool"))
-        ),
+        # nav_panel(
+        #   title = "Tool",
+        #   icon = icon("book"),
+        #   mod_02_02_00_tool_DEBUG_ui(id=ns("my_ns_tool"))
+        # ),
         nav_panel(
           title = "Script",
           icon = icon("book"),
