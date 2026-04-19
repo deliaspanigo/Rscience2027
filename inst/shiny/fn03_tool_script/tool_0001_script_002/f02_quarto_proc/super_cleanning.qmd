@@ -1,0 +1,81 @@
+---
+title: "Super cleanning"
+format: 
+  html:
+    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+
+---
+
+<!-- HIDDEN - LIBRERIAS -->
+```{r}
+#| eval: true
+#| echo: false
+#| include: false
+#| message: false
+#| warning: false
+
+library("knitr")
+library("kableExtra")
+library("tools")
+library("DT")
+library("htmltools")
+```
+
+
+
+<!-- HIDDEN - Loading local fn -->
+```{r}
+#| eval: true
+#| echo: true #!expr params$special_echo
+#| include: true #!expr params$special_include
+
+folder_fn_local_relative <- "zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
+
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
+
+
+```{r}
+
+# ignore.case = TRUE para atrapar .pdf y .PDF
+archivos_para_borrar <- list.files(
+  path = getwd(), 
+  pattern = "\\.(html|RData|pdf|png|zip)$", 
+  recursive = TRUE, 
+  full.names = TRUE, 
+  ignore.case = TRUE
+)
+``` 
+
+
+```{r}
+# Aplicamos la función a cada elemento de la lista
+resultados <- sapply(archivos_para_borrar, fn_local_delete_file_SECURITY)
+
+# Resumen de la operación
+cat(sprintf("\n--- RESUMEN ---\nArchivos encontrados: %d\nEliminados con éxito: %d\n", 
+            length(resultados), sum(resultados)))
+
+``` 

@@ -11,71 +11,92 @@ mod_02_01_dataset_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    # 2. Configurar el HEAD
+    # Inyectamos dependencias necesarias para los sub-componentes del motor
+    #shinyjs::useShinyjs(),
 
-    # CLASE RAÍZ ÚNICA PARA AISLAMIENTO TOTAL
     div(
       id = ns("import_container"),
       class = "rs-mod-dataset-container",
+      style = "padding: 20px;",
 
+      # ========================================================================
+      # CABECERA: TÍTULO + MOTOR (Inline)
+      # ========================================================================
+      div(id = ns("the_control"),
+          style = "display: flex; align-items: center; justify-content: flex-start; gap: 20px; margin-bottom: 25px;",
 
-      # FILA 0: HEADER
-      div(id = ns("the_header"),
-          class = "pack-style-unlock",
-          div(class = "row",
-          div(class = "col-12", uiOutput(ns("import_header")))
-          )
+          # --- ELEMENTOS A LA IZQUIERDA ---
+          div(class = "section-label",
+              style = "margin: 0; white-space: nowrap; font-size: 1.2rem; font-weight: 700; color: #8b949e;",
+              icon("database"), " DATASET"
+          ),
+
+          # El interruptor principal
+          mod_07_00_toggle_ui(ns("main_switch")),
+
+          # --- ESPACIADOR MÁGICO ---
+          div(style = "flex-grow: 1;"),
+
+          # --- ELEMENTOS A LA DERECHA ---
+          # Agrupamos los labels y controles auxiliares
+          mod_07_00_label_ui(ns("main_switch")),        # Label from control engine
+          mod_07_00_refresh_ui(ns("main_switch")),      # Refres button
+          mod_07_00_unlock_ghost_ui(ns("main_switch"))  # Ghost button
       ),
-      br(),
 
-      # FILA 1: PANEL DE CONTROL
-      div(class = "row g-4 align-items-start",
-          div(class = "col-md-8",
-              # Aplicamos las clases base: pack-style-unlock para el color y neon-glow-RUN para el latido
+      # ========================================================================
+      # CUERPO PRINCIPAL: 2 COLUMNAS (30/70)
+      # ========================================================================
+      div(style = "display: flex; flex-direction: row; align-items: stretch; gap: 25px; width: 100%;",
+
+          # --- COLUMNA 01: CONFIGURACIÓN (IZQUIERDA) ---
+          div(style = "flex: 0 0 30%; max-width: 300px;",
               div(id = ns("the_menu"),
-                  class = "lock-wrapper pack-style-unlock neon-glow-RUN",
-                  div(class = "row g-3",
-                      div(class = "col-md-4",
-                          div(id = ns("label_source"), class = "section-label", "Source Type"),
-                          selectInput(inputId = ns("source_dataset"), label = NULL,
-                                      choices = c("Select a source..." = ""),
-                                      width = "100%")
-                      ),
-                      div(class = "col-md-8",
-                          div(id = ns("div_menu01"), uiOutput(ns("menu01_local_file"))),
-                          div(id = ns("div_menu02"), uiOutput(ns("menu02_RData")))
-                      )
-                  ),
-                  div(id = ns("div_options"), uiOutput(ns("options_ui")))
+                  class = "pack-style-unlock",
+                  style = "padding: 20px; border-radius: 15px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);",
+
+                  div(id = ns("label_source"), class = "section-label mb-2",
+                      style = "color: #58a6ff; font-size: 0.8rem; text-transform: uppercase;",
+                      "Source Type"),
+
+                  selectInput(inputId = ns("source_dataset"), label = NULL,
+                              choices = c("Select a source..." = ""),
+                              width = "100%"),
+
+                  # Menús dinámicos
+                  div(id = ns("div_menu01"), style = "margin-top: 15px;", uiOutput(ns("menu01_local_file"))),
+                  div(id = ns("div_menu02"), style = "margin-top: 15px;", uiOutput(ns("menu02_RData"))),
+
+                  # Opciones extra
+                  div(id = ns("div_options"),
+                      style = "margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;",
+                      uiOutput(ns("options_ui")))
               )
           ),
 
-          div(id = ns("the_control"),
-              class = "col-md-4",
-              mod_07_00_engine_control_ui(ns("main_switch"))
+          # --- COLUMNA 02: VISUALIZACIÓN (DERECHA) ---
+          div(style = "flex: 1 1 70%; display: flex; flex-direction: column; gap: 20px;",
 
-          )
-      ),
+              # Resumen superior
+              div(id = ns("the_summary"),
+                  class = "pack-style-unlock",
+                  uiOutput(ns("import_summary"))
+              ),
 
-      div(style = "border-top: 4px solid rgba(0,212,255, 1); margin: 35px 0;"),
-
-      # Reemplázala por esto:
-      div(id = ns("the_summary"),
-          class = "pack-style-unlock",
-          uiOutput(ns("import_summary"))
-      ),
-
-      # FILA 2: PREVIEW
-      div(class = "row",
-          div(class = "col-12",
+              # Tabla Preview
               div(id = ns("the_view"),
                   class = "pack-style-unlock rs-table-wrapper",
-                    div(class = "section-label mb-3", icon("table"), " Data Preview"),
-                        DTOutput(ns("preview"))
-                    ),
-              uiOutput(ns("show_debug_internal"))
+                  style = "padding: 20px; border-radius: 15px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05);",
+                  div(class = "section-label mb-3", style = "color: #00e5ff;", icon("eye"), " Data Preview"),
+                  DT::DTOutput(ns("preview"))
+              ),
+
+              # Debug del motor (aparecerá aquí si show_debug = TRUE en el server)
+              # Usamos el namespace del switch para que el motor inyecte aquí el JSON
+
           )
-      )
+      ),
+      uiOutput(ns("show_debug"))
     )
   )
 }
@@ -97,7 +118,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
     internal_show_debug <- reactive(if(is.function(show_debug)) show_debug() else show_debug)
 
     # Engine Control
-    engine_state <- mod_07_00_engine_control_server("main_switch", show_debug = internal_show_debug)
+    rlist_control_btn <- mod_07_00_engine_control_server("main_switch", show_debug = internal_show_debug, show_ghost = FALSE)
 
     # Data sources details -----------------------------------------------------
     vector_hard_source <- c("Select a source..." = "",
@@ -108,51 +129,79 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
       updateSelectInput(session = session, inputId = "source_dataset", choices = vector_hard_source)
     })
 
-    # --- REACTIVE VALUES ---
-    get_default_data <- function() {
-      list(
-        "details" = "*** RScience - Import Engine ***",
-        "my_sys_time" = Sys.time(),
-        "click_count" = 0, # Corregido el nombre si era click_count
-        "is_done" = FALSE,
-        "is_locked" = FALSE,
-        "error_msg" = NULL,
-        "metadata" = list(
-          selected_external_source = NULL,
-          selected_internal_source = NULL,
-          code_import_internal = "",
-          code_import_external = "",
-          name_mod = NULL,
-          rows = NULL,
-          cols = NULL,
-          my_sys_time = Sys.time(),
-          df = data.frame()
-        )
-
+    # Metadata - Dataset --------------------------------------------------------------------
+    get_default_metadata_dataset <- function() {
+        list(
+            description = "*** Rscience - Dataset details ***",
+            my_timestamp = timestamp(),
+            is_done = FALSE,
+            is_locked = FALSE,
+            selected_external_source = NULL,
+            selected_internal_source = NULL,
+            code_import_internal = "",
+            code_import_external = "",
+            name_mod = NULL,
+            rows = NULL,
+            cols = NULL,
+            my_timestamp = timestamp(),
+            df = data.frame()
       )
     }
-    reset_data_store <- function() {
-      defaults <- get_default_data()
+    reset_default_metadata_dataset <- function() {
+      defaults <- get_default_metadata_dataset()
 
       # mapply recorre los nombres y valores de la lista de defaults
       # y los asigna uno a uno al objeto reactiveValues
       mapply(function(val, name) {
-        data_store[[name]] <- val
+        RValues_metadata_dataset[[name]] <- val
       }, defaults, names(defaults))
     }
-    data_store <- do.call(reactiveValues, get_default_data())
+    RValues_metadata_dataset <- do.call(reactiveValues, get_default_metadata_dataset())
 
-    # --- LÓGICA DE IMPORTACIÓN ---
+
+    # Metadata - Dataset --------------------------------------------------------------------
+    get_default_RValues_data_store <- function() {
+      list(
+        "details" = "*** RScience - Import Engine ***",
+        "my_timestamp" = timestamp(),
+        "click_count" = 0, # Corregido el nombre si era click_count
+        "is_done" = FALSE,
+        "is_locked" = FALSE,
+        "error_msg" = NULL,
+        "metadata_control_btn" = list(),
+        "metadata_dataset" = list()
+
+      )
+    }
+    reset_RValues_data_store <- function() {
+      defaults <- get_default_RValues_data_store()
+
+      # mapply recorre los nombres y valores de la lista de defaults
+      # y los asigna uno a uno al objeto reactiveValues
+      mapply(function(val, name) {
+        RValues_data_store[[name]] <- val
+      }, defaults, names(defaults))
+    }
+    RValues_data_store <- do.call(reactiveValues, get_default_RValues_data_store())
+
+
+
+    # --- LÓGICA DE IMPORTACIÓN --------------------------------------------------------------------
     # Here is for option seleccition and define is_done...
     import_logic <- function() {
+
+      reset_default_metadata_dataset()
+      reset_RValues_data_store()
+
       source <- input$source_dataset
       if (source == "") {
         showNotification("Please select a source first.", type = "warning")
+
         return()
       }
 
       tryCatch({
-        temp_df <- NULL
+
         if (source == "local_file") {
           req(input$file_input)
           path <- input$file_input$datapath
@@ -194,16 +243,16 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
 
 
             # 3. Ejecutamos el código final
-            data_store$metadata$code_import_external <-import_code_external
-            data_store$metadata$code_import_internal <-import_code_internal
-            temp_df <- eval(parse(text = import_code_internal))
-            data_store$metadata$name_mod <- input$file_input$name
+            RValues_metadata_dataset$code_import_external <-import_code_external
+            RValues_metadata_dataset$code_import_internal <-import_code_internal
+            #temp_df <- eval(parse(text = import_code_internal))
+            RValues_metadata_dataset$name_mod <- input$file_input$name
 
 
           } else if (ext == "xlsx") {
             req(input$excel_sheet)
             # 1. Definimos la plantilla (Template)
-            excel_template <- "temp_df <- readxl::read_excel(path = '{FILE_PATH}',
+            excel_template <- "readxl::read_excel(path = '{FILE_PATH}',
                                    sheet = '{SHEET}',
                                    col_names = TRUE)"
 
@@ -219,10 +268,10 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
 
             # 3. Ejecutamos el código
             # 3. Ejecutamos el código final
-            data_store$metadata$code_import_external <- import_code_excel_external
-            data_store$metadata$code_import_internal <- import_code_excel_internal
-            temp_df <- eval(parse(text = import_code_excel_internal))
-            data_store$metadata$name_mod <- paste0(input$file_input$name, " [", input$excel_sheet, "]")
+            RValues_metadata_dataset$code_import_external <- import_code_excel_external
+            RValues_metadata_dataset$code_import_internal <- import_code_excel_internal
+            #temp_df <- eval(parse(text = import_code_excel_internal))
+            RValues_metadata_dataset$name_mod <- paste0(input$file_input$name, " [", input$excel_sheet, "]")
           }
         } else if (source == "R_dataset") {
           req(input$selected_R_dataset)
@@ -232,85 +281,36 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
           import_code_Rdataset <- import_Rdataset
           import_code_Rdataset <- gsub("{DATASET_NAME}", selected_R_dataset, import_code_Rdataset, fixed = TRUE)
 
-          data_store$metadata$code_import_external <- import_code_Rdataset
-          data_store$metadata$code_import_internal <- import_code_Rdataset
-          temp_df <- eval(parse(text = import_code_Rdataset))
-          data_store$metadata$name_mod <- paste(input$selected_R_dataset, "(R)")
+          RValues_metadata_dataset$code_import_external <- import_code_Rdataset
+          RValues_metadata_dataset$code_import_internal <- import_code_Rdataset
+          #temp_df <- eval(parse(text = import_code_Rdataset))
+          RValues_metadata_dataset$name_mod <- paste(input$selected_R_dataset, "(R)")
         } else {
             # AGREGAR ALGO PARA CUANDO NO DETECTA NINGUNA SOURCE VALIDA
         }
 
-        data_store$metadata$df <- as.data.frame(temp_df)
-        data_store$metadata$rows <- nrow(data_store$metadata$df)
-        data_store$metadata$cols <- ncol(data_store$metadata$df)
-        data_store$metadata$"my_sys_time" <- Sys.time()
-        data_store$is_done <- TRUE
+        # Si llegamos aca, es que todo fue exitoso.
+        str_import_internal <- RValues_metadata_dataset$code_import_internal
+        RValues_metadata_dataset$df <- eval(parse(text = str_import_internal))
+        RValues_metadata_dataset$df <- as.data.frame(RValues_metadata_dataset$df)
+        RValues_metadata_dataset$rows <- nrow(RValues_metadata_dataset$df)
+        RValues_metadata_dataset$cols <- ncol(RValues_metadata_dataset$df)
+        RValues_metadata_dataset$"my_timestamp" <- timestamp()
+        RValues_metadata_dataset$is_done <- TRUE
 
         toggle_import_controls(TRUE)
-        showNotification(paste("Imported:", data_store$metadata$name_mod), type = "message")
+        showNotification(paste("Imported:", RValues_metadata_dataset$name_mod), type = "message")
+
 
       }, error = function(e) {
         showNotification(paste("Import Error:", e$message), type = "error")
       })
     }
 
-    # --- OBSERVER PRINCIPAL ---
-    # Here is for running import logic and define is_locked...
-    observeEvent(engine_state(), {
-
-      flat_engine_state <- engine_state()
-      control_state <- flat_engine_state$mode
-
-      data_store$click_count <- data_store$click_count + 1
-      data_store$"my_sys_time" = Sys.time()
-      data_store$metadata$selected_internal_source <- input$"source_dataset"
-      data_store$metadata$selected_external_source <- names(vector_hard_source)[vector_hard_source == input$"source_dataset"]
-
-      if (control_state == "unlock") {
-        toggle_import_controls(FALSE)
-        data_store$is_locked <- FALSE
-
-        reset_data_store()
-        return()
-      }
-
-      if (control_state == "lock") {
-        import_logic()
-
-        if(data_store$is_done == TRUE){
-          data_store$is_locked <- TRUE
-          return()
-        }
-
-        if(data_store$is_done == FALSE) {
-          data_store$is_locked <- FALSE
-          showNotification("Selection is not completed... Status Unlock", type = "warning")
-          reset_data_store()
-
-          ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### -----
-          shinyjs::delay(1000, {
-            shinyWidgets::updateRadioGroupButtons(
-              session = session,
-              inputId = "main_switch-engine_mode",
-              selected = "unlock"
-            )
-          })
-          ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### -----
-          return()
-        }
-      }
-
-      if (control_state == "reset") {
-        reset_all()
-        return()
-      }
-
-    })
-
-    # --- FUNCIONES DE ACCIÓN ---
+    # functions
+    # --- FUNCIONES DE ACCIÓN --------------------------------------------------------------------
     toggle_import_controls <- function(lock_it) {
       vector_obj <- c("root_id" = "import_container",
-                      "header_id"  = "the_header",
                       "menu_id" = "the_menu",
                       "control_id" = "the_control",
                       "summary_id" = "the_summary",
@@ -344,7 +344,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
         })
 
         # Cambios varios
-        shinyjs::addClass(selected_menu, "neon-glow-RUN")  # aplicamos el neon
+        #shinyjs::addClass(selected_menu, "neon-glow-RUN")  # aplicamos el neon
         shinyjs::removeClass(selected_menu, "rs-block-smoke") # Quitamos el block smote
         shinyjs::removeClass(selected_menu, "rs-block-invisible") # Quitamos el block invisible del menu
         shinyjs::removeClass(selected_root, "rs-block-invisible") # Quitamos el block invisible de la pagina principal
@@ -355,7 +355,6 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
 
     reset_all <- function() {
       vector_obj <- c("root_id" = "import_container",
-                      "header_id"  = "the_header",
                       "menu_id" = "the_menu",
                       "control_id" = "the_control",
                       "summary_id" = "the_summary",
@@ -373,8 +372,10 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
 
 
 
-      reset_data_store()  # Reseteo interno del reactive vallues...
-      shinyjs::reset(selected_menu) # Reseteamos las opciones del menu a default
+      reset_RValues_data_store()  # Reseteo interno del reactive vallues...
+      #shinyjs::reset(selected_menu) # Reseteamos las opciones del menu a default
+      shinyjs::reset(selected_menu)
+
 
       # Mandamos a todos lso colores de reset....
       lapply(vector_obj, function(selected_id) {
@@ -387,11 +388,92 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
 
 
 
+    # --- OBSERVER PRINCIPAL ---
+    # Here is for running import logic and define is_locked...
+    observeEvent(rlist_control_btn(), {
+
+      flat_rlist_control_btn <- rlist_control_btn()
+      control_state <- flat_rlist_control_btn$mode
+
+      #RValues_data_store$click_count <- RValues_data_store$click_count + 1
+      RValues_metadata_dataset$"my_timestamp" = timestamp()
+      RValues_metadata_dataset$selected_internal_source <- input$"source_dataset"
+      RValues_metadata_dataset$selected_external_source <- names(vector_hard_source)[vector_hard_source == input$"source_dataset"]
+
+      if (control_state == "unlock") {
+
+        reset_default_metadata_dataset()
+        reset_RValues_data_store()
+        toggle_import_controls(FALSE)
+
+        return()
+      }
+
+      if (control_state == "lock") {
+        import_logic()
+
+
+
+        if(RValues_data_store$is_done == TRUE){
+          RValues_data_store$is_locked <- TRUE
+          return()
+        }
+
+        if(RValues_metadata_dataset$is_done == FALSE) {
+          RValues_metadata_dataset$is_locked <- FALSE
+          showNotification("Selection is not completed... Status Unlock", type = "warning")
+          reset_RValues_data_store()
+
+
+          shinyjs::delay(1000, {
+            shinyjs::click("main_switch-btn_unlock_ghost")
+          })
+          ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### ----- ##### -----
+          return()
+        }
+      }
+
+      if (control_state == "reset") {
+        reset_default_metadata_dataset()
+        reset_RValues_data_store()
+        reset_all()
+
+
+        return()
+      }
+
+    })
+
+
+    observeEvent(list(rlist_control_btn(), RValues_metadata_dataset), {
+
+      flat_rlist_control_btn <- rlist_control_btn()
+      is_locked <- flat_rlist_control_btn$is_locked
+
+      flat_metadata_dataset <- reactiveValuesToList(RValues_metadata_dataset)
+      is_done_df <- flat_metadata_dataset$is_done
+      req(is_locked, is_done_df)
+      if(is_locked && is_done_df){
+
+        RValues_data_store$"my_timestamp" <- timestamp()
+        RValues_data_store$"click_count"  <- RValues_data_store$"click_count" + 1
+        RValues_data_store$"is_done"      <- TRUE
+        RValues_data_store$"is_locked"    <- TRUE
+        RValues_data_store$"metadata_control_btn" <- flat_rlist_control_btn
+        RValues_data_store$"metadata_dataset"  <- flat_metadata_dataset
+
+
+        #reset_default_metadata_dataset()
+      }
+
+    })
+
+
 
     # --- RENDERS ---
     output$import_header <- renderUI({
-      state <- engine_state()$mode
-      if (state == "lock" && data_store$is_done) {
+      state <- rlist_control_btn()$mode
+      if (state == "lock" && RValues_data_store$is_done) {
         div(class = "selection-header confirmed", span("DATASET - ", icon("lock"), " - IMPORTED AND LOCKED"), span(class="header-id", "LOCK"))
       } else if (state == "unlock") {
         div(class = "selection-header active-selection", span("DATASET - ", icon("lock-open"), " - READY FOR SELECTION"), span(class="header-id", "UNLOCK"))
@@ -419,7 +501,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
     })
 
     output$import_summary <- renderUI({
-      has_data <- !is.null(data_store$metadata$df) && data_store$is_done
+      has_data <- !is.null(RValues_data_store$metadata_dataset$df) && RValues_data_store$is_done
       state_class <- if(has_data) "rs-status-locked" else "rs-status-waiting"
       div(class = paste("rs-minimal-bar", state_class),
           div(class = "status-segment",
@@ -427,13 +509,13 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
               span(class = "status-text", if(has_data) "DATASET CONFIRMED" else "AWAITING CONFIRMATION...")),
           div(class = "info-segment",
               span(class = "info-label", "FILE:"),
-              span(class = "info-val", if(has_data) data_store$metadata$name_mod else "---")),
+              span(class = "info-val", if(has_data) RValues_data_store$metadata_dataset$name_mod else "---")),
           div(class = "info-segment",
               span(class = "info-label", "ROWS:"),
-              span(class = "info-val", if(has_data) data_store$metadata$rows else "0")),
+              span(class = "info-val", if(has_data) RValues_data_store$metadata_dataset$rows else "0")),
           div(class = "info-segment",
               span(class = "info-label", "COLS:"),
-              span(class = "info-val", if(has_data) data_store$metadata$cols else "0"))
+              span(class = "info-val", if(has_data) RValues_data_store$metadata_dataset$cols else "0"))
       )
     })
 
@@ -463,42 +545,67 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
     })
 
     output$preview <- renderDT({
-      req(data_store$metadata$df)
-      flat_df <- data_store$metadata$df
+      req(RValues_data_store$metadata_dataset$df)
+      flat_df <- RValues_data_store$metadata_dataset$df
 
       datatable(flat_df, options = list(scrollX = TRUE, scrollY = "400px", scrollCollapse = TRUE, pageLength = 5, dom = 'ftpi'))
     })
 
 
     # # # DEBUG
-    output$debug_internal <- listviewer::renderJsonedit({
+    output$debug_control_btn <- listviewer::renderJsonedit({
       req(internal_show_debug())
-      listviewer::jsonedit(listdata = reactiveValuesToList(data_store), mode = "text")
+      flat_control_btn <- rlist_control_btn()
+      listviewer::jsonedit(listdata = flat_control_btn, mode = "text")
     })
 
-    output$show_debug_internal <- renderUI({
+    output$debug_metadata_dataset <- listviewer::renderJsonedit({
       req(internal_show_debug())
-      div(class = "debug-section", style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px;",
-          div(class = "section-label", style = "justify-content: flex-start !important; gap: 8px;", icon("bug"), " Internal Debug - Dataset"),
-          listviewer::jsoneditOutput(ns("debug_internal"), height = "auto"))
+      flat_metadata_dataset <- reactiveValuesToList(RValues_metadata_dataset)
+      listviewer::jsonedit(listdata = flat_metadata_dataset, mode = "text")
     })
 
-    output$debug_external <- listviewer::renderJsonedit({
-      listviewer::jsonedit(listdata = reactiveValuesToList(data_store), mode = "text")
+    output$debug_data_store <- listviewer::renderJsonedit({
+      req(internal_show_debug())
+      flat_data_store <- reactiveValuesToList(RValues_data_store)
+      listviewer::jsonedit(listdata = flat_data_store, mode = "text")
     })
 
-    output$show_debug_external <- renderUI({
-      div(style = "background: #1a1a1a; padding: 15px; border-radius: 8px;",
+    output$show_debug <- renderUI({
+      req(internal_show_debug())
+
+      div(class = "debug-section",
+          style = "background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px;",
+
+          # Título de la sección
+          div(class = "section-label",
+              style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 15px;",
+              icon("bug"), " Internal Debug - Dataset"
+          ),
+
+          # Contenedor de Columnas
           div(class = "row",
-              div(class = "col-md-8",
-                  div(class = "section-label", style = "justify-content: flex-start !important; gap: 8px; margin-bottom: 15px;", icon("bug"), " External Debug - Dataset"),
-                  listviewer::jsoneditOutput(ns("debug_external"), height = "500px")),
               div(class = "col-md-4",
-                  div(style = "border-left: 1px solid #333; padding-left: 15px; height: 100%;",
-                      mod_07_00_engine_control_DEBUG_ui(id = ns("main_switch"))))))
+                  span(style = "color: #8b949e; font-size: 0.8rem;", "Data store - Dataset:"),
+                  listviewer::jsoneditOutput(ns("debug_data_store"), height = "auto")
+              ),
+              # Columna 1: Metadata
+              div(class = "col-md-4",
+                  span(style = "color: #8b949e; font-size: 0.8rem;", "Metadata - Dataset:"),
+                  listviewer::jsoneditOutput(ns("debug_metadata_dataset"), height = "auto")
+              ),
+              # Columna 2: Control Button
+              div(class = "col-md-4",
+                  span(style = "color: #8b949e; font-size: 0.8rem;", "Control Engine State - Dataset:"),
+                  listviewer::jsoneditOutput(ns("debug_control_btn"), height = "auto")
+              )
+          )
+      )
     })
+
+
 
     # # # OUTPUT
-    return(reactive({ reactiveValuesToList(data_store) }))
+    return(reactive({ reactiveValuesToList(RValues_data_store) }))
   })
 }

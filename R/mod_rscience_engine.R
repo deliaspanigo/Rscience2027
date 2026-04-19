@@ -435,11 +435,11 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
     # Collector03 - Objects for proccessing -----------------------------------------------------------------------
     rlist_collector03 <- reactive({
 
-      #internal_rlist_dataset <- rlist_dataset()
+      internal_rlist_dataset <- rlist_dataset()
       internal_list_settings <- rlist_settings()
       internal_local_folder_path_tool <- HOOK_temp_folder_path_tool_script()
 
-      req(internal_rlist_dataset, internal_list, internal_local_folder_path_tool)
+      req(internal_rlist_dataset, internal_list_settings, internal_local_folder_path_tool)
 
       my_list <- list()
 
@@ -600,7 +600,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       module_script_and_comments_file_path = HOOK_file_path_pather_module_script_and_comments_temp,
       temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
       show_file                     = TRUE,
-      show_debug                    = TRUE
+      show_debug                    = F
     )
 
 
@@ -635,7 +635,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       module_shiny_output_file_path = HOOK_file_path_pather_module_shiny_output_temp,
       temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
       show_file                     = TRUE,
-      show_debug                    = TRUE
+      show_debug                    = T
     )
 
 
@@ -668,7 +668,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       module_asa_file_path = HOOK_file_path_pather_module_asa_temp,
       temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
       show_file                     = TRUE,
-      show_debug                    = TRUE
+      show_debug                    = T
     )
 
 
@@ -702,7 +702,7 @@ mod_rscience_engine_server <- function(id, show_debug_tab = F, show_debug_genera
       module_pdf_file_path = HOOK_file_path_pather_module_pdf_temp,
       temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
       show_file                     = TRUE,
-      show_debug                    = TRUE
+      show_debug                    = T
     )
 
 

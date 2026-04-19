@@ -46,7 +46,7 @@ mod_10_00_proccessing_server <- function(id,
                                          local_folder_tool_script,
                                          temp_folder_tool_script,
                                          list_settings,
-                                         show_debug = TRUE) {
+                                         show_debug = F) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 

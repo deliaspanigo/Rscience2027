@@ -12,7 +12,7 @@ ui <- fluidPage(
 
 
 server <- function(input, output, session) {
-  mod_01_00_launchpad_server(id = "launchpad_instancia_1", show_debug = T)
+  mod_01_00_launchpad_server(id = "launchpad_instancia_1", show_debug = F)
 
 
 

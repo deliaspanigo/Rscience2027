@@ -73,7 +73,7 @@ SUB_mod_var_selection_ui <- function(id) {
   )
 }
 
-SUB_mod_var_selection_server <- function(id, df_input, show_debug = TRUE) {
+SUB_mod_var_selection_server <- function(id, df_input, show_debug = F) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 

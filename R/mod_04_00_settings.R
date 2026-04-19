@@ -54,7 +54,7 @@ library(listviewer)
 # MÓDULO SERVER: COLECTOR Y ORQUESTADOR RECURSIVO
 # ==============================================================================
 
-mod_04_00_settings_server <- function(id, df_input, folder_path_tool_script, show_debug = TRUE) {
+mod_04_00_settings_server <- function(id, df_input, folder_path_tool_script, show_debug = F) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -166,7 +166,7 @@ mod_04_00_settings_server <- function(id, df_input, folder_path_tool_script, sho
 
     output$render_json_colector <- listviewer::renderJsonedit({ listviewer::jsonedit(internal_meta()) })
     output$render_json_submodulo <- listviewer::renderJsonedit({ listviewer::jsonedit(get_debug_data()) })
-    output$debug_internal <- renderUI({ req(internal_show_debug); ui_debug_layout(ns) })
+    output$debug_internal <- renderUI({ req(internal_show_debug()); ui_debug_layout(ns) })
 
 
     ##########
