@@ -12,7 +12,7 @@ mod_02_01_dataset_ui <- function(id) {
 
   tagList(
     # Inyectamos dependencias necesarias para los sub-componentes del motor
-    #shinyjs::useShinyjs(),
+    shinyjs::useShinyjs(),
 
     div(
       id = ns("import_container"),
@@ -203,14 +203,19 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
       source <- input$source_dataset
       if (source == "") {
         showNotification("Please select a source first.", type = "warning")
+        ####============================================================================
+        shinyjs::delay(500, shinyjs::click("main_switch-btn_unlock_ghost"))
+        ####============================================================================
         return()
       }
 
       tryCatch({
         # Lógica para Local File (CSV/Excel)
         if (source == "local_file") {
-          req(input$file_input)
-          path <- input$file_input$datapath
+          req(input$file_input, input$file_input$datapath)
+          selected_file_path <- input$file_input$datapath
+          selected_file_name <- input$file_input$name
+
           ext <- tolower(tools::file_ext(input$file_input$name))
 
           if (ext %in% c("csv", "tsv", "txt")) {
@@ -221,8 +226,8 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
             }
 
             code_template <- "vroom::vroom(file = '{P}', delim = '{S}', locale = vroom::locale(decimal_mark = '{D}'), show_col_types = FALSE)"
-            RValues_metadata_dataset$code_import_external <- gsub("{P}", input$file_input$name, code_template, fixed = TRUE)
-            RValues_metadata_dataset$code_import_internal <- gsub("{P}", path, code_template, fixed = TRUE)
+            RValues_metadata_dataset$code_import_external <- gsub("{P}", selected_file_name, code_template, fixed = TRUE)
+            RValues_metadata_dataset$code_import_internal <- gsub("{P}", selected_file_path, code_template, fixed = TRUE)
             # Reemplazar SEP y DEC...
             RValues_metadata_dataset$code_import_internal <- gsub("{S}", input$sep, RValues_metadata_dataset$code_import_internal, fixed = TRUE)
             RValues_metadata_dataset$code_import_internal <- gsub("{D}", input$dec, RValues_metadata_dataset$code_import_internal, fixed = TRUE)
@@ -230,19 +235,23 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
             RValues_metadata_dataset$name_mod <- input$file_input$name
 
           } else if (ext == "xlsx") {
-            req(input$excel_sheet)
+            req(input$excel_sheet, input$file_input, input$file_input$datapath)
+
+            selected_sheet <- input$excel_sheet
+
+
             excel_template <- "readxl::read_excel(path = '{P}', sheet = '{S}')"
             excel_template_internal <- excel_template
-            excel_template_internal <- gsub("{P}", input$file_input$name, excel_template_internal, fixed = TRUE)
-            excel_template_internal <- gsub("{S}", input$excel_sheet, excel_template_internal, fixed = TRUE)
+            excel_template_internal <- gsub("{P}", selected_file_name, excel_template_internal, fixed = TRUE)
+            excel_template_internal <- gsub("{S}", selected_sheet, excel_template_internal, fixed = TRUE)
             RValues_metadata_dataset$code_import_external <- excel_template_internal
 
             excel_template_external <- excel_template
-            excel_template_external <- gsub("{P}", path, excel_template_external, fixed = TRUE)
-            excel_template_external <- gsub("{S}", input$excel_sheet, excel_template_external, fixed = TRUE)
+            excel_template_external <- gsub("{P}", selected_file_path, excel_template_external, fixed = TRUE)
+            excel_template_external <- gsub("{S}", selected_sheet, excel_template_external, fixed = TRUE)
             RValues_metadata_dataset$code_import_internal <- excel_template_external
 
-            RValues_metadata_dataset$name_mod <- paste0(input$file_input$name, " [", input$excel_sheet, "]")
+            RValues_metadata_dataset$name_mod <- paste0(selected_file_name, " [", selected_sheet, "]")
           }
         } else if (source == "R_dataset") {
           req(input$selected_R_dataset)
@@ -263,7 +272,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
         showNotification(paste("Success:", RValues_metadata_dataset$name_mod), type = "message")
 
       }, error = function(e) {
-        showNotification(paste("Import Error:", e$message), type = "error")
+        showNotification(paste("Import Error 01:", e$message), type = "error")
         RValues_metadata_dataset$is_done <- FALSE
       })
     }
@@ -290,13 +299,33 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
 
         # Si falló la importación, forzamos el regreso a Unlock
         if(!RValues_metadata_dataset$is_done) {
+          ####============================================================================
           shinyjs::delay(500, shinyjs::click(ns("main_switch-unlock_ghost")))
+          ####============================================================================
+
         } else RValues_data_store$is_locked <- TRUE
       } else if (state == "reset") {
+        # 1. Reseteamos los valores internos
+
+        # 3. Forzamos a que shinyjs limpie el input de archivos (si existe)
+        shinyjs::reset("file_input")
+        shinyjs::reset("the_menu")
+        shinyjs::reset("source_dataset")
+
+
         reset_RValues_data_store()
         reset_default_metadata_dataset()
-        updateSelectInput(session, "source_dataset", selected = "")
+
+        # 2. Update corregido (SIN el ns())
+        #updateSelectInput(session, "source_dataset", selected = "")
+        updateSelectInput(session = session, inputId = "source_dataset", choices = vector_hard_source)
+
+
+
+        # 4. Volvemos a los colores originales
         toggle_import_controls(FALSE)
+
+        showNotification("Interface reset to defaults", type = "message")
       }
     })
 
