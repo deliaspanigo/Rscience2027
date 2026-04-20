@@ -12,33 +12,71 @@ mod_03_A_theory_DEBUG_ui <- function(id) {
   uiOutput(ns("panel_debug_externo"))
 }
 
+# ==============================================================================
+# MÓDULO UI: THEORY COLLECTOR (mod_03_A_theory_ui)
+# ==============================================================================
+
 mod_03_A_theory_ui <- function(id) {
   ns <- NS(id)
 
   tagList(
-    navset_hidden(
-      id = ns("theory_switcher"),
+    # Inyectamos CSS específico para que este módulo sea Full Height
+    tags$style(HTML(paste0("
+      /* Forzamos que el contenedor del módulo ocupe el 100% del padre */
+      #", ns("theory_switcher"), " {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        height: 100%;
+        min-height: 0;
+      }
 
-      # PANEL 1: Ahora es un render dinámico para facilitar cambios estéticos
-      nav_panel_hidden(
-        value = "state_waiting",
-        uiOutput(ns("ui_waiting_state"))
-      ),
+      /* Aseguramos que los paneles ocultos también sean flex */
+      .tab-pane {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        height: 100%;
+      }
 
-      nav_panel_hidden(
-        value = "state_loading",
-        div(style = "padding: 80px; text-align: center;",
-            icon("sync", class = "fa-spin fa-3x", style = "color: #00d4ff;"),
-            h4("Sincronizando...", style = "color: #00d4ff;"))
-      ),
+      .rs-theory-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+      }
+    "))),
 
-      nav_panel_hidden(
-        value = "state_ready",
-        uiOutput(ns("placeholder_dinamico"))
-      )
-    ),
+    div(class = "rs-theory-container",
+        navset_hidden(
+          id = ns("theory_switcher"),
 
-    uiOutput(ns("debug_internal"))
+          # PANEL 1: ESPERA
+          nav_panel_hidden(
+            value = "state_waiting",
+            uiOutput(ns("ui_waiting_state"))
+          ),
+
+          # PANEL 2: CARGANDO
+          nav_panel_hidden(
+            value = "state_loading",
+            div(style = "display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: #1a1a1a;",
+                icon("sync", class = "fa-spin fa-3x", style = "color: #00d4ff;"),
+                h4("Sincronizando...", style = "color: #00d4ff; margin-top: 20px;"))
+          ),
+
+          # PANEL 3: LISTO (Aquí se inyecta el mod_special_theory_ui)
+          nav_panel_hidden(
+            value = "state_ready",
+            uiOutput(ns("placeholder_dinamico"), style = "height: 100%; display: flex; flex-direction: column;")
+          )
+        ),
+
+        # Sección de Debug Inferior (solo aparece si activas el flag)
+        uiOutput(ns("debug_internal"))
+    )
   )
 }
 
@@ -58,9 +96,12 @@ mod_03_A_theory_ui <- function(id) {
 # MÓDULO SERVER: COLECTOR Y ORQUESTADOR DE TEORÍA
 # ==============================================================================
 
-mod_03_A_theory_server <- function(id, module_theory_file_path, show_debug = TRUE) {
+mod_03_A_theory_server <- function(id, module_theory_file_path, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    internal_show_debug <- reactive({if (is.function(show_debug)) show_debug() else show_debug})
+
 
     # Colócala fuera del mod_03_A_theory_server
     ui_debug_layout_theory <- function(ns, prefix = "") {
@@ -237,7 +278,7 @@ mod_03_A_theory_server <- function(id, module_theory_file_path, show_debug = TRU
     output$ext_render_json_submodulo <- listviewer::renderJsonedit({ listviewer::jsonedit(get_debug_data()) })
 
     output$debug_internal <- renderUI({
-      req(show_debug)
+      req(internal_show_debug())
       ui_debug_layout_theory(ns, prefix = "")
     })
 

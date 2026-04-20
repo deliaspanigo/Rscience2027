@@ -127,7 +127,7 @@ mod_special_shiny_output_server <- function(id,
     })
 
     output$show_debug_internal <- renderUI({
-      req(show_debug)
+      req(internal_show_debug())
       div(class = "mt-4 p-2 border-top bg-dark text-light",
           tags$small(icon("bug"), " Debug Hijo: Archivos Hardcodeados"),
           listviewer::jsoneditOutput(ns("debug_json"), height = "250px"))

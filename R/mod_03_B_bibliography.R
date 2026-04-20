@@ -62,6 +62,9 @@ mod_03_B_bibliography_server <- function(id, module_bibliography_file_path, show
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    internal_show_debug <- reactive({if (is.function(show_debug)) show_debug() else show_debug})
+
+
     # Colócala fuera del mod_03_B_bibliography_server
     ui_debug_layout_theory <- function(ns, prefix = "") {
       # Creamos IDs únicos basados en el prefijo (ej: "ext_render_json_colector")
@@ -237,7 +240,7 @@ mod_03_B_bibliography_server <- function(id, module_bibliography_file_path, show
     output$ext_render_json_submodulo <- listviewer::renderJsonedit({ listviewer::jsonedit(get_debug_data()) })
 
     output$debug_internal <- renderUI({
-      req(show_debug)
+      req(internal_show_debug())
       ui_debug_layout_theory(ns, prefix = "")
     })
 

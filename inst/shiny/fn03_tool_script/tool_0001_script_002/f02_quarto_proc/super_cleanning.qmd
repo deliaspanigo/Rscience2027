@@ -62,7 +62,7 @@ invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
 # ignore.case = TRUE para atrapar .pdf y .PDF
 archivos_para_borrar <- list.files(
   path = getwd(), 
-  pattern = "\\.(html|RData|pdf|png|zip)$", 
+  pattern = "\\.(html|RData|pdf|png|zip|typ)$", 
   recursive = TRUE, 
   full.names = TRUE, 
   ignore.case = TRUE

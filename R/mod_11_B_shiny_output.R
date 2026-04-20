@@ -69,7 +69,7 @@ mod_11_B_shiny_output_server <- function(id,
     })
 
     internal_show_file <- reactive({if (is.function(show_file)) show_file() else show_file})
-    internal_show_debug <- reactive({if (is.function(debug)) debug() else debug})
+    internal_show_debug <- reactive({if (is.function(show_debug)) show_debug() else show_debug})
 
 
     local_env  <- reactiveVal(NULL)

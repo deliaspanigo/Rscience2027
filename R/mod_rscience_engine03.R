@@ -703,7 +703,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       module_shiny_output_file_path = reactive(pack02_02()$HOOK_file_path_pather_module_shiny_output_temp),
       temp_folder_tool_script       = reactive(pack02_02()$HOOK_temp_folder_path_tool_script),
       show_file                     = reactive(pack02_02()$HOOK_proccessing_is_done),
-      show_debug                    = T
+      show_debug                    = F
     )
 
 
@@ -738,7 +738,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       module_asa_file_path          = reactive(pack02_03()$HOOK_file_path_pather_module_asa_temp),
       temp_folder_tool_script       = reactive(pack02_03()$HOOK_temp_folder_path_tool_script),
       show_file                     = reactive(pack02_03()$HOOK_proccessing_is_done),
-      show_debug                    = T
+      show_debug                    = F
     )
 
 
@@ -776,7 +776,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       module_pdf_file_path          = reactive(pack02_04()$HOOK_file_path_pather_module_pdf_temp),
       temp_folder_tool_script       = reactive(pack02_04()$HOOK_temp_folder_path_tool_script),
       show_file                     = reactive(pack02_04()$HOOK_proccessing_is_done),
-      show_debug                    = T
+      show_debug                    = F
     )
 
 
