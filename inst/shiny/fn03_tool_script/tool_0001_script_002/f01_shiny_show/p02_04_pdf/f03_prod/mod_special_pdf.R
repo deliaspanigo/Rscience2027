@@ -11,15 +11,23 @@ mod_special_pdf_ui <- function(id) {
 }
 
 mod_special_pdf_server <- function(id,
-                                            temp_folder_tool_script, # Carpeta base
-                                            show_file = TRUE,
-                                            show_debug = FALSE) {
+                                                   temp_folder_tool_script, # Carpeta base
+                                                   show_file = TRUE,
+                                                   show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     # --- 1. PROCESAMIENTO DE LA CARPETA BASE ---
     internal_folder_temp <- reactive({
       if (is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script
+    })
+
+    internal_show_file <- reactive({
+      if (is.function(show_file)) show_file() else show_file
+    })
+
+    internal_show_debug <- reactive({
+      if (is.function(show_debug)) show_debug() else show_debug
     })
 
     # --- 2. HARDCODE DE ARCHIVOS ---
@@ -72,7 +80,7 @@ mod_special_pdf_server <- function(id,
                   )
               ),
               # Renderizado del Iframe
-              if(it$exists && isTRUE(show_file)) {
+              if(it$exists && isTRUE(internal_show_file())) {
                 resource_name <- paste0(res_prefix, "_", i)
                 addResourcePath(prefix = resource_name, directoryPath = normalizePath(dirname(it$full_path)))
 

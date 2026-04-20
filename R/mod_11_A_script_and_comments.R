@@ -74,7 +74,7 @@ mod_11_A_script_and_comments_server <- function(id,
 
     local_env  <- reactiveVal(NULL)
     data_store <- reactiveValues(
-      details = "*** RScience - Module Processing ***",
+      details = "*** RScience - Module Script and Comments ***",
       is_done = FALSE
     )
     rv <- reactiveValues(ready = FALSE, special_module = NULL)

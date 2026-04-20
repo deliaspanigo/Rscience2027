@@ -649,13 +649,8 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       data$"file02_01_script_and_comments"$"local_file_path"
     })
 
-    # flat_module_script_and_comments_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
-    #                                                   "f01_shiny_show", "p02_01_shiny_output", "f03_prod", "mod_special_shiny_output.R" ,
-    #                                                   package = "Rscience2027")
 
-    # file_path <- reactive(system.file("test_shiny_output", "f05_shiny_output", "tab01_control.html", package = "Rscience2027"))
-
-    pack01 <- reactive({
+    pack02_01 <- reactive({
       list(HOOK_file_path_pather_module_script_and_comments_temp = HOOK_file_path_pather_module_script_and_comments_temp(),
            HOOK_temp_folder_path_tool_script = HOOK_temp_folder_path_tool_script(),
            HOOK_proccessing_is_done = HOOK_proccessing_is_done(),
@@ -663,13 +658,13 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
            )
     })
 
-    observe(print(pack01()))
+
 
     rlist_script_and_comments <-       mod_11_A_script_and_comments_server(
       id = "pipeline_333",
-      module_script_and_comments_file_path = reactive(pack01()$HOOK_file_path_pather_module_script_and_comments_temp),
-      temp_folder_tool_script       = reactive(pack01()$HOOK_temp_folder_path_tool_script), # El hijo lo usará de base
-      show_file                     = reactive(pack01()$HOOK_proccessing_is_done),
+      module_script_and_comments_file_path = reactive(pack02_01()$HOOK_file_path_pather_module_script_and_comments_temp),
+      temp_folder_tool_script       = reactive(pack02_01()$HOOK_temp_folder_path_tool_script), # El hijo lo usará de base
+      show_file                     = reactive(pack02_01()$HOOK_proccessing_is_done),
       show_debug                    = F
     )
 
@@ -679,7 +674,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
 
 
 
-    # OPT 02.01. Shiny Outputs -------------------------------------------------------------------------------------------
+    # OPT 02.02. Shiny Outputs -------------------------------------------------------------------------------------------
     HOOK_file_path_pather_module_shiny_output_temp  <- reactive({
       # Solo si el colector tiene éxito
       data <- rlist_collector02()
@@ -695,16 +690,19 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       data$"file02_02_shiny_output"$"local_file_path"
     })
 
-    # flat_module_script_and_comments_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
-    #                                                   "f01_shiny_show", "p02_01_shiny_output", "f03_prod", "mod_special_shiny_output.R" ,
-    #                                                   package = "Rscience2027")
+    pack02_02 <- reactive({
+      list(HOOK_file_path_pather_module_shiny_output_temp = HOOK_file_path_pather_module_shiny_output_temp(),
+           HOOK_temp_folder_path_tool_script = HOOK_temp_folder_path_tool_script(),
+           HOOK_proccessing_is_done = HOOK_proccessing_is_done(),
+           file_existes = file.exists(HOOK_file_path_pather_module_shiny_output_temp())
+      )
+    })
 
-    # file_path <- reactive(system.file("test_shiny_output", "f05_shiny_output", "tab01_control.html", package = "Rscience2027"))
     rlist_shiny_output <-       mod_11_B_shiny_output_server(
       id = "pather_shiny_output",
-      module_shiny_output_file_path = HOOK_file_path_pather_module_shiny_output_temp,
-      temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
-      show_file                     = HOOK_proccessing_is_done,
+      module_shiny_output_file_path = reactive(pack02_02()$HOOK_file_path_pather_module_shiny_output_temp),
+      temp_folder_tool_script       = reactive(pack02_02()$HOOK_temp_folder_path_tool_script),
+      show_file                     = reactive(pack02_02()$HOOK_proccessing_is_done),
       show_debug                    = T
     )
 
@@ -712,7 +710,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
     ##############################################################################################
 
 
-    # OPT 02.01. Shiny Outputs -------------------------------------------------------------------------------------------
+    # OPT 02.03. ASA -------------------------------------------------------------------------------------------
     HOOK_file_path_pather_module_asa_temp  <- reactive({
       # Solo si el colector tiene éxito
       data <- rlist_collector02()
@@ -728,16 +726,18 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       data$"file02_03_asa"$"local_file_path"
     })
 
-    # flat_module_script_and_comments_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
-    #                                                   "f01_shiny_show", "p02_01_shiny_output", "f03_prod", "mod_special_shiny_output.R" ,
-    #                                                   package = "Rscience2027")
-
-    # file_path <- reactive(system.file("test_shiny_output", "f05_shiny_output", "tab01_control.html", package = "Rscience2027"))
+    pack02_03 <- reactive({
+      list(HOOK_file_path_pather_module_asa_temp = HOOK_file_path_pather_module_asa_temp(),
+           HOOK_temp_folder_path_tool_script = HOOK_temp_folder_path_tool_script(),
+           HOOK_proccessing_is_done = HOOK_proccessing_is_done(),
+           file_existes = file.exists(HOOK_file_path_pather_module_asa_temp())
+      )
+    })
     rlist_asa <-       mod_11_C_asa_server(
       id = "pather_asa",
-      module_asa_file_path = HOOK_file_path_pather_module_asa_temp,
-      temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
-      show_file                     = HOOK_proccessing_is_done,
+      module_asa_file_path          = reactive(pack02_03()$HOOK_file_path_pather_module_asa_temp),
+      temp_folder_tool_script       = reactive(pack02_03()$HOOK_temp_folder_path_tool_script),
+      show_file                     = reactive(pack02_03()$HOOK_proccessing_is_done),
       show_debug                    = T
     )
 
@@ -746,7 +746,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
 
 
 
-    # OPT 02.01. Shiny Outputs -------------------------------------------------------------------------------------------
+    # OPT 02.04. pdf -------------------------------------------------------------------------------------------
     HOOK_file_path_pather_module_pdf_temp  <- reactive({
       # Solo si el colector tiene éxito
       data <- rlist_collector02()
@@ -762,16 +762,20 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       data$"file02_04_pdf"$"local_file_path"
     })
 
-    # flat_module_script_and_comments_file_path <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002",
-    #                                                   "f01_shiny_show", "p02_01_shiny_output", "f03_prod", "mod_special_shiny_output.R" ,
-    #                                                   package = "Rscience2027")
 
-    # file_path <- reactive(system.file("test_shiny_output", "f05_shiny_output", "tab01_control.html", package = "Rscience2027"))
+    pack02_04 <- reactive({
+      list(HOOK_file_path_pather_module_pdf_temp = HOOK_file_path_pather_module_pdf_temp(),
+           HOOK_temp_folder_path_tool_script = HOOK_temp_folder_path_tool_script(),
+           HOOK_proccessing_is_done = HOOK_proccessing_is_done(),
+           file_existes = file.exists(HOOK_file_path_pather_module_pdf_temp())
+      )
+    })
+
     rlist_pdf <-       mod_11_D_pdf_server(
       id = "pather_pdf",
-      module_pdf_file_path = HOOK_file_path_pather_module_pdf_temp,
-      temp_folder_tool_script       = HOOK_temp_folder_path_tool_script, # El hijo lo usará de base
-      show_file                     = HOOK_proccessing_is_done,
+      module_pdf_file_path          = reactive(pack02_04()$HOOK_file_path_pather_module_pdf_temp),
+      temp_folder_tool_script       = reactive(pack02_04()$HOOK_temp_folder_path_tool_script),
+      show_file                     = reactive(pack02_04()$HOOK_proccessing_is_done),
       show_debug                    = T
     )
 

@@ -42,14 +42,14 @@ mod_11_D_pdf_ui <- function(id) {
 # ==============================================================================
 
 # ==============================================================================
-# MÓDULO SERVER (mod_11_D_pdf_server) - ACTUALIZADO
+# MÓDULO SERVER (mod_11_D_shiny_output_server) - ACTUALIZADO
 # ==============================================================================
 
 mod_11_D_pdf_server <- function(id,
-                                module_pdf_file_path, # Path al .R del hijo
-                                temp_folder_tool_script,
-                                show_debug = TRUE,
-                                show_file = TRUE) {
+                                                module_pdf_file_path, # Path al .R del hijo
+                                                temp_folder_tool_script,
+                                                show_debug = TRUE,
+                                                show_file = TRUE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -68,9 +68,13 @@ mod_11_D_pdf_server <- function(id,
       if (is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script
     })
 
+    internal_show_file <- reactive({if (is.function(show_file)) show_file() else show_file})
+    internal_show_debug <- reactive({if (is.function(debug)) debug() else debug})
+
+
     local_env  <- reactiveVal(NULL)
     data_store <- reactiveValues(
-      details = "*** RScience - Module Processing ***",
+      details = "*** RScience - Module Script and Comments ***",
       is_done = FALSE
     )
     rv <- reactiveValues(ready = FALSE, special_module = NULL)
@@ -110,8 +114,8 @@ mod_11_D_pdf_server <- function(id,
       rv$special_module <- env$mod_special_pdf_server(
         id                      = "sub_proc",
         temp_folder_tool_script = internal_temp_folder,
-        show_file               = show_file,
-        show_debug              = show_debug
+        show_file               = internal_show_file,
+        show_debug              = internal_show_debug
       )
     })
 
