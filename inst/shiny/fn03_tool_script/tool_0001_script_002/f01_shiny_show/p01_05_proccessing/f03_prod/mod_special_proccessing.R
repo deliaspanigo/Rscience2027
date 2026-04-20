@@ -134,6 +134,61 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     }) %>% debounce(1000)
 
     rlist_item04_qmd_files <- reactive({
+      # library(webshot2)
+      # library(pagedown)
+      # library(chromote)
+      # # chrome_path <- chromote::find_chrome()
+      #
+      # library(webshot2)
+      # set_chrome_args(c("--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"))
+      #
+      # library(shiny)
+      # library(webshot2)
+      # # force the use of pagedown to install chrome on shinyapps.io (this is a workaround)
+      # library(pagedown)
+      # # force the use of curl because chromote needs it (see https://github.com/rstudio/chromote/issues/37)
+      # library(curl)
+      #
+      # message(curl::curl_version()) # check curl is installed
+      # #if (identical(Sys.getenv("R_CONFIG_ACTIVE"), "shinyapps")) {
+      #   chromote::set_default_chromote_object(
+      #     chromote::Chromote$new(chromote::Chrome$new(
+      #       args = c("--disable-gpu",
+      #                "--no-sandbox",
+      #                "--disable-dev-shm-usage", # required bc the target easily crashes
+      #                c("--force-color-profile", "srgb"))
+      #     ))
+      #   )
+      #
+      # # 1. Verificar si la variable de entorno ya está definida
+      # # if (Sys.getenv("CHROMOTE_CHROME") == "") {
+      # #
+      # #   # 2. Intentar buscar Chrome usando pagedown (es más robusto que chromote)
+      # #   ruta <- pagedown::find_chrome()
+      # #
+      # #   if (!is.null(ruta)) {
+      # #     Sys.setenv(CHROMOTE_CHROME = ruta)
+      # #     message("Chrome encontrado en: ", ruta) # Opcional, para tu tranquilidad
+      # #   } else {
+      # #     # 3. Solo si pagedown devuelve NULL, disparamos el aviso real
+      # #     warning("No se encontró Chrome/Chromium en el sistema. Los gráficos de Plotly podrían fallar.")
+      # #   }
+      # # }
+
+
+      # library(webshot2)
+      #
+      # # Buscar el navegador automáticamente
+      # chrome_path <- webshot2::find_chrome()
+      #
+      # # Si lo encuentra, declararlo para que chromote lo use
+      # if (!is.null(chrome_path)) {
+      #   Sys.setenv(CHROMOTE_CHROME = chrome_path)
+      # } else {
+      #   warning("No se encontró Chrome/Chromium en el sistema.")
+      # }
+
+
       req(rlist_item03_quarto_proc()$is_done)
       path_val <- rlist_item03_quarto_proc()$path
       list_render_qmd_file <- list(
@@ -214,57 +269,86 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       )
     }) %>% debounce(1000) # El delay que te gusta
 
+    library(callr)
+
     observe({
-      # Extraemos la info del reactive debounced
       flat_pack <- pack_current_pos_render()
-      req(engine$started, flat_pack) # Evita que corra si no ha empezado o es NULL
+      req(engine$started, flat_pack)
 
       selected_pkg_name <- flat_pack$pkg_name
-      selected_idx      <- flat_pack$idx
-      selected_path     <- flat_pack$path
-      selected_max_idx  <- flat_pack$max_idx
+      selected_idx       <- flat_pack$idx
+      selected_path      <- flat_pack$path
+      selected_max_idx   <- flat_pack$max_idx
 
       isolate({
-        # --- SEGURIDAD DE DIRECTORIO ---
         old_wd <- getwd()
-        # on.exit se ejecutará al terminar el bloque isolate,
-        # sin importar si hubo éxito o error.
         on.exit(setwd(old_wd), add = TRUE)
 
+        selected_folder_path   <- dirname(selected_path)
+        selected_qmd_file_name <- basename(selected_path)
+
         tryCatch({
-          selected_folder_path <- dirname(selected_path)
-          selected_qmd_file_name <- basename(selected_path)
 
-          # Cambiamos al directorio del archivo
-          setwd(selected_folder_path)
+          # === EJECUCIÓN EN PROCESO SEPARADO CON CALLR ===
+          result <- callr::r(
+            func = function(qmd_file, folder_path, params_list = NULL) {
 
-          if(selected_idx == 1) {
-            quarto::quarto_render(
-              input = selected_qmd_file_name,
-              execute_params = list(
-                list_quarto_replacement = internal_list_quarto_replacement()
-              ),
-              quiet = FALSE
+              # Cambiamos el directorio DENTRO del proceso hijo
+              setwd(folder_path)
+
+              tryCatch({
+                if (!is.null(params_list) && length(params_list) > 0) {
+                  quarto::quarto_render(
+                    input = qmd_file,
+                    execute_params = params_list,
+                    quiet = FALSE
+                  )
+                } else {
+                  quarto::quarto_render(
+                    input = qmd_file,
+                    quiet = FALSE
+                  )
+                }
+                return("success")
+
+              }, error = function(e) {
+                return(paste0("error: ", e$message))
+              })
+            },
+
+            args = list(
+              qmd_file    = selected_qmd_file_name,
+              folder_path = selected_folder_path,
+              params_list = if(selected_idx == 1) {
+                list(list_quarto_replacement = internal_list_quarto_replacement())
+              } else {
+                NULL
+              }
             )
+          )
+
+          # === PROCESAMOS EL RESULTADO FUERA DEL PROCESO HIJO ===
+          if (result == "success") {
+            render_status[[selected_pkg_name]] <- "done"
           } else {
-            quarto::quarto_render(input = selected_qmd_file_name, quiet = FALSE)
+            render_status[[selected_pkg_name]] <- "error"
+            # Opcional: mostrar el error
+            showNotification(paste("Error en", selected_pkg_name, ":", result), type = "error")
           }
 
-          # Si llegó aquí, todo salió bien
-          render_status[[selected_pkg_name]] <- "done"
-
         }, error = function(e) {
-          # Si falla Quarto, marcamos el error pero on.exit nos devuelve a casa
           render_status[[selected_pkg_name]] <- "error"
+          showNotification(paste("Error grave al renderizar:", e$message), type = "error")
         })
 
-        # Avanzamos el índice para el siguiente ciclo
-        if(selected_idx < selected_max_idx) {
+        # --- Avanzamos al siguiente índice ---
+        if (selected_idx < selected_max_idx) {
           current_idx(selected_idx + 1)
-        } else if(selected_idx == selected_max_idx) {
+        } else if (selected_idx == selected_max_idx) {
           super_DONE(TRUE)
         }
-      })
+
+      }) # end isolate
     })
 
     observeEvent(super_DONE(), {

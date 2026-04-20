@@ -259,6 +259,7 @@ mod_02_01_dataset_server <- function(id, show_debug = reactive({FALSE})) {
 
             selected_sheet <- input$excel_sheet
             excel_template <- "readxl::read_excel(path = '{P}', sheet = '{S}')"
+            excel_template <- "openxlsx::read.xlsx(xlsxFile = '{P}', sheet = '{S}')"
 
             RValues_metadata_dataset$code_import_external <- gsub("{P}", selected_file_name, excel_template, fixed = TRUE)
             RValues_metadata_dataset$code_import_external <- gsub("{S}", selected_sheet, RValues_metadata_dataset$code_import_external, fixed = TRUE)

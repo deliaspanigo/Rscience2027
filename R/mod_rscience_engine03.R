@@ -254,6 +254,13 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       output_list$temp_folder$folder_path <- full_path_temp
       output_list$temp_folder$folder_exists <- check_folder_temp_created
 
+
+      # if (check_folder_temp_created) {
+      #   # En Ubuntu, 0755 es lo estándar para carpetas ejecutables/accesibles
+      #   # Usamos recursividad para asegurar que los scripts y binarios internos funcionen
+      #   system(paste("chmod -R 755", full_path_temp))
+      # }
+
       # Copying files from local to temp
       path_origin <- local_folder_path_tool_script
       path_dest   <- full_path_temp
@@ -515,7 +522,7 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
         name = "Is not an R Objetct.",
         R_value = str_import_internal,
         str_R = as.character(R_value),
-        str_quarto = "get('mtcars') ###SECURITY_SEAL - external###"
+        str_quarto = "get('mtcars') ###SECURITY_SEAL - internal###"
       )
 
       my_list$"quarto_replacement"$str_import_external = dplyr::lst(

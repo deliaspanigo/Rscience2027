@@ -17,7 +17,7 @@ knitr:
         collapse: false
         comment: ""
 params:
-  list_quarto_replacement: !expr list()
+  list_quarto_replacement: NULL
 ---
 
 ```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}

@@ -11,14 +11,28 @@ format:
       y: 2cm
     toc: false
     section-numbering: 1.1.a
-    # Añadimos esto para separar la carátula
-    keep-typ: true 
+    keep-typ: true
+    # Forzamos la conversión a PNG para Typst
+    fig-format: png
+    # Consolidamos dependencias para evitar el error de "web no encontrada"
+    embed-resources: true
 params:
   clean_all: false
   special_echo: false
   special_include: false
 ---
 
+```{r setup}
+#| include: false
+library(plotly)
+library(webshot2)
+
+# Configuración de seguridad para el motor de captura (especialmente en Linux/Shiny)
+Sys.setenv(CHROMOTE_CHROME_ARGS = "--no-sandbox --disable-gpu --disable-software-rasterizer")
+
+# Opcional: Forzar un tamaño de viewport para consistencia total entre OS
+options(webshot.vwidth = 800, webshot.vheight = 600)
+```
 
 
 ```{=typst}
@@ -265,91 +279,100 @@ fn_local_quarto_pretty_table_pdf(
 ```
 
 
+# Tukey Table
+```{r}
+#| eval: true
+#| echo: false
+
+
+fn_local_quarto_pretty_table_pdf(
+  df = super_bag[[6]]$df_tukey_table_classroom, 
+  title = "Tabla de Tukey", 
+  font_size = 8
+)
+```
+
+
 # Tukey plot
 ```{r}
 #| label: fig-tukey-png
-#| fig-cap: "Análisis de Comparaciones Múltiples (Tukey)"
 #| echo: false
-#| eval: true
 #| results: asis
 #| warning: false
 #| message: false
 
-# 1. Configuración inicial de Chrome (si no está seteado)
-if (Sys.getenv("CHROMOTE_CHROME") == "") {
-  Sys.setenv(CHROMOTE_CHROME = pagedown::find_chrome())
-}
+library(plotly)
+library(htmlwidgets)
+library(webshot2)
 
-# 2. Definir rutas y nombres
+# 1. Configuración de Chrome (Apuntando al nuevo .deb instalado)
+Sys.setenv(CHROMOTE_CHROME = "/usr/bin/google-chrome")
+
+Sys.setenv(CHROMOTE_CHROME_ARGS = paste(
+  "--no-sandbox",
+  "--disable-gpu",
+  "--headless",
+  "--disable-web-security",
+  "--allow-file-access-from-files",
+  "--disable-dev-shm-usage",
+  sep = " "
+))
+
+# 2. Definir objeto y nombres
 p <- super_bag[[2]]$plot_tukey001
 p <- p %>% plotly::config(displayModeBar = FALSE)
 
+nombre_html <- "temp_render.html"
 nombre_png <- "grafico_final.png"
-nombre_html <- "temp_render.html" # Nombre fijo para evitar líos de rutas
-
-# 3. Guardar el directorio actual para volver después
-dir_original <- getwd()
-
-# 4. Definir carpeta de trabajo temporal (dentro de tu proyecto actual)
-# Creamos una carpeta 'temp_export' para que Chrome no tenga problemas de acceso
-dir_temp_trabajo <- file.path(dir_original, "temp_export")
-if (!dir.exists(dir_temp_trabajo)) dir.create(dir_temp_trabajo)
 
 tryCatch({
-  # --- CAMBIO DE DIRECTORIO ---
-  setwd(dir_temp_trabajo)
-  
-  # A. Guardar el Widget en la carpeta actual
-  # Usamos selfcontained = TRUE para que no dependa de carpetas externas
+  # A. Guardar el Widget
   htmlwidgets::saveWidget(p, nombre_html, selfcontained = TRUE)
   
   # B. Capturar el PNG
-  # Al estar en el mismo directorio, webshot accede directo al archivo local
+  ruta_absoluta_html <- normalizePath(nombre_html, mustWork = TRUE)
+  url_file <- paste0("file://", ruta_absoluta_html)
+  
   webshot2::webshot(
-    url = nombre_html,
+    url = url_file, 
     file = nombre_png,
     vwidth = 1200,
     vheight = 800,
-    delay = 3,         # Aumentamos un poco el delay por si el JS es pesado
+    delay = 5,
     zoom = 2
   )
-  
-  # C. Mover el PNG resultante a la carpeta original (opcional)
-  file.copy(nombre_png, file.path(dir_original, nombre_png), overwrite = TRUE)
-  
-  message("✅ PNG generado con éxito: ", nombre_png)
+
+  # C. Copia de respaldo para Debug (Silenciosa)
+  debug_dir <- "/home/legion/bulk/MyGithub/Rscience2027/inst/debug_outputs"
+  if (dir.exists(debug_dir)) {
+    file.copy(nombre_html, file.path(debug_dir, "ultimo_render.html"), overwrite = TRUE)
+    file.copy(nombre_png, file.path(debug_dir, "ultimo_render.png"), overwrite = TRUE)
+  }
 
 }, error = function(e) {
-  message("❌ Error durante el proceso: ", e$message)
-}, finally = {
-  # --- VOLVER AL DIRECTORIO ORIGINAL ---
-  setwd(dir_original)
-  
-  # Limpieza de la carpeta temporal (Opcional: puedes comentarlo si quieres ver qué pasó)
-  # unlink(dir_temp_trabajo, recursive = TRUE)
+  # Solo avisamos si hay un error real de ejecución
+  cat("\n\n::: {.alert .alert-danger}\n")
+  cat("**ERROR DURANTE EL RENDERIZADO:**", e$message)
+  cat("\n:::\n\n")
 })
-```
 
-
-```{r}
-#| label: fig-tukey-001
-#| echo: false
-#| include: true
-#| fig-cap: "Análisis de Comparaciones Múltiples - Test de Tukey"
-#| out-width: "100%"
-#| fig-align: "center"
-
-# 1. Definir la ruta al PNG que generamos antes
-path_png <- "grafico_final.png" # O la ruta donde lo hayas guardado
-
-# 2. Verificar si el archivo existe antes de intentar incluirlo
-if (file.exists(path_png)) {
-  knitr::include_graphics(path_png)
-} else {
-  stop("Error: No se encuentra el archivo PNG para el reporte PDF.")
+# 4. Lógica de Avisos Condicionales
+if (!file.exists(nombre_html)) {
+  cat("\n\n> ⚠️ **Aviso:** No se pudo encontrar el archivo HTML intermedio.")
 }
 
+if (file.exists(nombre_png)) {
+  # Si el PNG existe, lo mostramos sin decir nada más
+  knitr::include_graphics(nombre_png)
+} else {
+  # Solo mostramos el error crítico si el PNG no está
+  cat("\n\n::: {.alert .alert-warning}\n")
+  cat("> **Error Crítico:** No se encontró el archivo PNG para el reporte.")
+  cat("\n:::\n\n")
+}
 ```
+
+
 
 
 

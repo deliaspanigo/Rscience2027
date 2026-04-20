@@ -129,6 +129,7 @@ if(!check_exists){
 
 list_quarto_replacement <- params$list_quarto_replacement
 
+if(!is.null(list_quarto_replacement)) {
 # --- 1. Definimos los campos que queremos extraer explícitamente ---
 target_fields <- c("detail", "name", "str_R", "str_quarto")
 
@@ -161,14 +162,17 @@ rownames(df_settings_strings) <- NULL
 
 # --- 4. Ver el resultado ---
 print(df_settings_strings)
+}
 ```
 
 # DF all changes
 ```{r eval=TRUE, echo=FALSE}
 
+if(!is.null(list_quarto_replacement)) {
+
 df_all_changes <- df_settings_strings[c("str_R","str_quarto")]
 df_all_changes
-
+}
 
 
 ```
@@ -176,6 +180,7 @@ df_all_changes
 
 ```{r eval=TRUE, echo=FALSE}
 
+if(!is.null(list_quarto_replacement)) {
 
 vector_code <- readLines(str_quarto_mod_file_path_absolute, encoding = "UTF-8")
 
@@ -193,5 +198,5 @@ writeLines(lineas_archivo, str_quarto_mod_file_path_absolute, useBytes = FALSE)
 # 4. Mensaje de confirmación en consola
 cat("Cambios aplicados exitosamente en:", basename(str_quarto_mod_file_path_absolute), "\n")
 
-
+}
 ```

@@ -50,7 +50,7 @@ Importamos el archivo con el cual trabajaremos, y visualizamos las 5 primeras
 filas del dataset para verificar que todo está en orden.
 ```{r eval=FALSE, echo=TRUE}
 # # # # # Section 02 - Import dataset ----------------------------------------
-  my_dataset <- get('mtcars')
+  my_dataset <- get('mtcars') ###SECURITY_SEAL - external###
   head(x = my_dataset, n = 5)
 ```
 
@@ -58,7 +58,7 @@ filas del dataset para verificar que todo está en orden.
 ```{r eval=TRUE, echo=FALSE}
 # El internal
 # # # # # Section 02 - Import dataset ----------------------------------------
-  my_dataset <- get('mtcars')
+  my_dataset <- get('mtcars') ###SECURITY_SEAL - internal###
   head(x = my_dataset, n = 5)
 ```
 
@@ -74,19 +74,19 @@ con todos los niveles del factor en el orden en el cual el usuario desea que los
 aparezcan en el informe, y un segundo vector para detallar un color por cada nivel del factor.
 ```{r eval=TRUE, echo=TRUE}
 # # # # # Section 03 - Settings ----------------------------------------------
-  var_name_rv     <-  "mpg"
+  var_name_rv     <-  "mpg" ###SECURITY_SEAL###
   var_name_rv
 
-  var_name_factor <- "cyl"
+  var_name_factor <- "cyl" ###SECURITY_SEAL###
   var_name_factor
 
-  alpha_value     <-  0.05
+  alpha_value     <-  0.05 ###SECURITY_SEAL###
   alpha_value
 
-  vector_order_levels_new <- c("4", "6", "8")
+  vector_order_levels_new <- c("4", "6", "8") ###SECURITY_SEAL###
   vector_order_levels_new
   
-  vector_color_levels_new <- c("#FF0000", "#00FF00", "#0000FF")
+  vector_color_levels_new <- c("#FF0000", "#00FF00", "#0000FF") ###SECURITY_SEAL###
   names(vector_color_levels_new) <- vector_order_levels_new
   vector_color_levels_new
   
