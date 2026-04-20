@@ -507,24 +507,24 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
 
       my_list$"quarto_replacement" <- dplyr::lst()
 
-      # str_import_internal <- internal_rlist_dataset$metadata_dataset$"code_import_internal"
-      # str_import_external <- internal_rlist_dataset$metadata_dataset$"code_import_external"
-      #
-      # my_list$"quarto_replacement"$str_import_internal = dplyr::lst(
-      #   detail = "Str for import - internal",
-      #   name = "Is not an R Objetct.",
-      #   R_value = str_import_internal,
-      #   str_R = as.character(R_value),
-      #   str_quarto = "get('mtcars') ###SECURITY_SEAL - external###"
-      # )
-      #
-      # my_list$"quarto_replacement"$str_import_external = dplyr::lst(
-      #   detail = "Str for import - external",
-      #   name = "Is not an R Objetct.",
-      #   R_value = str_import_external,
-      #   str_R = as.character(R_value),
-      #   str_quarto = "get('mtcars') ###SECURITY_SEAL - external###"
-      # )
+      str_import_internal <- internal_rlist_dataset$metadata_dataset$"code_import_internal"
+      str_import_external <- internal_rlist_dataset$metadata_dataset$"code_import_external"
+
+      my_list$"quarto_replacement"$str_import_internal = dplyr::lst(
+        detail = "Str for import - internal",
+        name = "Is not an R Objetct.",
+        R_value = str_import_internal,
+        str_R = as.character(R_value),
+        str_quarto = "get('mtcars') ###SECURITY_SEAL - external###"
+      )
+
+      my_list$"quarto_replacement"$str_import_external = dplyr::lst(
+        detail = "Str for import - external",
+        name = "Is not an R Objetct.",
+        R_value = str_import_external,
+        str_R = as.character(R_value),
+        str_quarto = "get('mtcars') ###SECURITY_SEAL - external###"
+      )
 
       ##########################################################################
 
