@@ -17,8 +17,7 @@ knitr:
         collapse: false
         comment: ""
 params:
-  rlist_collector03: NULL
-  use_default_collector03: FALSE
+  list_quarto_replacement: !expr list()
 ---
 
 ```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
@@ -70,6 +69,7 @@ if(stone02_exists){
 
   quarto::quarto_render(
     input = stone02_file_name,
+    execute_params = list(list_quarto_replacement = params$list_quarto_replacement),
     quiet = F
   )
 }

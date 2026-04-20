@@ -45,7 +45,7 @@ mod_10_00_proccessing_server <- function(id,
                                          module_proccessing_file_path,
                                          local_folder_tool_script,
                                          temp_folder_tool_script,
-                                         list_settings,
+                                         list_quarto_replacement,
                                          show_debug = F) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
@@ -59,6 +59,7 @@ mod_10_00_proccessing_server <- function(id,
     internal_path  <- reactive({ if (is.function(module_proccessing_file_path)) module_proccessing_file_path() else module_proccessing_file_path })
     internal_local <- reactive({ if (is.function(local_folder_tool_script)) local_folder_tool_script() else local_folder_tool_script })
     internal_temp  <- reactive({ if (is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script })
+    internal_list_quarto_replacement <- reactive({ if (is.function(list_quarto_replacement)) list_quarto_replacement() else list_quarto_replacement })
 
     local_env  <- reactiveVal(NULL)
     data_store <- reactiveValues(
@@ -101,8 +102,9 @@ mod_10_00_proccessing_server <- function(id,
 
       rv$special_module <- env$mod_special_proccessing_server(
         id = "sub_proc",
-        local_folder_tool_script = internal_local(),
-        temp_folder_tool_script = internal_temp()
+        local_folder_tool_script = internal_local,
+        temp_folder_tool_script = internal_temp,
+        list_quarto_replacement = internal_list_quarto_replacement
       )
     })
 

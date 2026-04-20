@@ -33,7 +33,7 @@ mod_special_proccessing_ui <- function(id) {
 }
 
 
-mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_folder_tool_script, list_settings, show_debug = FALSE) {
+mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_folder_tool_script, list_quarto_replacement, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -41,6 +41,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
 
     internal_local_folder_tool_script <- reactive(if(is.function(local_folder_tool_script)) local_folder_tool_script() else local_folder_tool_script)
     internal_temp_folder_tool_script  <- reactive(if(is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script)
+    internal_list_quarto_replacement <- reactive({ if (is.function(list_quarto_replacement)) list_quarto_replacement() else list_quarto_replacement })
 
 
     # --------------------------------------------------------------------------
@@ -216,34 +217,52 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     observe({
       # Extraemos la info del reactive debounced
       flat_pack <- pack_current_pos_render()
-      req(flat_pack) # Evita que corra si es NULL
+      req(engine$started, flat_pack) # Evita que corra si no ha empezado o es NULL
 
       selected_pkg_name <- flat_pack$pkg_name
-      selected_idx <- flat_pack$idx
-      selected_path <- flat_pack$path
-      selected_max_idx <- flat_pack$max_idx
+      selected_idx      <- flat_pack$idx
+      selected_path     <- flat_pack$path
+      selected_max_idx  <- flat_pack$max_idx
 
       isolate({
+        # --- SEGURIDAD DE DIRECTORIO ---
+        old_wd <- getwd()
+        # on.exit se ejecutará al terminar el bloque isolate,
+        # sin importar si hubo éxito o error.
+        on.exit(setwd(old_wd), add = TRUE)
+
         tryCatch({
           selected_folder_path <- dirname(selected_path)
           selected_qmd_file_name <- basename(selected_path)
 
-          old_wd <- getwd()
-          new_wd <- selected_folder_path
+          # Cambiamos al directorio del archivo
+          setwd(selected_folder_path)
 
-          setwd(new_wd)
-          quarto::quarto_render(input = selected_qmd_file_name, quiet = FALSE)
-          setwd(old_wd)
+          if(selected_idx == 1) {
+            quarto::quarto_render(
+              input = selected_qmd_file_name,
+              execute_params = list(
+                list_quarto_replacement = internal_list_quarto_replacement()
+              ),
+              quiet = FALSE
+            )
+          } else {
+            quarto::quarto_render(input = selected_qmd_file_name, quiet = FALSE)
+          }
 
-          # quarto::quarto_render(input = selected_path, quiet = TRUE)
+          # Si llegó aquí, todo salió bien
           render_status[[selected_pkg_name]] <- "done"
+
         }, error = function(e) {
+          # Si falla Quarto, marcamos el error pero on.exit nos devuelve a casa
           render_status[[selected_pkg_name]] <- "error"
         })
-        # Avanzamos el índice
-        if(selected_idx < selected_max_idx) current_idx(selected_idx + 1) else if(selected_idx == selected_max_idx) {
-        super_DONE(TRUE)
 
+        # Avanzamos el índice para el siguiente ciclo
+        if(selected_idx < selected_max_idx) {
+          current_idx(selected_idx + 1)
+        } else if(selected_idx == selected_max_idx) {
+          super_DONE(TRUE)
         }
       })
     })

@@ -500,14 +500,39 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
 
       req(internal_rlist_dataset, internal_list_settings, internal_local_folder_path_tool)
 
-      my_list <- list()
-
+      my_list <- dplyr::lst()
+      ##########################################################################
       my_list$"folder_script_tool" <- internal_local_folder_path_tool
+      ##########################################################################
 
-      # my_list$"dataset" <- list(code_import_external = internal_rlist_dataset$metadata$code_import_external,
-      #                           code_import_internal = internal_rlist_dataset$metadata$code_import_internal)
+      my_list$"quarto_replacement" <- dplyr::lst()
 
-      my_list$"settings" <- internal_list_settings$list_clean
+      # str_import_internal <- internal_rlist_dataset$metadata_dataset$"code_import_internal"
+      # str_import_external <- internal_rlist_dataset$metadata_dataset$"code_import_external"
+      #
+      # my_list$"quarto_replacement"$str_import_internal = dplyr::lst(
+      #   detail = "Str for import - internal",
+      #   name = "Is not an R Objetct.",
+      #   R_value = str_import_internal,
+      #   str_R = as.character(R_value),
+      #   str_quarto = "get('mtcars') ###SECURITY_SEAL - external###"
+      # )
+      #
+      # my_list$"quarto_replacement"$str_import_external = dplyr::lst(
+      #   detail = "Str for import - external",
+      #   name = "Is not an R Objetct.",
+      #   R_value = str_import_external,
+      #   str_R = as.character(R_value),
+      #   str_quarto = "get('mtcars') ###SECURITY_SEAL - external###"
+      # )
+
+      ##########################################################################
+
+      my_list$quarto_replacement <- utils::modifyList(
+        my_list$quarto_replacement,
+        internal_list_settings$list_clean
+      )
+      ##########################################################################
 
       my_list
 
@@ -558,14 +583,33 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
       data$"file01_05_proccsessing"$"local_file_path"
     })
 
+    # Pre Proccessing
+    pack_proccessing <- reactive({
+
+      req(rlist_collector03())
+      flat_rlist_collector03 <- rlist_collector03()
+      flat_list_quarto_replacement <- flat_rlist_collector03$"quarto_replacement"
+
+      the_output_list <- list(
+        module_proccessing_file_path = HOOK_temp_file_path_proccessing(),
+        local_folder_tool_script     = HOOK_local_folder_path_tool_script(),
+        temp_folder_tool_script      = HOOK_temp_folder_path_tool_script(),
+        list_quarto_replacement      = flat_list_quarto_replacement
+      )
+
+      print(the_output_list)
+      the_output_list
+    })
 
     rlist_proccessing <- mod_10_00_proccessing_server(
       id = "pipeline_1",
-      module_proccessing_file_path = HOOK_temp_file_path_proccessing,
-      local_folder_tool_script = HOOK_local_folder_path_tool_script,
-      temp_folder_tool_script =  HOOK_temp_folder_path_tool_script,
-      list_settings = NULL
+      module_proccessing_file_path = reactive(pack_proccessing()$module_proccessing_file_path),
+      local_folder_tool_script     = reactive(pack_proccessing()$local_folder_tool_script),
+      temp_folder_tool_script      = reactive(pack_proccessing()$temp_folder_tool_script),
+      list_quarto_replacement      = reactive(pack_proccessing()$list_quarto_replacement),
     )
+
+    # Post Proccessing
     HOOK_proccessing_is_done <- reactive({
       req(rlist_proccessing())
       rlist_proccessing()$is_done
