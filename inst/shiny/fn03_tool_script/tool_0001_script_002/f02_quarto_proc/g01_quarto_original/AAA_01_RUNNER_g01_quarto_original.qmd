@@ -21,7 +21,7 @@ params:
 ---
 
 ```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
-
+library('rmarkdown')
 library("knitr")
 library("tools")
 library("quarto")

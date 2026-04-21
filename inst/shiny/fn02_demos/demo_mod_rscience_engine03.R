@@ -1,5 +1,6 @@
 # --- LANZADOR DE LA APP ---
-devtools::load_all()
+library(devtools)
+
 
 # 1. Cargar el paquete
 devtools::load_all()

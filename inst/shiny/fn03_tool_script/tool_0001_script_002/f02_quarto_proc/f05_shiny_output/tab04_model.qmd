@@ -172,7 +172,7 @@ super_bag <- lapply(vector_RData_file_path, function(file_path) {
   temp_env <- new.env()
   
   # 2. Normalizamos la ruta (importante en Linux/Windows)
-  file_path_clean <- normalizePath(file_path, winslash = TRUE, mustWork = TRUE)
+  file_path_clean <- normalizePath(file_path,  mustWork = TRUE)
   
   # 3. Usamos LOAD especificando el entorno de destino
   # A diferencia de source(), load() no devuelve error de multibyte en binarios.

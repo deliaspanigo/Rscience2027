@@ -29,12 +29,20 @@ Imports:
   tidyverse,
   openxlsx,
   colourpicker,
+  S7,
+  ggplot2,
   plotly,
   htmlwidgets,
   webshot2,
   flextable,
   kableExtra,
-  officer
+  officer,
+  rmarkdown,
+  knitr,
+  callr,
+  agricolae,
+  EnvStats,
+  pagedown
 Depends: 
     R (>= 3.5)
 RoxygenNote: 7.3.3
