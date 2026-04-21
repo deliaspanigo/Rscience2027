@@ -21,7 +21,20 @@ Imports:
   DT,
   readxl,
   vroom,
-  shinyjs
+  shinyjs,
+  shinyWidgets,
+  listviewer,
+  dplyr,
+  quarto,
+  tidyverse,
+  openxlsx,
+  colourpicker,
+  plotly,
+  htmlwidgets,
+  webshot2,
+  flextable,
+  kableExtra,
+  officer
 Depends: 
     R (>= 3.5)
 RoxygenNote: 7.3.3

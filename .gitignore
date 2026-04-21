@@ -2,3 +2,15 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# renv (Aislamiento Nuclear)
+# Ignoramos la librería local y la caché porque son específicas de tu Legion
+renv/library/
+renv/cache/
+renv/staging/
+renv/sandbox/
+renv/python/
+
+# EXCEPCIONES: Estos archivos SI deben ir a Git para que el proyecto funcione
+!renv/activate.R
+!renv/settings.json

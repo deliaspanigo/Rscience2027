@@ -1,31 +1,36 @@
-# install.packages("renv")
+# 1. Limpieza
+if ("renv" %in% loadedNamespaces()) unloadNamespace("renv")
 
-renv::deactivate()
+# 2. Instalación en la librería base del R-Portable
+# Asegúrate de ejecutar esto desde el R que está en .\App\R-Portable
+install.packages("renv", lib = .Library)
 
-# Cargar renv
-library(renv)
+# 3. Configuración para PORTABILIDAD (Crucial)
+Sys.setenv(RENV_CONFIG_SANDBOX_ENABLED = FALSE)
+Sys.setenv(RENV_CONFIG_CACHE_ENABLED = FALSE)
 
-# Inicializa renv totalmente limpio
-renv::init()
+# 4. Inicialización
+# Entramos a la carpeta del proyecto si no estamos en ella
+if (basename(getwd()) != "Rscience2027") setwd("Rscience2027")
 
-# Configura para que SOLO instale lo que pongas en el DESCRIPTION
+renv::init(bare = TRUE, restart = FALSE)
+
+# 5. Configuración de Snapshot
 renv::settings$snapshot.type("explicit")
 
-# Inicializar renv en tu proyecto/paquete
-renv::init()
-
+# 6. Instalación de dependencias
+# Esto instalará lo que declare tu archivo DESCRIPTION
 renv::install()
 renv::snapshot()
 
-# Cuando quieras guardar el estado actual de dependencias
-renv::snapshot()
+renv::restore()
 
-# Restaurar el entorno exacto si trabajo en otro equipo!
-# renv::restore()
+# 7. Snapshot Final
+renv::snapshot(prompt = FALSE)
 
-# Limpiar paquetes no utilizados
-# renv::clean() ocasionalmente para eliminar paquetes no utilizados de la biblioteca privada
+# VERIFICACIÓN FINAL
+cat("\n--- VERIFICACIÓN DE AISLAMIENTO ---\n")
+print(.libPaths()) # Debe mostrar la ruta interna de tu proyecto
 
-# Actualiza los paquetes de manera controlada
-# renv::update()
-#############################################################
+# 8. Prueba manual antes de cerrar
+# shiny::runApp(launch.browser = TRUE)
