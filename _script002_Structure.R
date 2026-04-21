@@ -20,7 +20,7 @@ devtools::clean_dll()
 devtools::document()
 
 
-remotes::install_github("deliaspanigo/Rscience3")
+# remotes::install_github("deliaspanigo/Rscience3")
 
 devtools::install()
 

@@ -116,28 +116,34 @@ mod_rscience_engine03_ui <- function(id) {
             )
         ),
 
-        # --- ÁREA DE CONTENIDO ---
-        div(class = "main-content-area",
-            navset_hidden(
-              id = ns("main_navset"),
-              nav_panel_hidden("c_data",   mod_02_01_dataset_ui(id = ns("my_ns_dataset"))),
-              nav_panel_hidden("c_tool",   mod_02_02_00_tool_ui(id = ns("my_ns_tool"))),
-              nav_panel_hidden("c_script", mod_02_03_00_script_ui(id = ns("my_ns_script"))),
-              nav_panel_hidden("c_settings", mod_04_00_settings_ui(id = ns("my_ns_collector02_settings"))),
-              nav_panel_hidden("c_play", mod_10_00_proccessing_ui(id = ns("pipeline_1"))),
-              nav_panel_hidden("c_DEBUG", uiOutput(ns("show_debug"))),
-              nav_panel_hidden("c_script_and_comments", mod_11_A_script_and_comments_ui(id = ns("pipeline_333"))),
-              nav_panel_hidden("c_shiny_output", mod_11_B_shiny_output_ui(id = ns("pather_shiny_output"))),
-              nav_panel_hidden("c_asa", mod_11_C_asa_ui(id = ns("pather_asa"))),
-              nav_panel_hidden("c_pdf", mod_11_D_pdf_ui(id = ns("pather_pdf"))),
-              nav_panel_hidden("c_theory", mod_03_A_theory_ui(ns("txt_1"))),
-              nav_panel_hidden("c_bibliography", mod_03_B_bibliography_ui(ns("txt_2"))),
-              nav_panel_hidden("c_cite", mod_03_C_cite_ui(ns("txt_3"))),
-              nav_panel_hidden("c_faqs", card(card_body("FAQ...")))
-            )
-        )
+        mod_rscience_engine03_main_ui(id = id)
     )
   )
+}
+
+
+mod_rscience_engine03_main_ui <- function(id) {
+  ns <- NS(id)
+# --- ÁREA DE CONTENIDO ---
+div(class = "main-content-area",
+    navset_hidden(
+      id = ns("main_navset"),
+      nav_panel_hidden("c_data",   mod_02_01_dataset_ui(id = ns("my_ns_dataset"))),
+      nav_panel_hidden("c_tool",   mod_02_02_00_tool_ui(id = ns("my_ns_tool"))),
+      nav_panel_hidden("c_script", mod_02_03_00_script_ui(id = ns("my_ns_script"))),
+      nav_panel_hidden("c_settings", mod_04_00_settings_ui(id = ns("my_ns_collector02_settings"))),
+      nav_panel_hidden("c_play", mod_10_00_proccessing_ui(id = ns("pipeline_1"))),
+      nav_panel_hidden("c_DEBUG", uiOutput(ns("show_debug"))),
+      nav_panel_hidden("c_script_and_comments", mod_11_A_script_and_comments_ui(id = ns("pipeline_333"))),
+      nav_panel_hidden("c_shiny_output", mod_11_B_shiny_output_ui(id = ns("pather_shiny_output"))),
+      nav_panel_hidden("c_asa", mod_11_C_asa_ui(id = ns("pather_asa"))),
+      nav_panel_hidden("c_pdf", mod_11_D_pdf_ui(id = ns("pather_pdf"))),
+      nav_panel_hidden("c_theory", mod_03_A_theory_ui(ns("txt_1"))),
+      nav_panel_hidden("c_bibliography", mod_03_B_bibliography_ui(ns("txt_2"))),
+      nav_panel_hidden("c_cite", mod_03_C_cite_ui(ns("txt_3"))),
+      nav_panel_hidden("c_faqs", card(card_body("FAQ...")))
+    )
+)
 }
 
 mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_general = F) {
