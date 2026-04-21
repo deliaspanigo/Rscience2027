@@ -4,7 +4,8 @@ git commit -m "Release: Version 0.9.1"
 
 # 2. Etiquetar la versión
 # Borramos el tag local por si acaso ya se creó con error antes
-git tag -d v0.9.1 2>/dev/null
+#git tag -d v0.9.1 2>/dev/null
+git tag -d v0.9.1 | Out-Null
 git tag -a v0.9.1 -m "Versión estable 0.9.1 ROMA"
 
 # 3. Subir cambios y etiquetas a GitHub
