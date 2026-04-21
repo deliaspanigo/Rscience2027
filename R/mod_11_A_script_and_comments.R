@@ -137,6 +137,11 @@ mod_11_A_script_and_comments_server <- function(id,
 
     # --- 7. RENDERS UI ---
     output$ui_waiting_state <- renderUI({
+      # REGLA: Si el path existe y el entorno está listo, detén este render (devuelve NULL)
+      info <- internal_meta()
+      req(info$status == "WAITING_PATH" || !rv$ready)
+
+      # Si pasa el req, muestra el diseño:
       div(style = "padding: 80px 20px; text-align: center; border: 2px dashed #444; border-radius: 20px; background: #1a1a1a;",
           div(class = "text-center rs-logo-animated",
               img(src = "WWW-FOLDER/Rscience_logo_sticker.png", style = "width: 150px;")),
@@ -146,16 +151,26 @@ mod_11_A_script_and_comments_server <- function(id,
     })
 
     output$placeholder_dinamico <- renderUI({
-      req(rv$ready)
+      req(rv$ready, internal_temp_folder()) # Solo renderiza si ambos están listos
       env <- local_env()
       req(env$mod_special_script_and_comments_ui)
       env$mod_special_script_and_comments_ui(ns("sub_proc"))
     })
 
-    # --- 8. ESTADOS Y DEBUG ---
+    # --- 8. ESTADOS Y DEBUG (CORREGIDO) ---
     observe({
       info <- internal_meta()
-      state <- if (info$status == "WAITING_PATH") "state_waiting" else if (!rv$ready) "state_loading" else "state_ready"
+      temp_ready <- !is.null(internal_temp_folder()) && internal_temp_folder() != ""
+
+      # Definimos el estado basado en la disponibilidad de datos y del hijo
+      state <- if (info$status == "WAITING_PATH" || !temp_ready) {
+        "state_waiting"
+      } else if (!rv$ready) {
+        "state_loading"
+      } else {
+        "state_ready"
+      }
+
       nav_select("proccessing_switcher", state)
     })
 

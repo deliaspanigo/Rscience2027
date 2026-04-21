@@ -2,10 +2,6 @@ mod_rscience_engine03_ui <- function(id) {
   ns <- NS(id)
 
   # Registro de recursos
-  css_folder <- system.file("www", "css", package = "Rscience2027")
-  if (css_folder == "") css_folder <- "www/css"
-  try(addResourcePath("RS-STYLES", normalizePath(css_folder)), silent = TRUE)
-
   www_folder <- system.file("www", package = "Rscience2027")
   if (www_folder == "") www_folder <- "www"
   try(addResourcePath("WWW-FOLDER", normalizePath(www_folder)), silent = TRUE)
@@ -15,108 +11,201 @@ mod_rscience_engine03_ui <- function(id) {
       useShinyjs(),
       tags$link(rel = "stylesheet", type = "text/css",
                 href = paste0("RS-STYLES/style_000.css?v=", as.numeric(Sys.time()))),
-
       tags$style(HTML(paste0("
-        /* Evita que el navegador genere scroll en el body */
-        html, body {
-          height: 100vh;
-          overflow: hidden;
-          margin: 0;
-          background: #0b1218;
-        }
+  /* --- RESET GLOBAL: CERO ABSOLUTO --- */
 
-        /* Contenedor principal: Ocupa toda la pantalla y es Flex Vertical */
-        .rs-dashboard-wrapper {
-          display: flex;
-          flex-direction: column;
-          height: 100vh;
-          width: 100%;
-        }
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    overflow: hidden;
+    background-color: #0b1218; /* Evita destellos blancos al cargar */
+  }
 
-        /* Header: Altura fija según su contenido */
-        .rs-dashboard-header {
-          flex: 0 0 auto;
-          background: #0b1218;
-          border-bottom: 6px solid #00d4ff;
-          padding: 10px 20px;
-          display: flex;
-          align-items: center;
-          gap: 30px;
-          z-index: 1000;
-        }
+  /* Reset de contenedores automáticos de Shiny/Bootstrap */
+  .container-fluid, .tab-pane, .tab-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
 
-        /* Área de contenido: Ocupa el 100% de lo que sobra */
-        .main-content-area {
-          flex: 1 1 auto;
-          padding: 20px;
-          background: #0b1218;
-          overflow-y: auto; /* El scroll solo sucede aquí adentro */
-          position: relative;
-        }
+  /* --- ESTILOS ESPECÍFICOS DEL MÓDULO --- */
 
-        /* REGLA CRITICA: Asegura que el contenido del navset llene el alto */
-        .main-content-area > .tab-content {
-          height: 100%;
-          width: 100%;
-        }
+  #", id, "-container.rs-module-container {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #0b1218;
+    position: relative;
+    top: 0;
+    left: 0;
+  }
 
-        .rs-brand img { width: 140px; }
-        .rs-nav-group {
-          display: flex;
-          background: rgba(255,255,255,0.05);
-          border-radius: 50px;
-          padding: 5px;
-          gap: 5px;
-        }
-        .nav-btn-custom {
-          border: none;
-          background: transparent;
-          color: #8a9ba8;
-          padding: 8px 18px;
-          border-radius: 40px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          transition: 0.3s;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .nav-btn-custom:hover { background: rgba(0, 212, 255, 0.1); color: #00d4ff; }
-        .nav-btn-custom.active { background: #00d4ff; color: #000; }
-        .nav-divider { width: 2px; height: 25px; background: rgba(255,255,255,0.1); align-self: center; }
-      ")))
+  #", id, "-container .rs-dashboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #", id, "-container .rs-dashboard-header {
+    flex: 0 0 auto;
+    background: #0b1218;
+    border-bottom: 6px solid #00d4ff;
+    padding: 10px 20px 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    z-index: 1000;
+    position: relative;
+    margin: 0 !important;
+  }
+
+  #", id, "-container .main-content-area {
+    flex: 1 1 auto;
+    padding: 20px;
+    background: #0b1218;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  #", id, "-container .rs-brand img {
+    width: 140px;
+  }
+
+  #", id, "-container .rs-nav-group {
+    display: flex;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50px;
+    padding: 5px;
+    gap: 5px;
+  }
+
+  #", id, "-container .nav-btn-custom {
+    border: none;
+    background: transparent;
+    color: #8a9ba8;
+    padding: 8px 18px;
+    border-radius: 40px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #", id, "-container .nav-btn-custom:hover {
+    background: rgba(0, 212, 255, 0.1);
+    color: #00d4ff;
+  }
+
+  #", id, "-container .nav-btn-custom.active {
+    background: #00d4ff;
+    color: #000;
+  }
+
+  #", id, "-container .nav-divider {
+    width: 2px;
+    height: 25px;
+    background: rgba(255,255,255,0.1);
+    align-self: center;
+  }
+
+  /* --- ETIQUETAS SOBRE EL BORDE --- */
+
+  #", id, "-container .rs-header-status-bar {
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    display: flex;
+    gap: 20px;
+    pointer-events: none;
+  }
+
+  #", id, "-container .rs-status-item {
+    font-size: 0.65rem;
+    color: #0b1218;
+    background: #00d4ff;
+    padding: 1px 10px;
+    border-radius: 4px 4px 0 0;
+    font-family: 'Consolas', 'Monaco', monospace;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  #", id, "-container .rs-status-item span {
+    color: #000000;
+  }
+")))
     ),
 
-    div(class = "rs-dashboard-wrapper",
-        # --- HEADER SUPERIOR ---
-        div(class = "rs-dashboard-header",
-            div(class = "rs-brand", img(src = "WWW-FOLDER/Rscience_logo_sticker.png")),
+    # --- CONTENEDOR RAÍZ CON ID ÚNICO ---
+    div(id = ns("container"), class = "rs-module-container",
+        div(class = "rs-dashboard-wrapper",
 
-            div(class = "rs-nav-group",
-                actionButton(ns("c_data"),     label = list(icon("database"), "Dataset"), class = "nav-btn-custom active"),
-                actionButton(ns("c_tool"),     label = list(icon("tools"), "Tool"),        class = "nav-btn-custom"),
-                actionButton(ns("c_script"),   label = list(icon("code"), "Script"),      class = "nav-btn-custom"),
-                actionButton(ns("c_settings"), label = list(icon("sliders"), "Settings"), class = "nav-btn-custom"),
-                actionButton(ns("c_play"),     label = list(icon("play"), "Run"),          class = "nav-btn-custom"),
-                hidden(actionButton(ns("c_DEBUG"), label = "DEBUG", class = "nav-btn-custom"))
-            ),
-            div(class = "nav-divider"),
-            div(class = "rs-nav-group",
-                actionButton(ns("c_script_and_comments"), label = "Scripts", class = "nav-btn-custom"),
-                actionButton(ns("c_shiny_output"),        label = "Output",  class = "nav-btn-custom"),
-                actionButton(ns("c_asa"),                 label = "ASA",     class = "nav-btn-custom"),
-                actionButton(ns("c_pdf"),                 label = "PDF",     class = "nav-btn-custom")
-            ),
-            div(class = "nav-divider"),
-            div(class = "rs-nav-group",
-                actionButton(ns("c_theory"),       label = icon("book"),           class = "nav-btn-custom"),
-                actionButton(ns("c_bibliography"), label = icon("list"),           class = "nav-btn-custom"),
-                actionButton(ns("c_cite"),         label = icon("quote-left"),     class = "nav-btn-custom"),
-                actionButton(ns("c_faqs"),         label = icon("question-circle"), class = "nav-btn-custom")
-            )
-        ),
+            # --- HEADER SUPERIOR ---
+            div(class = "rs-dashboard-header",
+                div(class = "rs-brand", img(src = "WWW-FOLDER/Rscience_logo_sticker.png")),
 
-        mod_rscience_engine03_main_ui(id = id)
+                # Grupo 1
+                div(class = "rs-nav-group",
+                    actionButton(ns("c_data"),   label = list(icon("database"), "Dataset"), class = "nav-btn-custom active"),
+                    actionButton(ns("c_tool"),   label = list(icon("tools"), "Tool"),        class = "nav-btn-custom"),
+                    actionButton(ns("c_script"), label = list(icon("code"), "Script"),      class = "nav-btn-custom")
+                ),
+
+                div(class = "nav-divider"),
+
+                # Grupo 2
+                div(class = "rs-nav-group",
+                    actionButton(ns("c_settings"), label = list(icon("sliders"), "Settings"), class = "nav-btn-custom"),
+                    actionButton(ns("c_play"),     label = list(icon("play"), "Run"),          class = "nav-btn-custom"),
+                    hidden(actionButton(ns("c_DEBUG"), label = "DEBUG", class = "nav-btn-custom"))
+                ),
+
+                div(class = "nav-divider"),
+
+                # Grupo 3
+                div(class = "rs-nav-group",
+                    actionButton(ns("c_script_and_comments"), label = "Scripts", class = "nav-btn-custom"),
+                    actionButton(ns("c_shiny_output"),        label = "Output",  class = "nav-btn-custom"),
+                    actionButton(ns("c_asa"),                  label = "ASA",     class = "nav-btn-custom"),
+                    actionButton(ns("c_pdf"),                  label = "PDF",     class = "nav-btn-custom")
+                ),
+
+                div(class = "nav-divider"),
+
+                # Grupo 4
+                div(class = "rs-nav-group",
+                    actionButton(ns("c_theory"),       label = icon("book"),            class = "nav-btn-custom"),
+                    actionButton(ns("c_bibliography"), label = icon("list"),            class = "nav-btn-custom"),
+                    actionButton(ns("c_cite"),         label = icon("quote-left"),     class = "nav-btn-custom"),
+                    actionButton(ns("c_faqs"),         label = icon("question-circle"), class = "nav-btn-custom")
+                ),
+
+                # --- ETIQUETAS ABSOLUTAS ---
+                div(class = "rs-header-status-bar",
+                    span(class = "rs-status-item", icon("database"), "Dataset: ", textOutput(ns("name_dataset"), inline = TRUE)),
+                    span(class = "rs-status-item", icon("microchip"), "Tool: ",    textOutput(ns("name_tool"),    inline = TRUE)),
+                    span(class = "rs-status-item", icon("file-code"), "Script: ",  textOutput(ns("name_script"),  inline = TRUE))
+                )
+            ),
+
+            mod_rscience_engine03_main_ui(id = id)
+        )
     )
   )
 }
@@ -218,10 +307,24 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
     # OPT 01.01. Dataset -------------------------------------------------------------------------------------------
     rlist_dataset <- mod_02_01_dataset_server(id = "my_ns_dataset", show_debug = internal_show_debug_general())
 
+    output$name_dataset <- renderText({
+      req( rlist_dataset())
+      flat_rlist_dataset <-  rlist_dataset()
+
+      the_name  <- flat_rlist_dataset$"metadata_dataset"$"name_mod"
+      the_name
+    })
 
     # OPT 01.02. Tool -------------------------------------------------------------------------------------------
     rlist_tool <- mod_02_02_00_tool_server(id = "my_ns_tool", show_debug = internal_show_debug_general()) # SIN ns()
 
+    output$name_tool <- renderText({
+      req( rlist_tool())
+      flat_rlist_tool <-  rlist_tool()
+
+      the_name  <- flat_rlist_tool$"metadata_tree"$"path_mod"
+      the_name
+    })
 
     # OPT 01.03. Script -------------------------------------------------------------------------------------------
     HOOK_vector_id_tool_script <- reactive({
@@ -234,6 +337,13 @@ mod_rscience_engine03_server <- function(id, show_debug_tab = F, show_debug_gene
                                                  vector_str_folder_tool_script = HOOK_vector_id_tool_script,
                                                  show_debug = internal_show_debug_general()) # Llamamos a la UI
 
+    output$name_script <- renderText({
+      req( rlist_script())
+      flat_rlist_script <-  rlist_script()
+
+      the_name  <- flat_rlist_script$"metadata"$"tool_script_name"
+      the_name
+    })
 
     # Collector01 - Temporal folder and copying selected tool_script folder from local to temp --------------------
     rlist_collector01 <- reactive({

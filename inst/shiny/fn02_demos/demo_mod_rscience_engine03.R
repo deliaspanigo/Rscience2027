@@ -31,7 +31,7 @@ ui <- page_fluid(
 )
 
 server <- function(input, output, session) {
-  mod_rscience_engine03_server(id = "engine_instancia_1", show_debug_tab = F, show_debug_general = F)
+  mod_rscience_engine03_server(id = "engine_instancia_1", show_debug_tab = T, show_debug_general = T)
 }
 
 shinyApp(ui, server)

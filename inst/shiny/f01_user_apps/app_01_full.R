@@ -40,7 +40,7 @@ ui <- page_fillable(
     nav_panel_hidden(
       value = "page_engine",
       #mod_02_00_rscience_ui("engine_v1")
-      mod_rscience_engine_ui("engine_v1")
+      mod_rscience_engine03_ui("engine_v1")
     )
   )
 )
@@ -48,7 +48,7 @@ ui <- page_fillable(
 server <- function(input, output, session) {
 
   launchpad_res <- mod_01_00_launchpad_server("launchpad_v1")
-  mod_rscience_engine_server("engine_v1")
+  mod_rscience_engine03_server("engine_v1")
 
   # Navegación Launchpad → Engine
   observeEvent(launchpad_res(), {
