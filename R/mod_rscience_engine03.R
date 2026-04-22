@@ -12,45 +12,39 @@ mod_rscience_engine03_ui <- function(id) {
       tags$link(rel = "stylesheet", type = "text/css",
                 href = paste0("RS-STYLES/style_000.css?v=", as.numeric(Sys.time()))),
       tags$style(HTML(paste0("
-  /* --- RESET GLOBAL: CERO ABSOLUTO --- */
-
+  /* --- RESET GLOBAL --- */
   html, body {
     margin: 0 !important;
     padding: 0 !important;
-    height: 100vh !important;
-    width: 100vw !important;
-    overflow: hidden;
-    background-color: #0b1218; /* Evita destellos blancos al cargar */
+    min-height: 100vh;
+    width: 100%;
+    background-color: #0b1218;
   }
 
   /* Reset de contenedores automáticos de Shiny/Bootstrap */
   .container-fluid, .tab-pane, .tab-content {
     padding: 0 !important;
     margin: 0 !important;
-    height: 100% !important;
+    min-height: 100vh;
     width: 100% !important;
   }
 
   /* --- ESTILOS ESPECÍFICOS DEL MÓDULO --- */
 
   #", id, "-container.rs-module-container {
-    height: 100vh;
+    min-height: 100vh;
     width: 100%;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     margin: 0 !important;
     padding: 0 !important;
     background: #0b1218;
-    position: relative;
-    top: 0;
-    left: 0;
   }
 
   #", id, "-container .rs-dashboard-wrapper {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    min-height: 100vh;
     width: 100%;
     margin: 0 !important;
     padding: 0 !important;
@@ -65,16 +59,16 @@ mod_rscience_engine03_ui <- function(id) {
     align-items: center;
     gap: 30px;
     z-index: 1000;
-    position: relative;
+    position: sticky;
+    top: 0;
     margin: 0 !important;
   }
 
   #", id, "-container .main-content-area {
-    flex: 1 1 auto;
+    flex: 1 0 auto;
     padding: 20px;
     background: #0b1218;
-    overflow-y: auto;
-    position: relative;
+    margin: 0;
   }
 
   #", id, "-container .rs-brand img {
@@ -121,7 +115,6 @@ mod_rscience_engine03_ui <- function(id) {
   }
 
   /* --- ETIQUETAS SOBRE EL BORDE --- */
-
   #", id, "-container .rs-header-status-bar {
     position: absolute;
     bottom: 10px;
@@ -149,7 +142,32 @@ mod_rscience_engine03_ui <- function(id) {
   #", id, "-container .rs-status-item span {
     color: #000000;
   }
-")))
+
+  /* --- SCROLL SUAVE Y NATURAL --- */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0b1218;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #2a3b47;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00d4ff;
+  }
+
+  /* Firefox scroll */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2a3b47 #0b1218;
+  }
+"))),
     ),
 
     # --- CONTENEDOR RAÍZ CON ID ÚNICO ---
@@ -180,10 +198,10 @@ mod_rscience_engine03_ui <- function(id) {
 
                 # Grupo 3
                 div(class = "rs-nav-group",
-                    actionButton(ns("c_script_and_comments"), label = "Scripts", class = "nav-btn-custom"),
-                    actionButton(ns("c_shiny_output"),        label = "Output",  class = "nav-btn-custom"),
                     actionButton(ns("c_asa"),                  label = "ASA",     class = "nav-btn-custom"),
-                    actionButton(ns("c_pdf"),                  label = "PDF",     class = "nav-btn-custom")
+                    actionButton(ns("c_pdf"),                  label = "PDF",     class = "nav-btn-custom"),
+                    actionButton(ns("c_shiny_output"),        label = "Output",  class = "nav-btn-custom"),
+                    actionButton(ns("c_script_and_comments"), label = "Scripts", class = "nav-btn-custom")
                 ),
 
                 div(class = "nav-divider"),

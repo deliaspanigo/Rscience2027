@@ -286,7 +286,7 @@ fn_local_quarto_pretty_table_pdf(
 
 
 fn_local_quarto_pretty_table_pdf(
-  df = super_bag[[6]]$df_tukey_table_classroom, 
+  df = super_bag[[2]]$df_tukey_table_classroom, 
   title = "Tabla de Tukey", 
   font_size = 8
 )
@@ -306,17 +306,17 @@ library(htmlwidgets)
 library(webshot2)
 
 # 1. Configuración de Chrome (Apuntando al nuevo .deb instalado)
-Sys.setenv(CHROMOTE_CHROME = "/usr/bin/google-chrome")
+#Sys.setenv(CHROMOTE_CHROME = "/usr/bin/google-chrome")
 
-Sys.setenv(CHROMOTE_CHROME_ARGS = paste(
-  "--no-sandbox",
-  "--disable-gpu",
-  "--headless",
-  "--disable-web-security",
-  "--allow-file-access-from-files",
-  "--disable-dev-shm-usage",
-  sep = " "
-))
+# Sys.setenv(CHROMOTE_CHROME_ARGS = paste(
+#   "--no-sandbox",
+#   "--disable-gpu",
+#   "--headless",
+#   "--disable-web-security",
+#   "--allow-file-access-from-files",
+#   "--disable-dev-shm-usage",
+#   sep = " "
+# ))
 
 # 2. Definir objeto y nombres
 p <- super_bag[[2]]$plot_tukey001
@@ -371,9 +371,6 @@ if (file.exists(nombre_png)) {
   cat("\n:::\n\n")
 }
 ```
-
-
-
 
 
 

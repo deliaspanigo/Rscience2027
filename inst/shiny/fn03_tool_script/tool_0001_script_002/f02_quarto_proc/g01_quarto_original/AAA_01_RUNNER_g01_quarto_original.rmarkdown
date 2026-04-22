@@ -1,0 +1,93 @@
+---
+title: "Rscience - Anova - script01 - Anova - Import and control"
+format: 
+  html:
+#    css: custom_theme.css
+    grid:
+      body-width: 2000px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    toc: true
+    toc-float: true
+    toc-location: right
+    self-contained: true
+    link-citations: true # Util para ver referencias en el margen (ver `tufte.html` en la galería de Quarto)
+knitr: 
+    opts_chunk: 
+        collapse: false
+        comment: ""
+params:
+  list_quarto_replacement: NULL
+---
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+library('rmarkdown')
+library("knitr")
+library("tools")
+library("quarto")
+```
+
+
+```{r eval=TRUE, echo=FALSE}
+folder_fn_local_relative <- "../zzz_fn_local"
+folder_fn_local_absolute <- normalizePath(folder_fn_local_relative, mustWork = T)
+vector_fn <- list.files(
+  path = folder_fn_local_absolute, 
+  pattern = "^fn_local.*\\.R$", 
+  full.names = TRUE
+)
+vector_fn <- normalizePath(vector_fn, mustWork = T)
+
+invisible(lapply(vector_fn, source, local = FALSE, encoding = "UTF-8"))
+#lapply(vector_fn, source, local = FALSE, encoding = "UTF-8")
+``` 
+
+
+# Run Stone 01 - Copying files
+
+```{r eval=TRUE, echo=FALSE}
+# 1. Recuperar motor (prioridad a la variable de entorno, sino ruta fija)
+mi_quarto <- Sys.getenv("QUARTO_PATH")
+if (mi_quarto == "") mi_quarto <- "C:/Users/Legion/bulk/MyInstallers/Rscience2027_installer/App/Quarto/bin/quarto.exe"
+
+stone01_name <- "AAA_02_STONE_01_copying_files.qmd"
+# Buscamos la ruta absoluta en la sesión actual (sea Temp o real)
+stone01_path <- normalizePath(stone01_name, mustWork = FALSE)
+
+if (file.exists(stone01_path)) {
+  message(">>> [RUNNER] Renderizando Stone 01...")
+  
+  quarto::quarto_render(
+    input  = stone01_path,
+    quarto = mi_quarto, # <--- ESTO ES LO QUE SHINY NECESITA
+    quiet  = FALSE
+  )
+} else {
+  warning("No se encontró Stone 01: ", stone01_path)
+}
+```
+
+
+# Run Stone 02 - Modying files
+```{r eval=TRUE, echo=FALSE}
+mi_quarto <- Sys.getenv("QUARTO_PATH")
+if (mi_quarto == "") mi_quarto <- "C:/Users/Legion/bulk/MyInstallers/Rscience2027_installer/App/Quarto/bin/quarto.exe"
+
+stone02_name <- "AAA_02_STONE_02_modying_files.qmd"
+stone02_path <- normalizePath(stone02_name, mustWork = FALSE)
+
+if (file.exists(stone02_path)) {
+  message(">>> [RUNNER] Renderizando Stone 02...")
+  
+  quarto::quarto_render(
+    input  = stone02_path,
+    quarto = mi_quarto, # <--- FORZAMOS MOTOR
+    execute_params = list(list_quarto_replacement = params$list_quarto_replacement),
+    quiet  = FALSE
+  )
+}
+
+```
+
+
+
