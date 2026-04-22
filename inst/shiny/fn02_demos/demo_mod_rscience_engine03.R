@@ -4,7 +4,10 @@ library(devtools)
 
 # 1. Cargar el paquete
 devtools::load_all()
+#############################
 
+
+##############################
 # 2. Configuración de rutas robusta
 # Buscamos la carpeta inst/www/css que es el estándar de paquetes R
 path_www <- system.file("www", package = "Rscience2027")

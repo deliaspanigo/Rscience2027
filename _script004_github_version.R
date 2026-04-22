@@ -1,12 +1,12 @@
 # 1. Preparar y Guardar los cambios (incluyendo el DESCRIPTION limpio)
 git add .
-git commit -m "Release: Version 0.9.8"
+git commit -m "Release: Version 0.9.9"
 
 # 2. Etiquetar la versión
 # Borramos el tag local por si acaso ya se creó con error antes
-#git tag -d v0.9.8 2>/dev/null
-git tag -d v0.9.8 | Out-Null
-git tag -a v0.9.8 -m "Versión estable 0.9.8 ROMULO"
+#git tag -d v0.9.9 2>/dev/null
+git tag -d v0.9.9 | Out-Null
+git tag -a v0.9.9 -m "Versión estable 0.9.9 ROMULO"
 
 # 3. Subir cambios y etiquetas a GitHub
 git push origin main --follow-tags

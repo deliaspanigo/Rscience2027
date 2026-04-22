@@ -84,7 +84,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
         message(">>> [TIMER-1-UI] Delay 0.3s para mostrar 'processing' en tarea ", idx)
       }
       idx
-    }) %>% debounce(300)  # 0.3 segundos - rápido para UI
+    }) %>% debounce(300)
 
     # TIMER 2: Para iniciar el procesamiento REAL (delay después del UI)
     task_process_trigger <- reactiveVal(0)
@@ -94,7 +94,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
         message(">>> [TIMER-2-PROCESS] Delay 0.2s para iniciar procesamiento REAL")
       }
       val
-    }) %>% debounce(200)  # 0.2 segundos después del UI
+    }) %>% debounce(200)
 
     # TIMER 3: Delay DESPUÉS de completar el procesamiento
     task_complete_trigger <- reactiveVal(0)
@@ -104,7 +104,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
         message(">>> [TIMER-3-COMPLETE] Delay 0.5s DESPUÉS de completar")
       }
       val
-    }) %>% debounce(500)  # 0.5 segundos después del procesamiento
+    }) %>% debounce(500)
 
     # --- 2. ENTRADAS ---
     inputs_bundle <- reactive({
@@ -118,17 +118,72 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     # Metadata de tareas
     tasks_metadata <- reactive({
       req(inputs_bundle())
-      base_path <- normalizePath(file.path(inputs_bundle()$temp_path, "f02_quarto_proc"), mustWork = FALSE)
+
+      base_path  <- normalizePath(file.path(inputs_bundle()$temp_path, "f02_quarto_proc"), mustWork = FALSE)
 
       list(
-        "pack01" = list(rel = "g01_quarto_original/AAA_02_STONE_01_copying_files.qmd", label = "📁 Copying files..."),
-        "pack02" = list(rel = "g01_quarto_original/AAA_02_STONE_02_modying_files.qmd", label = "⚙️ Applying settings..."),
-        "pack03" = list(rel = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd", label = "▶️ Running R script"),
-        "pack04" = list(rel = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd", label = "📦 Packaging R scripts"),
-        "pack05" = list(rel = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd", label = "👁️ View Shiny Outputs"),
-        "pack06" = list(rel = "g06_asa/AAA_01_RUNNER_g06_asa.qmd", label = "📊 View ASA"),
-     #   "pack07" = list(rel = "g07_save_plots/AAA_01_RUNNER_g07_save_plots.qmd", label = "📈 Saving plots"),
-        "pack08" = list(rel = "f08_pdf/report_pdf.qmd", label = "📄 PDF Report")
+        "pack01" = list(rel = "g01_quarto_original/AAA_02_STONE_01_copying_files.qmd",
+                        label = "📁 Copying files...",
+                        format = "html"),
+        "pack02" = list(rel = "g01_quarto_original/AAA_02_STONE_02_modying_files.qmd",
+                        label = "⚙️ Applying settings...",
+                        format = "html"),
+        ####################################################################################
+        "pack03" = list(rel = "f02_quarto_mod/file01_anova_import_and_control.qmd",
+                        label = "⚙️ Import and Control...",
+                        format = "html"),
+        "pack04" = list(rel = "f02_quarto_mod/file02_anova_full_test.qmd",
+                        label = "⚙️ Full Test...",
+                        format = "html"),
+        "pack05" = list(rel = "f02_quarto_mod/file03_anova_model.qmd",
+                        label = "⚙️ Anova Model...",
+                        format = "html"),
+        "pack06" = list(rel = "f02_quarto_mod/file04_anova_descriptive_rv.qmd",
+                        label = "⚙️ Descriptive RV...",
+                        format = "html"),
+        "pack07" = list(rel = "f02_quarto_mod/file05_anova_descriptive_residuals.qmd",
+                        label = "⚙️ Descriptive Residual...",
+                        format = "html"),
+        "pack08" = list(rel = "f02_quarto_mod/file06_anova_asa.qmd",
+                        label = "⚙️ Automatic Statistic Asesor...",
+                        format = "html"),
+        ####################################################################################
+        "pack09" = list(rel = "f05_shiny_output/tab01_control.qmd",
+                        label = "👁 Shiny Output - Tab01 Control",
+                        format = "html"),
+        "pack10" = list(rel = "f05_shiny_output/tab02_anova_and_tukey.qmd",
+                        label = "👁️ Shiny Output - Tab02 Anova and Tukeys",
+                        format = "html"),
+        "pack11" = list(rel = "f05_shiny_output/tab03_requeriments.qmd",
+                        label = "👁️Shiny Output - requerimentsts",
+                        format = "html"),
+        "pack12" = list(rel = "f05_shiny_output/tab04_model.qmd",
+                        label = "👁️ Shiny Output - Tab04 Models",
+                        format = "html"),
+        "pack13" = list(rel = "f05_shiny_output/tab05_descriptive_rv.qmd",
+                        label = "👁️ Shiny output- Tab05 Descriptive RVs",
+                        format = "html"),
+        "pack14" = list(rel = "f05_shiny_output/tab06_residuals.qmd",
+                        label = "👁️Shiny Output - Descriptive residualss",
+                        format = "html"),
+        ####################################################################################
+        "pack15" = list(rel = "f06_asa/tab01_summary_anova.qmd",
+                        label = "👁️ASAt - Ta014 Summarys",
+                        format = "html"),
+        "pack16" = list(rel = "f06_asa/tab02_level02.qmd",
+                        label = "👁️ASA - Tab02 Level02s",
+                        format = "html"),
+        "pack17" = list(rel = "f06_asa/tab03_level03.qmd",
+                        label = "👁️ASA - Tab03 Level03s",
+                        format = "html"),
+        ####################################################################################
+
+        # "pack10" = list(rel = "g07_save_plots/AAA_01_RUNNER_g07_save_plots.qmd",
+        #                 label = "📈 Saving plots",
+        #                 format = "html"),
+        "pack18" = list(rel = "f08_pdf/report_pdf.qmd",
+                        label = "📄 PDF Report",
+                        format = "typst")
       ) %>% lapply(function(x) {
         full_path <- file.path(base_path, x$rel)
         x$abs_path <- normalizePath(full_path, mustWork = FALSE)
@@ -333,35 +388,73 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     })
 
     # --- 9. FUNCIÓN PARA RENDERIZAR QUARTO EN BACKGROUND ---
-    render_quarto_async <- function(task_path, idx, replacements) {
-      future({
-        old_wd <- getwd()
-        setwd(dirname(task_path))
+    render_quarto_worker <- function(qmd_path, replacements, format = "html") {
+      base_app   <- "C:/Users/Legion/bulk/MyInstallers/Rscience2027_installer/App"
+      quarto_bin <- file.path(base_app, "Quarto/bin/quarto.exe")
+      r_portable <- file.path(base_app, "R-Portable")
+      r_libs     <- file.path(r_portable, "library")
+      chrome_bin <- file.path(base_app, "Chrome/GoogleChromePortable/App/Chrome-bin/chrome.exe")
 
+      formatos_validos <- c("typst", "html", "pdf", "docx", "pptx", "latex", "markdown")
+      if (!format %in% formatos_validos) {
+        warning("Formato '", format, "' no reconocido. Usando 'html' por defecto.")
+        format <- "html"
+      }
+
+      qmd_dir <- dirname(qmd_path)
+      bat_file <- file.path(qmd_dir, paste0("run_", tools::md5sum(qmd_path), ".bat"))
+      config_file <- file.path(qmd_dir, "_quarto.yml")
+
+      config_list <- list(params = list(list_quarto_replacement = replacements))
+      yaml::write_yaml(config_list, config_file)
+
+      bat_content <- c(
+        "@echo off",
+        paste0('set "R_HOME=', normalizePath(r_portable, winslash = "\\"), '"'),
+        paste0('set "R_LIBS_USER=', normalizePath(r_libs, winslash = "\\"), '"'),
+        paste0('set "QUARTO_CHROME=', normalizePath(chrome_bin, winslash = "\\"), '"'),
+        paste0('set "PATH=', normalizePath(file.path(base_app, "Quarto/bin"), winslash = "\\"), ";",
+               normalizePath(file.path(r_portable, "bin"), winslash = "\\"), ';%PATH%"'),
+        paste0('"', normalizePath(quarto_bin, winslash = "\\"), '" render "', basename(qmd_path), '" --to ', format)
+      )
+      writeLines(bat_content, bat_file)
+
+      message("🚀 Renderizando: ", basename(qmd_path), " -> Formato: ", format)
+
+      old_wd <- getwd()
+      setwd(qmd_dir)
+
+      res <- system2("cmd.exe", args = c("/c", basename(bat_file)), stdout = TRUE, stderr = TRUE)
+
+      setwd(old_wd)
+      if(file.exists(bat_file)) unlink(bat_file)
+      if(file.exists(config_file)) unlink(config_file)
+
+      status <- attr(res, "status")
+      if (!is.null(status) && status != 0) {
+        stop(paste(res, collapse = "\n"))
+      }
+
+      message("✅ Renderizado completado: ", basename(qmd_path))
+      return(TRUE)
+    }
+
+    render_quarto_async <- function(task_path, idx, replacements, format) {
+      future({
         result <- tryCatch({
-          if(idx == 1 && !is.null(replacements)) {
-            quarto::quarto_render(
-              input = basename(task_path),
-              execute_params = list(list_quarto_replacement = replacements),
-              quiet = TRUE
-            )
-          } else {
-            quarto::quarto_render(input = basename(task_path), quiet = TRUE)
-          }
-          setwd(old_wd)
+          params_to_send <- if(idx == 1) replacements else NULL
+          render_quarto_worker(qmd_path = task_path, replacements = params_to_send, format = format)
           list(success = TRUE, error = NULL)
         }, error = function(e) {
-          setwd(old_wd)
           list(success = FALSE, error = e$message)
         })
-
         result
       })
     }
 
-    # --- 10. TRES OBSERVERS (SEPARADOS) ---
+    # --- 10. OBSERVERS ---
 
-    # OBSERVER 1: Solo actualiza la UI a "processing" (NO procesa nada)
+    # OBSERVER 1: Solo actualiza la UI a "processing"
     observeEvent(task_ui_trigger(), {
       idx <- task_ui_trigger()
 
@@ -377,17 +470,15 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
 
       curr_id <- pkg_names[idx]
 
-      # SOLO CAMBIO DE UI - nada más
       task_status[[curr_id]] <- "processing"
       state$current_task <- task_labels[[curr_id]]
       message(">>> [UI] 🎨 Mostrando 'processing' para: ", curr_id)
 
-      # Disparar el procesamiento REAL después de que la UI se actualice
       task_process_trigger(idx)
 
     }, ignoreInit = TRUE)
 
-    # OBSERVER 2: Procesamiento REAL (después de que la UI mostró "processing")
+    # OBSERVER 2: Procesamiento REAL
     observeEvent(task_process(), {
       idx <- task_process()
 
@@ -409,13 +500,14 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       task_path <- task$abs_path
       replacements <- isolate(inputs_bundle()$replacement)
 
-      render_quarto_async(task_path, idx, replacements) %...>%
+      # OBTENER EL FORMATO DE LA TAREA
+      task_format <- if (!is.null(task$format)) task$format else "html"
+
+      render_quarto_async(task_path, idx, replacements, task_format) %...>%
         (function(result) {
           if (result$success) {
-            # Éxito - actualizar UI a "done"
             task_status[[curr_id]] <- "done"
             message(">>> [PROCESS] ✅ OK: ", curr_id)
-            # Disparar el delay después de completar
             task_complete_trigger(idx)
           } else {
             task_status[[curr_id]] <- "error"
@@ -436,7 +528,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
 
     }, ignoreInit = TRUE)
 
-    # OBSERVER 3: Delay después de completar, antes de la siguiente tarea
+    # OBSERVER 3: Delay después de completar
     observeEvent(task_complete(), {
       idx <- task_complete()
 
@@ -448,7 +540,6 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       next_idx <- idx + 1
 
       if (next_idx > total_tasks) {
-        # Pipeline completado
         state$super_done <- TRUE
         state$engine_started <- FALSE
         state$current_task <- NULL
@@ -457,7 +548,6 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
         message(">>> [COMPLETE] 🎉 PIPELINE COMPLETO")
         showNotification("Pipeline completed!", duration = 3, type = "message")
       } else {
-        # Avanzar a la siguiente tarea
         current_index(next_idx)
         message(">>> [COMPLETE] 👉 Siguiente tarea: ", next_idx)
       }
@@ -491,7 +581,6 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       pkg_names <- names(meta)
       total_tasks <- length(pkg_names)
 
-      # Resetear todo
       for(task_id in pkg_names) {
         task_status[[task_id]] <- "pending"
         task_labels[[task_id]] <- meta[[task_id]]$label
@@ -511,8 +600,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     # --- 12. RETORNO ---
     return(reactive({ state$super_done }))
   })
-}# )
-#
+}#
 # server <- function(input, output, session) {
 #   # CORRECCIÓN AQUÍ: Usar los nombres de argumentos definidos en el módulo
 #   mod_pipeline_server(
