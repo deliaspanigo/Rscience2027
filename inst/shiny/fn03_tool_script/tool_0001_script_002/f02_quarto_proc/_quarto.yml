@@ -1,0 +1,10 @@
+project:
+  type: default
+
+# Si decides usar el script de pre-render para las rutas:
+  pre-render: setup_rscience.R
+
+format:
+  html:
+    self-contained: true
+    toc: true

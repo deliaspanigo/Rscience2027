@@ -42,7 +42,10 @@ Imports:
   callr,
   agricolae,
   EnvStats,
-  pagedown
+  pagedown,
+  knitr,
+  rmarkdown,
+  agricolae
 Depends: 
     R (>= 3.5)
 RoxygenNote: 7.3.3

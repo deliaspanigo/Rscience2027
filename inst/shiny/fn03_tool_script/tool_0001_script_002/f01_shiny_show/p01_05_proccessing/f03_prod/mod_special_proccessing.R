@@ -104,7 +104,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
            color = color_hex,
            icon_name = if(exists_val) "check-circle" else "exclamation-triangle",
            shadow = paste0("0 0 12px ", color_hex))
-    }) %>% debounce(1000)
+    }) # %>% debounce(1000)
 
     rlist_item02_temp_folder_tool_script <- reactive({
       req(rlist_item01_local_folder_tool_script()$is_done)
@@ -117,7 +117,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
            color = color_hex,
            icon_name = "microchip",
            shadow = paste0("0 0 12px ", color_hex))
-    }) %>% debounce(1000)
+    }) # %>% debounce(1000)
 
     rlist_item03_quarto_proc <- reactive({
       req(rlist_item02_temp_folder_tool_script()$is_done)
@@ -131,94 +131,62 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
            color = color_hex,
            icon_name = "folder-tree",
            shadow = paste0("0 0 12px ", color_hex))
-    }) %>% debounce(1000)
+    }) # %>% debounce(1000)
 
     rlist_item04_qmd_files <- reactive({
-      # library(webshot2)
-      # library(pagedown)
-      # library(chromote)
-      # # chrome_path <- chromote::find_chrome()
-      #
-      # library(webshot2)
-      # set_chrome_args(c("--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"))
-      #
-      # library(shiny)
-      # library(webshot2)
-      # # force the use of pagedown to install chrome on shinyapps.io (this is a workaround)
-      # library(pagedown)
-      # # force the use of curl because chromote needs it (see https://github.com/rstudio/chromote/issues/37)
-      # library(curl)
-      #
-      # message(curl::curl_version()) # check curl is installed
-      # #if (identical(Sys.getenv("R_CONFIG_ACTIVE"), "shinyapps")) {
-      #   chromote::set_default_chromote_object(
-      #     chromote::Chromote$new(chromote::Chrome$new(
-      #       args = c("--disable-gpu",
-      #                "--no-sandbox",
-      #                "--disable-dev-shm-usage", # required bc the target easily crashes
-      #                c("--force-color-profile", "srgb"))
-      #     ))
-      #   )
-      #
-      # # 1. Verificar si la variable de entorno ya está definida
-      # # if (Sys.getenv("CHROMOTE_CHROME") == "") {
-      # #
-      # #   # 2. Intentar buscar Chrome usando pagedown (es más robusto que chromote)
-      # #   ruta <- pagedown::find_chrome()
-      # #
-      # #   if (!is.null(ruta)) {
-      # #     Sys.setenv(CHROMOTE_CHROME = ruta)
-      # #     message("Chrome encontrado en: ", ruta) # Opcional, para tu tranquilidad
-      # #   } else {
-      # #     # 3. Solo si pagedown devuelve NULL, disparamos el aviso real
-      # #     warning("No se encontró Chrome/Chromium en el sistema. Los gráficos de Plotly podrían fallar.")
-      # #   }
-      # # }
-
-
-      # library(webshot2)
-      #
-      # # Buscar el navegador automáticamente
-      # chrome_path <- webshot2::find_chrome()
-      #
-      # # Si lo encuentra, declararlo para que chromote lo use
-      # if (!is.null(chrome_path)) {
-      #   Sys.setenv(CHROMOTE_CHROME = chrome_path)
-      # } else {
-      #   warning("No se encontró Chrome/Chromium en el sistema.")
-      # }
 
 
       req(rlist_item03_quarto_proc()$is_done)
       path_val <- rlist_item03_quarto_proc()$path
+      # list_render_qmd_file <- list(
+      #   "pack01" = list(qmd_file_path_relative = "g01_quarto_original/AAA_01_RUNNER_g01_quarto_original.qmd",
+      #                   label_on_rendering = "Applying setting on R scripts."),
+      #   "pack02" = list(qmd_file_path_relative = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd",
+      #                   label_on_rendering = "Running R script"),
+      #   "pack03" = list(qmd_file_path_relative = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd",
+      #                   label_on_rendering = "Packaging R scripts for user (.R - zip)."),
+      #   "pack04" = list(qmd_file_path_relative = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd",
+      #                   label_on_rendering = "View - Shiny Outputs"),
+      #   "pack05" = list(qmd_file_path_relative = "g06_asa/AAA_01_RUNNER_g06_asa.qmd",
+      #                   label_on_rendering = "View - Automatic Statistic Asesor (ASA)"),
+      #   "pack06" = list(qmd_file_path_relative = "g07_save_plots/AAA_01_RUNNER_g07_save_plots.qmd",
+      #                   label_on_rendering = "Plots as png and html (Zip)"),
+      #   "pack07" = list(qmd_file_path_relative = "f08_pdf/report_pdf.qmd",
+      #                   label_on_rendering = "PDF Report")
+      # )
       list_render_qmd_file <- list(
-        "pack01" = list(qmd_file_path_relative = "g01_quarto_original/AAA_01_RUNNER_g01_quarto_original.qmd",
+        "pack01" = list(qmd_file_path_relative = "g01_quarto_original/AAA_02_STONE_01_copying_files.qmd",
+                        label_on_rendering = "Copying files..."),
+        "pack02" = list(qmd_file_path_relative = "g01_quarto_original/AAA_02_STONE_02_modying_files.qmd",
                         label_on_rendering = "Applying setting on R scripts."),
-        "pack02" = list(qmd_file_path_relative = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd",
+        "pack03" = list(qmd_file_path_relative = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd",
                         label_on_rendering = "Running R script"),
-        "pack03" = list(qmd_file_path_relative = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd",
+        "pack04" = list(qmd_file_path_relative = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd",
                         label_on_rendering = "Packaging R scripts for user (.R - zip)."),
-        "pack04" = list(qmd_file_path_relative = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd",
+        "pack05" = list(qmd_file_path_relative = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd",
                         label_on_rendering = "View - Shiny Outputs"),
-        "pack05" = list(qmd_file_path_relative = "g06_asa/AAA_01_RUNNER_g06_asa.qmd",
+        "pack06" = list(qmd_file_path_relative = "g06_asa/AAA_01_RUNNER_g06_asa.qmd",
                         label_on_rendering = "View - Automatic Statistic Asesor (ASA)"),
-        "pack06" = list(qmd_file_path_relative = "g07_save_plots/AAA_01_RUNNER_g07_save_plots.qmd",
+        "pack07" = list(qmd_file_path_relative = "g07_save_plots/AAA_01_RUNNER_g07_save_plots.qmd",
                         label_on_rendering = "Plots as png and html (Zip)"),
-        "pack07" = list(qmd_file_path_relative = "f08_pdf/report_pdf.qmd",
+        "pack08" = list(qmd_file_path_relative = "f08_pdf/report_pdf.qmd",
                         label_on_rendering = "PDF Report")
       )
+
       list_processed <- lapply(list_render_qmd_file, function(item) {
         item$qmd_file_path_abs_local <- normalizePath(file.path(path_val, item$qmd_file_path_relative), mustWork = FALSE)
         item$exists_local <- file.exists(item$qmd_file_path_abs_local)
         return(item)
       })
+
+
       all_exist <- all(sapply(list_processed, function(x) x$exists_local))
       color_hex <- if(all_exist) "#00bc8c" else "#f39c12"
       list(is_done = all_exist,
            text = if(all_exist) "ALL RUNNERS READY" else "SOME RUNNERS MISSING",
            color = color_hex, icon_name = "check-double", shadow = paste0("0 0 12px ", color_hex),
            list_qmd = list_processed)
-    }) %>% debounce(1000)
+    }) # %>% debounce(1000)
 
     rlist_item05_proccessing <- reactive({
 
@@ -226,7 +194,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       flat_rlist_item04_qmd_files <- rlist_item04_qmd_files()
       flat_is_done <- flat_rlist_item04_qmd_files$is_done
       list(is_done = flat_is_done)
-    }) %>% debounce(1000)
+    }) # %>% debounce(1000)
 
 
 
@@ -237,119 +205,115 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     observeEvent(rlist_item04_qmd_files()$is_done, {
       req(rlist_item04_qmd_files()$is_done)
       pkgs <- names(rlist_item04_qmd_files()$list_qmd)
-      for(p in pkgs) {
-        render_status[[p]] <- "pending"
-      }
+      isolate(
+        for(p in pkgs) {
+          render_status[[p]] <- "pending"
+        }
+
+      )
       current_idx(1)
     })
 
-    # delay_current_idx <- reactive({
-    #
-    #   current_idx()
-    # }) %>% debounce(1000)
+    delay_current_idx <- reactive({
+
+      current_idx()
+    }) %>% debounce(300)
+
+
+
 
     pack_current_pos_render <- reactive({
       req(engine$started, rlist_item04_qmd_files()$is_done)
-      idx <- current_idx()
+      req(current_idx(), delay_current_idx())
+      req(current_idx()  == delay_current_idx())
+      # idx <- current_idx()
+      idx <-delay_current_idx()
       details <- rlist_item04_qmd_files()$list_qmd
       pkg_names <- names(details)
 
       if(idx == 0 || idx > length(pkg_names)) return(NULL)
 
-      pkg_name <- pkg_names[idx]
-
-      # Cambiamos a processing AQUÍ para que se vea durante el debounce
-      render_status[[pkg_name]] <- "processing"
-
+      selected_pack  <-pkg_names[idx]
+      selected_status  <- render_status[[selected_pack]]
+      if(selected_status != "pending") return(NULL)
+      print("A")
       list(
-        idx = idx,
-        pkg_name = pkg_name,
-        path = details[[pkg_name]]$qmd_file_path_abs_local,
-        max_idx = length(pkg_names)
+        idx      = idx,
+        pkg_name = pkg_names[idx],
+        path     = details[[idx]]$qmd_file_path_abs_local,
+        max_idx  = length(pkg_names),
+        status = selected_status
       )
-    }) %>% debounce(1000) # El delay que te gusta
+    })
 
-    library(callr)
-
-    observe({
+    observeEvent(pack_current_pos_render(), {
+      req(pack_current_pos_render())
       flat_pack <- pack_current_pos_render()
       req(engine$started, flat_pack)
+      req(current_idx(), delay_current_idx())
+      req(current_idx()  == delay_current_idx())
 
-      selected_pkg_name <- flat_pack$pkg_name
-      selected_idx       <- flat_pack$idx
-      selected_path      <- flat_pack$path
-      selected_max_idx   <- flat_pack$max_idx
+      s_name    <- flat_pack$pkg_name
+      s_idx     <- flat_pack$idx
+      s_path    <- flat_pack$path
+      s_max_idx <- flat_pack$max_idx
+      s_status  <- flat_pack$status
+
+      # --- VÁLVULA DE SEGURIDAD ---
+      # Si ya está procesado o en curso, abortamos para evitar ejecuciones múltiples
+      if (s_status %in% c("processing", "done")) return()
 
       isolate({
+        # Marcamos estado INMEDIATAMENTE
+        render_status[[s_name]] <- "processing"
+
         old_wd <- getwd()
         on.exit(setwd(old_wd), add = TRUE)
 
-        selected_folder_path   <- dirname(selected_path)
-        selected_qmd_file_name <- basename(selected_path)
-
         tryCatch({
+          message(">>> [RUNNER] Iniciando: ", s_name)
 
-          # === EJECUCIÓN EN PROCESO SEPARADO CON CALLR ===
-          result <- callr::r(
-            func = function(qmd_file, folder_path, params_list = NULL) {
+          selected_folder_path <- dirname(s_path)
+          selected_qmd_file_name <- basename(s_path)
 
-              # Cambiamos el directorio DENTRO del proceso hijo
-              setwd(folder_path)
+          setwd(selected_folder_path)
 
-              tryCatch({
-                if (!is.null(params_list) && length(params_list) > 0) {
-                  quarto::quarto_render(
-                    input = qmd_file,
-                    execute_params = params_list,
-                    quiet = FALSE
-                  )
-                } else {
-                  quarto::quarto_render(
-                    input = qmd_file,
-                    quiet = FALSE
-                  )
-                }
-                return("success")
-
-              }, error = function(e) {
-                return(paste0("error: ", e$message))
-              })
-            },
-
-            args = list(
-              qmd_file    = selected_qmd_file_name,
-              folder_path = selected_folder_path,
-              params_list = if(selected_idx == 1) {
-                list(list_quarto_replacement = internal_list_quarto_replacement())
-              } else {
-                NULL
-              }
+          if(s_idx == 1) {
+            quarto::quarto_render(
+              input = selected_qmd_file_name,
+              execute_params = list(
+                list_quarto_replacement = internal_list_quarto_replacement()
+              ),
+              quiet = FALSE
             )
-          )
-
-          # === PROCESAMOS EL RESULTADO FUERA DEL PROCESO HIJO ===
-          if (result == "success") {
-            render_status[[selected_pkg_name]] <- "done"
           } else {
-            render_status[[selected_pkg_name]] <- "error"
-            # Opcional: mostrar el error
-            showNotification(paste("Error en", selected_pkg_name, ":", result), type = "error")
+            quarto::quarto_render(input = selected_qmd_file_name, quiet = FALSE)
           }
 
+          # Éxito
+          render_status[[s_name]] <- "done"
+          message(">>> [RUNNER] Finalizado OK: ", s_name)
+
         }, error = function(e) {
-          render_status[[selected_pkg_name]] <- "error"
-          showNotification(paste("Error grave al renderizar:", e$message), type = "error")
+          message("!!! [RUNNER] Error en ", s_name, ": ", e$message)
+          render_status[[s_name]] <- "error"
         })
 
-        # --- Avanzamos al siguiente índice ---
-        if (selected_idx < selected_max_idx) {
-          current_idx(selected_idx + 1)
-        } else if (selected_idx == selected_max_idx) {
-          super_DONE(TRUE)
-        }
+        # Limpieza de RAM (tus 32GB te lo agradecerán)
+        gc(full = TRUE)
 
-      }) # end isolate
+        # Avanzamos solo si el actual terminó bien (o falló, pero avanzamos)
+        if(s_idx < s_max_idx) {
+          current_idx(s_idx + 1)
+        } else {
+          super_DONE(TRUE)
+          engine$started <- FALSE # Apagamos el motor
+        }
+      })
     })
+
+
+
 
     observeEvent(super_DONE(), {
 
@@ -357,6 +321,8 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       data_store$is_locked <- super_DONE()
 
     })
+
+
     # --------------------------------------------------------------------------
     # 3. RENDERS UI
     # --------------------------------------------------------------------------
@@ -507,7 +473,7 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     # --- 6. DEBUG LOGIC ---
     the_output <- reactive({
       reactiveValuesToList(data_store)
-    })  %>% debounce(1000)
+    })  # %>% debounce(1000)
 
     output$json_internal <- listviewer::renderJsonedit({
       req(internal_show_debug())
