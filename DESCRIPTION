@@ -45,7 +45,9 @@ Imports:
   pagedown,
   knitr,
   rmarkdown,
-  agricolae
+  agricolae,
+  future,
+  promises
 Depends: 
     R (>= 3.5)
 RoxygenNote: 7.3.3

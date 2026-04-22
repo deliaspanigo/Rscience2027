@@ -1,3 +1,10 @@
+library(future)
+library(promises)
+
+# Configuración necesaria (esto va fuera del server o al inicio)
+plan(multisession)
+
+
 mod_special_proccessing_DEBUG_ui <- function(id) {
   ns <- NS(id)
   tagList(
@@ -32,493 +39,308 @@ mod_special_proccessing_ui <- function(id) {
   )
 }
 
-
 mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_folder_tool_script, list_quarto_replacement, show_debug = FALSE) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    internal_show_debug <- reactive(if(is.function(show_debug)) show_debug() else show_debug)
+    message(">>> [MODULO] Inicializado con ID: ", id, " en ", Sys.time())
 
-    internal_local_folder_tool_script <- reactive(if(is.function(local_folder_tool_script)) local_folder_tool_script() else local_folder_tool_script)
-    internal_temp_folder_tool_script  <- reactive(if(is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script)
-    internal_list_quarto_replacement <- reactive({ if (is.function(list_quarto_replacement)) list_quarto_replacement() else list_quarto_replacement })
+    # --- 1. ESTADO CENTRALIZADO ---
+    state <- reactiveValues(
+      engine_started = FALSE,
+      status_list = list(),
+      super_done = FALSE,
+      current_task = NULL
+    )
 
+    # Lock para evitar ejecuciones múltiples
+    execution_lock <- FALSE
 
-    # --------------------------------------------------------------------------
-    # 0. CONTROL DE ESTADO
-    # --------------------------------------------------------------------------
-    engine <- reactiveValues(started = FALSE)
-    render_status <- reactiveValues()
-    current_idx <- reactiveVal(0)
-    current_pos_render <- reactiveVal(0)
-    super_DONE <- reactiveVal(FALSE)
+    # --- 2. ENTRADAS ---
+    inputs_bundle <- reactive({
+      loc <- if(is.function(local_folder_tool_script)) local_folder_tool_script() else local_folder_tool_script
+      temp <- if(is.function(temp_folder_tool_script)) temp_folder_tool_script() else temp_folder_tool_script
+      repl <- if(is.function(list_quarto_replacement)) list_quarto_replacement() else list_quarto_replacement
+      req(loc, temp, repl)
+      list(local_path = loc, temp_path = temp, replacement = repl)
+    }) %>% debounce(500)
 
-    observeEvent(input$start_pipeline, {
-      engine$started <- TRUE
+    # Metadata de tareas
+    tasks_metadata <- reactive({
+      req(inputs_bundle())
+      base_path <- normalizePath(file.path(inputs_bundle()$temp_path, "f02_quarto_proc"), mustWork = FALSE)
+
+      message(">>> [METADATA] Base path: ", base_path)
+
+      list(
+        "pack01" = list(rel = "g01_quarto_original/AAA_02_STONE_01_copying_files.qmd", label = "Copying files..."),
+        "pack02" = list(rel = "g01_quarto_original/AAA_02_STONE_02_modying_files.qmd", label = "Applying settings on R scripts"),
+        "pack03" = list(rel = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd", label = "Running R script"),
+        "pack04" = list(rel = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd", label = "Packaging R scripts (.R - zip)"),
+        "pack05" = list(rel = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd", label = "View - Shiny Outputs"),
+        "pack06" = list(rel = "g06_asa/AAA_01_RUNNER_g06_asa.qmd", label = "View - ASA"),
+        "pack07" = list(rel = "g07_save_plots/AAA_01_RUNNER_g07_save_plots.qmd", label = "Plots as png/html"),
+        "pack08" = list(rel = "f08_pdf/report_pdf.qmd", label = "PDF Report")
+      ) %>% lapply(function(x) {
+        full_path <- file.path(base_path, x$rel)
+        x$abs_path <- normalizePath(full_path, mustWork = FALSE)
+        x$exists <- file.exists(full_path)
+        if(!x$exists) message(">>> [METADATA] ⚠️ No existe: ", full_path)
+        x
+      })
     })
 
-    render_standby <- function(title) {
-      div(style = "display: flex; align-items: center; padding: 12px; background: #1a262f; border: 1px solid #2a3b47; border-radius: 8px; margin-bottom: 10px; opacity: 0.4;",
-          div(style = "width: 12px; height: 12px; border-radius: 50%; margin-right: 15px; background: #566b7a;"),
-          div(style = "font-weight: 800; font-size: 0.75rem; color: #566b7a;", icon("lock", class = "me-2"), paste0(toupper(title), " - WAITING...")))
-    }
+    # --- 3. UI RENDER (SIMPLE Y DIRECTO) ---
 
-    # --------------------------------------------------------------------------
-    # 1. LÓGICA REACTIVA (Items 01 a 05)
-    # --------------------------------------------------------------------------
-    # --- REACTIVE VALUES ---
-    get_default_data <- function() {
-      list(
-        "details" = "*** RScience - Module Special Proccessing ***",
-        "my_sys_time" = Sys.time(),
-        "click_count" = 0, # Corregido el nombre si era click_count
-        "is_done" = FALSE,
-        "is_locked" = FALSE,
-        #"is_successful" = FALSE,
-        #"is_all_ok" = FALSE,
-        "error_msg" = NULL,
-        "metadata" = list(
-        )
+    render_file_row_server <- function(label, s) {
+      if (is.null(s) || length(s) == 0) s <- "pending"
 
-      )
-    }
-    reset_data_store <- function() {
-      defaults <- get_default_data()
-
-      # mapply recorre los nombres y valores de la lista de defaults
-      # y los asigna uno a uno al objeto reactiveValues
-      mapply(function(val, name) {
-        data_store[[name]] <- val
-      }, defaults, names(defaults))
-    }
-    data_store <- do.call(reactiveValues, get_default_data())
-
-    rlist_item01_local_folder_tool_script <- reactive({
-      req(engine$started)
-      path_val <- internal_local_folder_tool_script()
-      exists_val <- dir.exists(path_val)
-      color_hex <- if(exists_val) "#00bc8c" else "#ff4b5c"
-      list(path = path_val,
-           is_done = exists_val,
-           text = if(exists_val) "FOLDER VERIFIED" else "PATH NOT FOUND",
-           color = color_hex,
-           icon_name = if(exists_val) "check-circle" else "exclamation-triangle",
-           shadow = paste0("0 0 12px ", color_hex))
-    }) # %>% debounce(1000)
-
-    rlist_item02_temp_folder_tool_script <- reactive({
-      req(rlist_item01_local_folder_tool_script()$is_done)
-      path_val <- if(is.function(internal_temp_folder_tool_script)) internal_temp_folder_tool_script() else internal_temp_folder_tool_script
-      exists_val <- dir.exists(path_val)
-      color_hex <- if(exists_val) "#00bc8c" else "#ff4b5c"
-      list(path = path_val,
-           is_done = exists_val,
-           text = if(exists_val) "TEMP VERIFIED" else "TEMP NOT FOUND",
-           color = color_hex,
-           icon_name = "microchip",
-           shadow = paste0("0 0 12px ", color_hex))
-    }) # %>% debounce(1000)
-
-    rlist_item03_quarto_proc <- reactive({
-      req(rlist_item02_temp_folder_tool_script()$is_done)
-      path_val <- rlist_item02_temp_folder_tool_script()$path
-      path_folder_absolute <- normalizePath(file.path(path_val, "f02_quarto_proc"), mustWork = FALSE)
-      exists_val <- dir.exists(path_folder_absolute)
-      color_hex <- if(exists_val) "#00bc8c" else "#ff4b5c"
-      list(path = path_folder_absolute,
-           is_done = exists_val,
-           text = if(exists_val) "STRUCTURE OK" else "STRUCTURE MISSING",
-           color = color_hex,
-           icon_name = "folder-tree",
-           shadow = paste0("0 0 12px ", color_hex))
-    }) # %>% debounce(1000)
-
-    rlist_item04_qmd_files <- reactive({
-
-
-      req(rlist_item03_quarto_proc()$is_done)
-      path_val <- rlist_item03_quarto_proc()$path
-      # list_render_qmd_file <- list(
-      #   "pack01" = list(qmd_file_path_relative = "g01_quarto_original/AAA_01_RUNNER_g01_quarto_original.qmd",
-      #                   label_on_rendering = "Applying setting on R scripts."),
-      #   "pack02" = list(qmd_file_path_relative = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd",
-      #                   label_on_rendering = "Running R script"),
-      #   "pack03" = list(qmd_file_path_relative = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd",
-      #                   label_on_rendering = "Packaging R scripts for user (.R - zip)."),
-      #   "pack04" = list(qmd_file_path_relative = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd",
-      #                   label_on_rendering = "View - Shiny Outputs"),
-      #   "pack05" = list(qmd_file_path_relative = "g06_asa/AAA_01_RUNNER_g06_asa.qmd",
-      #                   label_on_rendering = "View - Automatic Statistic Asesor (ASA)"),
-      #   "pack06" = list(qmd_file_path_relative = "g07_save_plots/AAA_01_RUNNER_g07_save_plots.qmd",
-      #                   label_on_rendering = "Plots as png and html (Zip)"),
-      #   "pack07" = list(qmd_file_path_relative = "f08_pdf/report_pdf.qmd",
-      #                   label_on_rendering = "PDF Report")
-      # )
-      list_render_qmd_file <- list(
-        "pack01" = list(qmd_file_path_relative = "g01_quarto_original/AAA_02_STONE_01_copying_files.qmd",
-                        label_on_rendering = "Copying files..."),
-        "pack02" = list(qmd_file_path_relative = "g01_quarto_original/AAA_02_STONE_02_modying_files.qmd",
-                        label_on_rendering = "Applying setting on R scripts."),
-        "pack03" = list(qmd_file_path_relative = "g02_quarto_mod/AAA_01_RUNNER_g02_quarto_mod.qmd",
-                        label_on_rendering = "Running R script"),
-        "pack04" = list(qmd_file_path_relative = "g04_script_external/AAA_01_RUNNER_g04_script_external.qmd",
-                        label_on_rendering = "Packaging R scripts for user (.R - zip)."),
-        "pack05" = list(qmd_file_path_relative = "g05_shiny_output/AAA_01_RUNNER_g05_shiny_output.qmd",
-                        label_on_rendering = "View - Shiny Outputs"),
-        "pack06" = list(qmd_file_path_relative = "g06_asa/AAA_01_RUNNER_g06_asa.qmd",
-                        label_on_rendering = "View - Automatic Statistic Asesor (ASA)"),
-        "pack07" = list(qmd_file_path_relative = "g07_save_plots/AAA_01_RUNNER_g07_save_plots.qmd",
-                        label_on_rendering = "Plots as png and html (Zip)"),
-        "pack08" = list(qmd_file_path_relative = "f08_pdf/report_pdf.qmd",
-                        label_on_rendering = "PDF Report")
+      icon_name <- switch(s,
+                          "pending" = "hourglass",
+                          "processing" = "spinner",
+                          "done" = "check-double",
+                          "error" = "times-circle",
+                          "hourglass"
       )
 
-      list_processed <- lapply(list_render_qmd_file, function(item) {
-        item$qmd_file_path_abs_local <- normalizePath(file.path(path_val, item$qmd_file_path_relative), mustWork = FALSE)
-        item$exists_local <- file.exists(item$qmd_file_path_abs_local)
-        return(item)
+      icon_class <- if(s == "processing") "fa-spin" else NULL
+      color <- switch(s,
+                      "pending" = "#566b7a",
+                      "processing" = "#00d4ff",
+                      "done" = "#00bc8c",
+                      "error" = "#ff4b5c",
+                      "#566b7a"
+      )
+
+      div(
+        style = paste0("display: flex; align-items: center; padding: 8px 12px; background: #0b1218; ",
+                       "border-left: 3px solid ", color, "; border-radius: 4px; margin-bottom: 6px;"),
+        div(style = paste0("width: 8px; height: 8px; border-radius: 50%; margin-right: 12px; ",
+                           "background:", color, "; box-shadow: 0 0 8px ", color),
+        ),
+        span(label, style = "font-family: 'JetBrains Mono'; font-size: 0.68rem; color: #fff; flex-grow: 1;"),
+        icon(icon_name, class = icon_class, style = paste0("color: ", color))
+      )
+    }
+
+    # Output principal del pipeline status
+    output$item05_quarto_exec <- renderUI({
+      meta <- tasks_metadata()
+      req(meta)
+      current_status <- state$status_list
+      current_task <- state$current_task
+
+      # Calcular progreso
+      total <- length(meta)
+      if(length(current_status) > 0) {
+        completed <- sum(unlist(current_status) == "done", na.rm = TRUE)
+      } else {
+        completed <- 0
+      }
+      progress_pct <- if(total > 0) round(completed / total * 100) else 0
+
+      rows <- lapply(names(meta), function(id) {
+        s_val <- if(!is.null(current_status[[id]])) current_status[[id]] else "pending"
+        render_file_row_server(meta[[id]]$label, s_val)
       })
 
-
-      all_exist <- all(sapply(list_processed, function(x) x$exists_local))
-      color_hex <- if(all_exist) "#00bc8c" else "#f39c12"
-      list(is_done = all_exist,
-           text = if(all_exist) "ALL RUNNERS READY" else "SOME RUNNERS MISSING",
-           color = color_hex, icon_name = "check-double", shadow = paste0("0 0 12px ", color_hex),
-           list_qmd = list_processed)
-    }) # %>% debounce(1000)
-
-    rlist_item05_proccessing <- reactive({
-
-      req(rlist_item04_qmd_files()$is_done)
-      flat_rlist_item04_qmd_files <- rlist_item04_qmd_files()
-      flat_is_done <- flat_rlist_item04_qmd_files$is_done
-      list(is_done = flat_is_done)
-    }) # %>% debounce(1000)
-
-
-
-
-    # --------------------------------------------------------------------------
-    # 2. MOTOR DINÁMICO (Anterior 07, ahora vinculado al 04)
-    # --------------------------------------------------------------------------
-    observeEvent(rlist_item04_qmd_files()$is_done, {
-      req(rlist_item04_qmd_files()$is_done)
-      pkgs <- names(rlist_item04_qmd_files()$list_qmd)
-      isolate(
-        for(p in pkgs) {
-          render_status[[p]] <- "pending"
-        }
-
-      )
-      current_idx(1)
-    })
-
-    delay_current_idx <- reactive({
-
-      current_idx()
-    }) %>% debounce(300)
-
-
-
-
-    pack_current_pos_render <- reactive({
-      req(engine$started, rlist_item04_qmd_files()$is_done)
-      req(current_idx(), delay_current_idx())
-      req(current_idx()  == delay_current_idx())
-      # idx <- current_idx()
-      idx <-delay_current_idx()
-      details <- rlist_item04_qmd_files()$list_qmd
-      pkg_names <- names(details)
-
-      if(idx == 0 || idx > length(pkg_names)) return(NULL)
-
-      selected_pack  <-pkg_names[idx]
-      selected_status  <- render_status[[selected_pack]]
-      if(selected_status != "pending") return(NULL)
-      print("A")
-      list(
-        idx      = idx,
-        pkg_name = pkg_names[idx],
-        path     = details[[idx]]$qmd_file_path_abs_local,
-        max_idx  = length(pkg_names),
-        status = selected_status
-      )
-    })
-
-    observeEvent(pack_current_pos_render(), {
-      req(pack_current_pos_render())
-      flat_pack <- pack_current_pos_render()
-      req(engine$started, flat_pack)
-      req(current_idx(), delay_current_idx())
-      req(current_idx()  == delay_current_idx())
-
-      s_name    <- flat_pack$pkg_name
-      s_idx     <- flat_pack$idx
-      s_path    <- flat_pack$path
-      s_max_idx <- flat_pack$max_idx
-      s_status  <- flat_pack$status
-
-      # --- VÁLVULA DE SEGURIDAD ---
-      # Si ya está procesado o en curso, abortamos para evitar ejecuciones múltiples
-      if (s_status %in% c("processing", "done")) return()
-
-      isolate({
-        # Marcamos estado INMEDIATAMENTE
-        render_status[[s_name]] <- "processing"
-
-        old_wd <- getwd()
-        on.exit(setwd(old_wd), add = TRUE)
-
-        tryCatch({
-          message(">>> [RUNNER] Iniciando: ", s_name)
-
-          selected_folder_path <- dirname(s_path)
-          selected_qmd_file_name <- basename(s_path)
-
-          setwd(selected_folder_path)
-
-          if(s_idx == 1) {
-            quarto::quarto_render(
-              input = selected_qmd_file_name,
-              execute_params = list(
-                list_quarto_replacement = internal_list_quarto_replacement()
+      div(style = "padding: 12px; background: #1a262f; border: 1px solid #2a3b47; border-radius: 8px;",
+          div(style = "margin-bottom: 15px; font-weight: 800; font-size: 0.75rem; color: #adb5bd;",
+              icon("microchip"), " ENGINE PIPELINE STATUS"
+          ),
+          # Barra de progreso
+          div(style = "margin-bottom: 15px;",
+              div(style = "display: flex; justify-content: space-between; margin-bottom: 5px;",
+                  span("Progress:", style = "font-size: 0.7rem; color: #adb5bd;"),
+                  span(paste0(progress_pct, "%"), style = "font-size: 0.7rem; color: #00d4ff; font-weight: bold;")
               ),
-              quiet = FALSE
-            )
-          } else {
-            quarto::quarto_render(input = selected_qmd_file_name, quiet = FALSE)
-          }
-
-          # Éxito
-          render_status[[s_name]] <- "done"
-          message(">>> [RUNNER] Finalizado OK: ", s_name)
-
-        }, error = function(e) {
-          message("!!! [RUNNER] Error en ", s_name, ": ", e$message)
-          render_status[[s_name]] <- "error"
-        })
-
-        # Limpieza de RAM (tus 32GB te lo agradecerán)
-        gc(full = TRUE)
-
-        # Avanzamos solo si el actual terminó bien (o falló, pero avanzamos)
-        if(s_idx < s_max_idx) {
-          current_idx(s_idx + 1)
-        } else {
-          super_DONE(TRUE)
-          engine$started <- FALSE # Apagamos el motor
-        }
-      })
+              div(style = "width: 100%; background: #0b1218; border-radius: 4px; overflow: hidden;",
+                  div(style = paste0("width: ", progress_pct, "%; height: 4px; background: #00d4ff; transition: width 0.3s ease;"))
+              )
+          ),
+          # Tarea actual
+          if(!is.null(current_task) && state$engine_started)
+            div(style = "margin-bottom: 15px; padding: 8px; background: #0b1218; border-radius: 4px;",
+                icon("play", style = "color: #00d4ff; font-size: 0.7rem;"),
+                span(" Current: ", style = "font-size: 0.7rem; color: #adb5bd;"),
+                span(current_task, style = "font-size: 0.7rem; color: #00d4ff; font-weight: bold;")
+            ),
+          div(rows)
+      )
     })
 
-
-
-
-    observeEvent(super_DONE(), {
-
-      data_store$is_done   <- super_DONE()
-      data_store$is_locked <- super_DONE()
-
-    })
-
-
-    # --------------------------------------------------------------------------
-    # 3. RENDERS UI
-    # --------------------------------------------------------------------------
-
+    # Outputs informativos
     output$item01_folder_target <- renderUI({
-      if(!engine$started) return(render_standby("Item 01 - Target Folder"))
-      res <- rlist_item01_local_folder_tool_script()
-      div(style = "display: flex; align-items: center; padding: 12px; background: #1a262f; border: 1px solid #2a3b47; border-radius: 8px; margin-bottom: 10px;",
-          div(style = paste0("width: 12px; height: 12px; border-radius: 50%; margin-right: 15px; background:", res$color, "; box-shadow:", res$shadow)),
-          div(style = "width: 100%; overflow: hidden;",
-              div(style = paste0("font-weight: 800; font-size: 0.75rem; color: ", res$color), icon(res$icon_name, class="me-2"), res$text),
-              div(res$path, style = "font-family: 'JetBrains Mono'; font-size: 0.72rem; color: #adb5bd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;")))
+      req(inputs_bundle())
+      div(style = "margin-bottom: 10px; padding: 8px; background: #0b1218; border-radius: 4px;",
+          icon("folder", style = "color: #00d4ff;"),
+          span(" Local: ", style = "color: #adb5bd; font-size: 0.7rem;"),
+          span(inputs_bundle()$local_path, style = "color: #fff; font-size: 0.7rem; font-family: monospace;")
+      )
     })
 
     output$item02_folder_quarto_render <- renderUI({
-      if(!rlist_item01_local_folder_tool_script()$is_done) return(render_standby("Item 02 - Temp Folder"))
-      res <- rlist_item02_temp_folder_tool_script()
-      div(style = "display: flex; align-items: center; padding: 12px; background: #1a262f; border: 1px solid #2a3b47; border-radius: 8px; margin-bottom: 10px;",
-          div(style = paste0("width: 12px; height: 12px; border-radius: 50%; margin-right: 15px; background:", res$color, "; box-shadow:", res$shadow)),
-          div(style = "width: 100%; overflow: hidden;",
-              div(style = paste0("font-weight: 800; font-size: 0.75rem; color: ", res$color), icon(res$icon_name, class="me-2"), res$text),
-              div(res$path, style = "font-family: 'JetBrains Mono'; font-size: 0.72rem; color: #adb5bd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;")))
+      req(inputs_bundle())
+      div(style = "margin-bottom: 10px; padding: 8px; background: #0b1218; border-radius: 4px;",
+          icon("folder-open", style = "color: #00d4ff;"),
+          span(" Temp: ", style = "color: #adb5bd; font-size: 0.7rem;"),
+          span(inputs_bundle()$temp_path, style = "color: #fff; font-size: 0.7rem; font-family: monospace;")
+      )
     })
 
     output$item03_qmd_files <- renderUI({
-      if(!rlist_item02_temp_folder_tool_script()$is_done) return(render_standby("Item 03 - Quarto Structure"))
-      res <- rlist_item03_quarto_proc()
-      div(style = "display: flex; align-items: center; padding: 12px; background: #1a262f; border: 1px solid #2a3b47; border-radius: 8px; margin-bottom: 10px;",
-          div(style = paste0("width: 12px; height: 12px; border-radius: 50%; margin-right: 15px; background:", res$color, "; box-shadow:", res$shadow)),
-          div(style = "width: 100%; overflow: hidden;",
-              div(style = paste0("font-weight: 800; font-size: 0.75rem; color: ", res$color), icon(res$icon_name, class="me-2"), res$text),
-              div(res$path, style = "font-family: 'JetBrains Mono'; font-size: 0.72rem; color: #adb5bd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;")))
+      meta <- tasks_metadata()
+      req(meta)
+      div(style = "margin-bottom: 10px; padding: 8px; background: #0b1218; border-radius: 4px;",
+          icon("file-alt", style = "color: #00d4ff;"),
+          span(" QMD files: ", style = "color: #adb5bd; font-size: 0.7rem;"),
+          span(length(meta), style = "color: #fff; font-size: 0.7rem; font-weight: bold;")
+      )
     })
-
-    #-----------------------------------------------------------------------------------------------
 
     output$item04_temp_folder_Rscience <- renderUI({
-      if(!rlist_item03_quarto_proc()$is_done) return(render_standby("Item 04 - QMD Verification"))
-      res <- rlist_item04_qmd_files()
-      div(style = "padding: 12px; background: #1a262f; border: 1px solid #2a3b47; border-radius: 8px; margin-bottom: 10px;",
-          div(style = "display: flex; align-items: center; margin-bottom: 8px;",
-              div(style = paste0("width: 12px; height: 12px; border-radius: 50%; margin-right: 15px; background:", res$color, "; box-shadow:", res$shadow)),
-              span(style = paste0("font-weight: 800; font-size: 0.75rem; color: ", res$color), icon(res$icon_name, class="me-2"), res$text)),
-          div(style = "display: flex; gap: 10px; background: #0b1218; padding: 8px; border-radius: 4px; overflow-x: auto;",
-              lapply(names(res$list_qmd), function(p) {
-                file_exists <- res$list_qmd[[p]]$exists_local
-                status_color <- if(file_exists) "#00bc8c" else "#ff4b5c"
-                status_icon <- if(file_exists) "file-circle-check" else "file-circle-xmark"
-                div(style = paste0("font-size: 0.65rem; color: ", status_color, "; white-space: nowrap; padding: 2px 6px; border: 1px solid ", status_color, "44; border-radius: 3px; background: ", status_color, "11;"),
-                    icon(status_icon),
-                    p)
-              })))
+      div(style = "margin-bottom: 10px; padding: 8px; background: #0b1218; border-radius: 4px;",
+          icon("info-circle", style = "color: #00d4ff;"),
+          span(" Status: ", style = "color: #adb5bd; font-size: 0.7rem;"),
+          span(if(state$engine_started) "Processing..." else if(state$super_done) "Complete" else "Ready",
+               style = paste0("font-size: 0.7rem; font-weight: bold; color: ",
+                              if(state$engine_started) "#00d4ff" else if(state$super_done) "#00bc8c" else "#566b7a", ";"))
+      )
     })
-    #-----------------------------------------------------------------------------------------------
 
-    # ITEM 05: Log de Ejecución (Anterior 07)
-    # UI de la fila individual (sin renderUI, solo el contenedor)
-    render_file_row_ui <- function(id_row) {
-      uiOutput(id_row)
-    }
+    # Debug interno
+    output$debug_internal_ui <- renderUI({
+      req(show_debug)
+      div(style = "margin-top: 20px; padding: 10px; background: #0b1218; border-radius: 4px; font-family: monospace; font-size: 0.7rem;",
+          pre(paste(
+            "Engine started:", state$engine_started,
+            "\nSuper done:", state$super_done,
+            "\nCurrent task:", state$current_task
+          ))
+      )
+    })
 
-    # Lógica para renderizar solo una fila
-    render_file_row_server <- function(pkg_name, s) {
-      get_conf <- function(st) {
-        switch(st,
-               "pending"    = list(col = "#566b7a", icon = "hourglass", class = ""),
-               "processing" = list(col = "#00d4ff", icon = "spinner", class = "processing-pulse"),
-               "done"       = list(col = "#00bc8c", icon = "check-double", class = ""),
-               "error"      = list(col = "#ff4b5c", icon = "times-circle", class = ""))
+    # --- 4. BOTÓN Y MOTOR (VERSIÓN SIMPLIFICADA) ---
+
+    observeEvent(input$start_pipeline, {
+      message(">>> [BOTON] start_pipeline clickeado")
+
+      if (execution_lock) {
+        message(">>> [MOTOR] ⚠️ Pipeline ya en ejecución")
+        showNotification("Pipeline already running!", type = "warning", duration = 2)
+        return()
       }
 
-      conf <- get_conf(s)
+      # Adquirir lock
+      execution_lock <<- TRUE
+      message(">>> [MOTOR] 🔒 Lock adquirido")
 
-      div(class = conf$class,
-          style = paste0("display: flex; align-items: center; padding: 8px 12px; background: #0b1218; border-left: 3px solid ", conf$col, "; border-radius: 4px; transition: all 0.3s; margin-bottom: 6px;"),
-          div(style = paste0("width: 8px; height: 8px; border-radius: 50%; margin-right: 12px; background:", conf$col, "; box-shadow: 0 0 8px ", conf$col)),
-          span(pkg_name, style = "font-family: 'JetBrains Mono'; font-size: 0.68rem; color: #fff; flex-grow: 1;"),
-          span(toupper(s), style = paste0("font-size: 0.6rem; font-weight: 900; color: ", conf$col, "; margin-right: 10px;")),
-          icon(conf$icon, class = if(s == "processing") "fa-spin" else NULL, style = paste0("color: ", conf$col))
-      )
-    }
+      meta <- isolate(tasks_metadata())
+      if (is.null(meta) || length(meta) == 0) {
+        message(">>> [MOTOR] ❌ No hay metadata")
+        execution_lock <<- FALSE
+        showNotification("No tasks metadata available!", type = "error")
+        return()
+      }
 
+      # Verificar que los archivos existan
+      missing_files <- names(meta)[!sapply(meta, function(x) x$exists)]
+      if(length(missing_files) > 0) {
+        message(">>> [MOTOR] ❌ Archivos faltantes: ", paste(missing_files, collapse = ", "))
+        showNotification(paste("Missing files:", paste(missing_files, collapse = ", ")), type = "error", duration = 5)
+        execution_lock <<- FALSE
+        return()
+      }
 
-    # --- DENTRO DE mod_pipeline_server ---
+      pkg_names <- names(meta)
+      total_tasks <- length(pkg_names)
 
-    # 1. El contenedor principal ahora es casi estático
-    # --- ITEM 05: Log de Ejecución con Efecto Neón Potenciado ---
-    output$item05_quarto_exec <- renderUI({
-      if(!rlist_item04_qmd_files()$is_done) return(render_standby("Item 05 - Engine Status"))
+      # Reset estados
+      state$status_list <- setNames(rep("pending", total_tasks), pkg_names)
+      state$super_done <- FALSE
+      state$engine_started <- TRUE
+      state$current_task <- NULL
 
-      pkgs <- names(rlist_item04_qmd_files()$list_qmd)
+      message(">>> [MOTOR] 🚀 Iniciando Pipeline (", total_tasks, " tareas)")
+      showNotification(paste("Pipeline started -", total_tasks, "tasks"), type = "message", duration = 3)
 
-      tags$div(
-        tags$style("
-          @keyframes pulse-border {
-            0% {
-              box-shadow: 0 0 0 0px rgba(0, 212, 255, 0.7);
-              border-color: #00d4ff;
-            }
-            50% {
-              box-shadow: 0 0 25px 10px rgba(0, 212, 255, 0.5);
-              border-color: #00fbff;
-            }
-            100% {
-              box-shadow: 0 0 40px 20px rgba(0, 212, 255, 0);
-              border-color: #00d4ff;
-            }
-          }
-          .processing-pulse {
-            animation: pulse-border 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-            border: 2px solid #00d4ff !important;
-            background: #1c2d3a !important;
-            z-index: 10;
-            position: relative;
-          }
-        "),
-        div(style = "padding: 12px; background: #1a262f; border: 1px solid #2a3b47; border-radius: 8px;",
-            div(style = "margin-bottom: 15px; font-weight: 800; font-size: 0.75rem; color: #adb5bd;", icon("microchip"), " ITEM 05 - ENGINE STATUS"),
-            div(id = ns("rows_container"),
-                lapply(pkgs, function(p) uiOutput(ns(paste0("row_", p))))
+      # Función recursiva con delays para permitir UI updates
+      run_task <- function(idx) {
+        if (!state$engine_started) {
+          message(">>> [MOTOR] Pipeline detenido")
+          execution_lock <<- FALSE
+          return()
+        }
+
+        if (idx > total_tasks) {
+          state$super_done <- TRUE
+          state$engine_started <- FALSE
+          state$current_task <- NULL
+          execution_lock <<- FALSE
+          message(">>> [MOTOR] 🎉 PIPELINE COMPLETO")
+          showNotification("Pipeline completed successfully!", type = "success", duration = 5)
+          return()
+        }
+
+        curr_id <- pkg_names[idx]
+        state$status_list[[curr_id]] <- "processing"
+        state$current_task <- meta[[curr_id]]$label
+
+        message(">>> [MOTOR] ⚙️ [", idx, "/", total_tasks, "] ", curr_id, ": ", meta[[curr_id]]$label)
+
+        task <- meta[[curr_id]]
+        task_path <- task$abs_path
+        replacements <- isolate(inputs_bundle()$replacement)
+
+        # Pequeño delay para que la UI se actualice
+        Sys.sleep(0.05)
+
+        # Ejecutar la tarea
+        tryCatch({
+          old_wd <- getwd()
+          setwd(dirname(task_path))
+
+          if(idx == 1 && !is.null(replacements)) {
+            quarto::quarto_render(
+              input = basename(task_path),
+              execute_params = list(list_quarto_replacement = replacements),
+              quiet = FALSE
             )
-        )
-      )
-    })
+          } else {
+            quarto::quarto_render(input = basename(task_path), quiet = FALSE)
+          }
+          setwd(old_wd)
 
-    # 2. Creamos los renders individuales dinámicamente
-    observe({
-      req(rlist_item04_qmd_files()$is_done)
-      flat_rlist_item04_qmd_files <- rlist_item04_qmd_files()
-      pkgs <- names(flat_rlist_item04_qmd_files$list_qmd)
+          # Éxito
+          state$status_list[[curr_id]] <- "done"
+          message(">>> [MOTOR] ✅ OK: ", curr_id)
 
-      for(p in pkgs) {
-        # Localizamos p para el scope del render
-        local({
-          pkg_id <- p
-          label_id <- flat_rlist_item04_qmd_files$list_qmd[[pkg_id]]$label_on_rendering
+          # Pequeño delay antes de la siguiente tarea
+          Sys.sleep(0.05)
 
-          output[[paste0("row_", pkg_id)]] <- renderUI({
-            # ESTA ES LA MAGIA: Solo este render se dispara cuando render_status[[pkg_id]] cambia
-            #render_file_row_server(pkg_id, render_status[[pkg_id]])
-            render_file_row_server(label_id, render_status[[pkg_id]])
-          })
+          # Siguiente tarea
+          run_task(idx + 1)
+
+        }, error = function(e) {
+          setwd(old_wd)
+          state$status_list[[curr_id]] <- "error"
+          state$engine_started <- FALSE
+          state$current_task <- NULL
+          execution_lock <<- FALSE
+          message(">>> [MOTOR] ❌ ERROR en ", curr_id, ": ", e$message)
+          showNotification(paste("Error in", curr_id, ":", e$message), type = "error", duration = 10)
         })
       }
-    })
 
-    #-----------------------------------------------------------------------------------------------
-    # --- 6. DEBUG LOGIC ---
-    the_output <- reactive({
-      reactiveValuesToList(data_store)
-    })  # %>% debounce(1000)
+      # Iniciar
+      run_task(1)
 
-    output$json_internal <- listviewer::renderJsonedit({
-      req(internal_show_debug())
-      listviewer::jsonedit(the_output(), mode = "view")
-    })
+    }, ignoreInit = TRUE)
 
-    # --- 4. DEBUG GLOBAL ---
-    output$debug_internal_ui <- renderUI({
-      req(internal_show_debug())
-      div(class = "rs-card-wrapper mt-3",
-          style = "border: 1px dashed #00d4ff; background: #0b1218;",
-          h6("GLOBAL OUTPUT MONITOR (mod_special_settings)", style="color: #00d4ff; font-weight:800;"),
-          listviewer::jsoneditOutput(ns("json_internal"), height = "auto")
-      )
-    })
-
-    #######
-    output$json_external <- listviewer::renderJsonedit({
-      listviewer::jsonedit(the_output(), mode = "view")
-    })
-
-    # --- 4. DEBUG GLOBAL ---
-    output$debug_external <- renderUI({
-      div(class = "rs-card-wrapper mt-3",
-          style = "border: 1px dashed #00d4ff; background: #0b1218;",
-          h6("GLOBAL OUTPUT MONITOR (mod_special_settings)", style="color: #00d4ff; font-weight:800;"),
-          listviewer::jsoneditOutput(ns("json_external"), height = "auto")
-      )
-    })
-
-
-    #-----------------------------------------------------------------------------------------------
-
-    return(the_output)
+    # --- 5. RETORNO ---
+    return(reactive({ state$super_done }))
   })
-}
-
-# ==============================================================================
-# APP DE PRUEBA (SOLO PARA TEST)
-# ==============================================================================
-
-# ==============================================================================
-# APP DE PRUEBA (SOLO PARA TEST)
-# ==============================================================================
-#
+}#
 # library(bslib)
 # library(shiny)
 # library(tidyverse)
