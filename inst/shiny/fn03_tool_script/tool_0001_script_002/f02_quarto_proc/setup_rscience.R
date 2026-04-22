@@ -6,8 +6,9 @@
 # 1. DEFINICIÓN DE RUTAS ABSOLUTAS
 # ============================================================
 
-base_app <- "C:/Users/Legion/bulk/MyInstallers/Rscience2027_installer/App"
-
+#base_app <- "C:/Users/Legion/bulk/MyInstallers/Rscience2027_installer/App"
+base_app   <- dirname(here::here())
+base_app   <- file.path(base_app, "/App")
 # Rutas de Quarto y Pandoc
 quarto_exe <- file.path(base_app, "Quarto/bin/quarto.exe")
 pandoc_dir <- file.path(base_app, "Quarto/bin/tools")

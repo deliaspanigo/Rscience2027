@@ -389,7 +389,9 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
 
     # --- 9. FUNCIÓN PARA RENDERIZAR QUARTO EN BACKGROUND ---
     render_quarto_worker <- function(qmd_path, replacements, format = "html") {
-      base_app   <- "C:/Users/Legion/bulk/MyInstallers/Rscience2027_installer/App"
+    #  base_app   <- "C:/Users/Legion/bulk/MyInstallers/Rscience2027_installer/App"
+      base_app   <- dirname(here::here())
+      base_app   <- file.path(base_app, "/App")
       quarto_bin <- file.path(base_app, "Quarto/bin/quarto.exe")
       r_portable <- file.path(base_app, "R-Portable")
       r_libs     <- file.path(r_portable, "library")
