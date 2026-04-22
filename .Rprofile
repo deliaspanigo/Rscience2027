@@ -6,8 +6,8 @@ Sys.setenv(RENV_CONFIG_CACHE_ENABLED = FALSE)
 
 # 2. DEFINICIÓN DE RUTAS (Ruta corregida para Pandoc)
 #base_path         <- "C:/Users/Legion/bulk/MyInstallers/Rscience2027_installer/App"
-base_app   <- dirname(here::here())
-base_app   <- file.path(base_app, "/App")
+base_path   <- dirname(here::here())
+base_path   <- file.path(base_path, "/App")
 mi_ruta_libreria  <- file.path(base_path, "R-Portable/library")
 mi_ruta_quarto_exe <- file.path(base_path, "Quarto/bin/quarto.exe")
 # Corregido: Agregamos la subcarpeta 'tools'
