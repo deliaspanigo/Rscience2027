@@ -56,19 +56,28 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
     # Lock para evitar ejecuciones múltiples
     execution_lock <- FALSE
 
-    # --- CONTROL DE POSICIÓN (EL CORAZÓN DE LA IDEA) ---
-    # Este reactiveVal controla qué tarea ejecutar
+    # --- CONTROL DE POSICIÓN CON DOBLE DEBOUNCE ---
     current_index <- reactiveVal(0)
 
-    # Este reactive se re-evalúa cuando cambia current_index
-    # Y tiene debounce de 1 segundo - ¡esa es la pausa no bloqueante!
-    task_trigger <- reactive({
+    # Primer debounce: para iniciar la tarea (delay ANTES de procesar)
+    task_trigger_start <- reactive({
       idx <- current_index()
       if(idx > 0) {
-        message(">>> [TRIGGER] Esperando 1 segundo antes de ejecutar tarea ", idx)
+        message(">>> [TRIGGER-START] Esperando 1 segundo ANTES de ejecutar tarea ", idx)
       }
       idx
-    }) %>% debounce(1000)  # 1 segundo de pausa NO BLOQUEANTE
+    }) %>% debounce(1000)
+
+    # Segundo debounce: para finalizar la tarea (delay DESPUÉS de procesar)
+    task_complete_trigger <- reactiveVal(0)
+
+    task_trigger_end <- reactive({
+      val <- task_complete_trigger()
+      if(val > 0) {
+        message(">>> [TRIGGER-END] Esperando 1 segundo DESPUÉS de completar")
+      }
+      val
+    }) %>% debounce(1000)
 
     # --- 2. ENTRADAS ---
     inputs_bundle <- reactive({
@@ -195,11 +204,11 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       )
     })
 
-    # --- 4. MOTOR BASADO EN REACTIVE CON DEBOUNCE ---
+    # --- 4. MOTOR CON DOBLE DEBOUNCE CORREGIDO ---
 
-    # Este observeEvent se dispara cuando el reactive con debounce cambia
-    observeEvent(task_trigger(), {
-      idx <- task_trigger()
+    # PRIMER OBSERVER: Inicio de tarea (delay ANTES de procesar)
+    observeEvent(task_trigger_start(), {
+      idx <- task_trigger_start()
 
       # Si el pipeline no está activo o el índice es inválido, ignorar
       if (!state$engine_started || idx == 0) {
@@ -210,15 +219,17 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       pkg_names <- names(meta)
       total_tasks <- length(pkg_names)
 
+      # Verificar si hemos terminado ANTES de procesar
       if (idx > total_tasks) {
         # Pipeline completado
         state$super_done <- TRUE
         state$engine_started <- FALSE
         state$current_task <- NULL
         execution_lock <<- FALSE
-        current_index(0)  # Reset
+        current_index(0)
+        task_complete_trigger(0)
         message(">>> [MOTOR] 🎉 PIPELINE COMPLETO")
-        showNotification("Pipeline completed successfully!", type = "success", duration = 5)
+        showNotification("Pipeline completed successfully!", duration = 5, type = "message")
         return()
       }
 
@@ -227,9 +238,9 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       # Actualizar UI a "processing"
       state$status_list[[curr_id]] <- "processing"
       state$current_task <- meta[[curr_id]]$label
-      message(">>> [MOTOR] ⚙️ [", idx, "/", total_tasks, "] ", curr_id, ": ", meta[[curr_id]]$label)
+      message(">>> [MOTOR] ⚙️ [", idx, "/", total_tasks, "] INICIANDO: ", curr_id, ": ", meta[[curr_id]]$label)
 
-      # Ejecutar la tarea (esto es síncrono pero el debounce ya nos dio la pausa)
+      # Ejecutar la tarea
       task <- meta[[curr_id]]
       task_path <- task$abs_path
       replacements <- isolate(inputs_bundle()$replacement)
@@ -263,29 +274,54 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
         state$current_task <- NULL
         execution_lock <<- FALSE
         current_index(0)
+        task_complete_trigger(0)
         message(">>> [MOTOR] ❌ ERROR en ", curr_id, ": ", error_msg)
-        showNotification(paste("Error in", curr_id, ":", error_msg), type = "error", duration = 10)
+        showNotification(paste("Error in", curr_id, ":", error_msg), duration = 10, type = "error")
         return()
       }
 
-      # Éxito - actualizar UI
+      # Éxito - actualizar UI a "done"
       state$status_list[[curr_id]] <- "done"
       message(">>> [MOTOR] ✅ OK: ", curr_id)
 
-      # Avanzar al siguiente índice (esto disparará el reactive con debounce)
-      next_idx <- idx + 1
-      current_index(next_idx)
-      message(">>> [MOTOR] 👉 Próxima tarea: ", next_idx, " (esperando 1 segundo)")
+      # Disparar el trigger de finalización (delay DESPUÉS)
+      task_complete_trigger(idx)
 
     }, ignoreInit = TRUE)
 
+    # SEGUNDO OBSERVER: Finalización de tarea (delay DESPUÉS de procesar)
+    observeEvent(task_trigger_end(), {
+      idx <- task_trigger_end()
+
+      if (!state$engine_started || idx == 0) {
+        return()
+      }
+
+      meta <- isolate(tasks_metadata())
+      total_tasks <- length(names(meta))
+
+      message(">>> [MOTOR] 👉 Delay completado, avanzando a la siguiente tarea")
+
+      # Avanzar al siguiente índice
+      next_idx <- idx + 1
+
+      # Verificar si es la última tarea
+      if (next_idx > total_tasks) {
+        # La siguiente tarea no existe, el pipeline terminará en el próximo trigger_start
+        message(">>> [MOTOR] 👉 Última tarea completada, preparando finalización")
+      }
+
+      current_index(next_idx)
+      message(">>> [MOTOR] 👉 Próxima tarea: ", next_idx, " (esperando 1 segundo ANTES de iniciar)")
+
+    }, ignoreInit = TRUE)
 
     # --- 5. BOTÓN DE INICIO ---
     observeEvent(input$start_pipeline, {
       message(">>> [BOTON] start_pipeline clickeado")
 
       if (execution_lock) {
-        showNotification("Pipeline already running!", type = "warning", duration = 2)
+        showNotification("Pipeline already running!", duration = 2, type = "warning")
         return()
       }
 
@@ -295,13 +331,13 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       meta <- isolate(tasks_metadata())
       if (is.null(meta) || length(meta) == 0) {
         execution_lock <<- FALSE
-        showNotification("No tasks metadata available!", type = "error")
+        showNotification("No tasks metadata available!", duration = 5, type = "error")
         return()
       }
 
       missing_files <- names(meta)[!sapply(meta, function(x) x$exists)]
       if(length(missing_files) > 0) {
-        showNotification(paste("Missing files:", paste(missing_files, collapse = ", ")), type = "error", duration = 5)
+        showNotification(paste("Missing files:", paste(missing_files, collapse = ", ")), duration = 5, type = "error")
         execution_lock <<- FALSE
         return()
       }
@@ -314,23 +350,21 @@ mod_special_proccessing_server <- function(id, local_folder_tool_script, temp_fo
       state$super_done <- FALSE
       state$engine_started <- TRUE
       state$current_task <- NULL
+      task_complete_trigger(0)
 
       message(">>> [MOTOR] 🚀 Iniciando Pipeline (", total_tasks, " tareas)")
-      showNotification(paste("Pipeline started -", total_tasks, "tasks"), type = "message", duration = 3)
+      showNotification(paste("Pipeline started -", total_tasks, "tasks"), duration = 3, type = "message")
 
       # Comenzar desde la primera tarea
-      # Esto disparará el reactive con debounce de 1 segundo
       current_index(1)
-      message(">>> [MOTOR] 👉 Primera tarea programada (esperando 1 segundo)")
+      message(">>> [MOTOR] 👉 Primera tarea programada (esperando 1 segundo ANTES de iniciar)")
 
     }, ignoreInit = TRUE)
 
     # --- 6. RETORNO ---
     return(reactive({ state$super_done }))
   })
-}# library(tidyverse)
-#
-# # Asumo que esta ruta existe y contiene la estructura necesaria
+}# # Asumo que esta ruta existe y contiene la estructura necesaria
 # path_test <- system.file("shiny", "fn03_tool_script", "tool_0001_script_002", package = "Rscience2027")
 #
 # ui <- page_fluid(
